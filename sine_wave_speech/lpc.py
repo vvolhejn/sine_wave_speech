@@ -59,3 +59,42 @@ def fit_lpc(audio: np.ndarray, p=12, hop_size=128, window_size=None):
     residual = residual[(window_size - hop_size) // 2 :]
 
     return lpc_coefficients, gain, residual
+
+
+def lpc_coefficients_to_frequencies(lpc_coefficients, gain):
+    """Convert LPC coefficients and gain to frequencies and magnitudes.
+
+    Args:
+        lpc_coefficients (np.ndarray): LPC coefficients of shape (n_hops, p + 1).
+        gain (np.ndarray): Gain of shape (n_hops,).
+
+    Returns:
+        frequencies (np.ndarray): Frequencies of shape (n_hops, p // 2). The unit
+            is radians/sample.
+        magnitudes (np.ndarray): Magnitudes of shape (n_hops, p // 2).
+    """
+    n_hops = lpc_coefficients.shape[0]
+    p = lpc_coefficients.shape[1] - 1
+
+    frequencies = np.zeros((n_hops, p // 2))
+    magnitudes = np.zeros((n_hops, p // 2))
+
+    for hop in range(n_hops):
+        cur_lpc_coefficients = lpc_coefficients[hop, 1 : p + 1]
+
+        # The roots of the LPC polynomial are the frequencies of the sinusoids
+        # that are present in the signal.
+        roots = np.roots(np.concatenate([[1], cur_lpc_coefficients]))
+
+        cur_frequencies = np.angle(roots)
+        cur_magnitudes = gain[hop] / (1 - np.abs(roots))
+
+        # Each frequency is repeated twice, once with a positive angle and once
+        # with a negative angle. We only want to keep the positive angle.
+        ix = np.argsort(cur_frequencies)
+        ix = ix[cur_frequencies[ix] > 0]
+
+        frequencies[hop, : len(ix)] = cur_frequencies[ix][: frequencies.shape[1]]
+        magnitudes[hop, : len(ix)] = cur_magnitudes[ix][: frequencies.shape[1]]
+
+    return frequencies, magnitudes
