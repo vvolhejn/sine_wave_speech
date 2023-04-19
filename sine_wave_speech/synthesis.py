@@ -18,9 +18,7 @@ def synthesize(
     output = np.zeros(output_samples)
 
     for i in range(channels):
-        cur = synthesize_one(
-            frequencies[:, i], magnitudes[:, i], sr, hop_size, wave_fn
-        )
+        cur = synthesize_one(frequencies[:, i], magnitudes[:, i], sr, hop_size, wave_fn)
         output += cur
 
     return output
