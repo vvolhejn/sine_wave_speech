@@ -3,7 +3,7 @@ import scipy.signal
 
 
 def fit_lpc(audio: np.ndarray, p=12, hop_size=128, window_size=None):
-    """Compute the LPC coefficients and gain for each frame of audio.
+    """Compute Linear Predictive Coding coefficients and gain for each frame of audio.
 
     Args:
         audio (np.ndarray): Audio signal.
@@ -62,7 +62,7 @@ def fit_lpc(audio: np.ndarray, p=12, hop_size=128, window_size=None):
 
 
 def lpc_coefficients_to_frequencies(lpc_coefficients, gain):
-    """Convert LPC coefficients and gain to frequencies and magnitudes.
+    """Convert LPC coefficients and gain to normalized_frequencies and magnitudes.
 
     Args:
         lpc_coefficients (np.ndarray): LPC coefficients of shape (n_hops, p + 1).
@@ -89,9 +89,11 @@ def lpc_coefficients_to_frequencies(lpc_coefficients, gain):
         cur_frequencies = np.angle(roots)
         cur_magnitudes = gain[hop] / (1 - np.abs(roots))
 
+        # Sort the frequencies so that the sine waves don't cross when we upsample.
+        ix = np.argsort(cur_frequencies)
+
         # Each frequency is repeated twice, once with a positive angle and once
         # with a negative angle. We only want to keep the positive angle.
-        ix = np.argsort(cur_frequencies)
         ix = ix[cur_frequencies[ix] > 0]
 
         frequencies[hop, : len(ix)] = cur_frequencies[ix][: frequencies.shape[1]]
