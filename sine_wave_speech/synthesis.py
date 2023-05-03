@@ -36,6 +36,9 @@ def synthesize(
         )
         output += cur
 
+    # Normalize the output signal to [-1, 1] to avoid clipping.
+    output /= np.max(np.abs(output))
+
     return output
 
 
