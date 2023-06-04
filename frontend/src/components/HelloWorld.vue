@@ -2,6 +2,7 @@
 import { compileToFunction, onMounted, ref, watch } from 'vue'
 import sentence from '../assets/sentence-original.wav'
 import swsData from '../assets/sentence-sine-wave.json'
+import SineWaveVisualization from './SineWaveVisualization.vue'
 // https://colorhunt.co/palette/3e3838ae7c7c6cbbb3efe784
 
 const audioContext = new window.AudioContext()
@@ -11,19 +12,14 @@ const audioElement = ref<HTMLAudioElement | null>(null)
 const playButton = ref<HTMLButtonElement | null>(null)
 
 const isPlaying = ref(false)
-const path = ref<any>(null)
-const coef = ref<number>(1)
+const coef = ref(1)
+const startTime = ref(0)
 
 onMounted(() => {
   if (!audioElement.value) return
 
   const track = audioContext.createMediaElementSource(audioElement.value)
   track.connect(audioContext.destination)
-
-  const svg = d3.select('#wave')
-  path.value = svg.append('path')
-  console.log(path.value)
-  makePlot()
 })
 
 const onAudioEnded = () => {
@@ -49,8 +45,8 @@ const onClick = () => {
 }
 
 const playSineWaveSpeech = (time: number) => {
-  coef.value = 2
-
+  startTime.value = audioContext.currentTime
+  console.log(audioContext.currentTime)
   const oscillators = new Array<OscillatorNode>()
   const gains = new Array<GainNode>()
   const nWaves = swsData.frequencies[0].length
@@ -95,43 +91,24 @@ const playSineWaveSpeech = (time: number) => {
   })
 }
 
-import * as d3 from 'd3'
-
-const makePlot = () => {
-  const width = 800
-  const height = 400
-  const margin = { top: 20, right: 20, bottom: 30, left: 50 }
-
-  const svg = d3.select('#wave').attr('width', width).attr('height', height)
-
-  const xScale = d3
-    .scaleLinear()
-    .domain([0, 2 * Math.PI])
-    .range([margin.left, width - margin.right])
-
-  const yScale = d3
-    .scaleLinear()
-    .domain([-1, 1])
-    .range([height - margin.bottom, margin.top])
-
-  path.value
-    .datum(d3.range(0, 2 * Math.PI, 0.01))
-    .attr('fill', 'none')
-    .attr('stroke', 'steelblue')
-    .attr('stroke-width', 1.5)
-    .attr(
-      'd',
-      d3
-        .line()
-        .x((d) => xScale(d))
-        .y((d) => yScale(Math.sin(d * coef.value)))
-    )
+const step = () => {
+  const secondsPerTimestep = swsData.hopSize / swsData.sr
+  const index = Math.floor(
+    (audioContext.currentTime - startTime.value) / secondsPerTimestep
+  )
+  console.log(index)
+  if (index < swsData.frequencies.length) {
+    // take the average of 10 consecutive frequencies
+    const freq = swsData.frequencies
+      .slice(index, index + 1)
+      .map((x) => x[0])
+      .reduce((a, b) => a + b, 0)
+    coef.value = (freq + 10000) / 5000
+  }
+  // console.log(index)
+  window.requestAnimationFrame(step)
 }
-
-watch(coef, () => {
-  if (!path.value) return
-  makePlot()
-})
+window.requestAnimationFrame(step)
 </script>
 
 <template>
@@ -150,7 +127,7 @@ watch(coef, () => {
   <button @click="playSineWaveSpeech(audioContext.currentTime)">
     Play Sine Wave Speech
   </button>
-  <svg id="wave"></svg>
+  <SineWaveVisualization :coef="coef" />
 </template>
 
 <style scoped>
