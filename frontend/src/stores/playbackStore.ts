@@ -5,7 +5,12 @@ import { playSineWaveSpeechAudio } from '../audio'
 
 export const usePlaybackStore = defineStore('playback', () => {
   const audioContext = new AudioContext()
+
   const isPlaying = ref(false)
+  const setIsPlaying = (value: boolean) => {
+    isPlaying.value = value
+  }
+
   const startTime = ref(0)
   const swsData = ref<SwsData | null>(null)
 
@@ -13,6 +18,7 @@ export const usePlaybackStore = defineStore('playback', () => {
     swsData.value = data
   }
 
+  const swsIndex = ref<number | null>(null)
   const getSwsIndex = (time?: number) => {
     if (!swsData.value) return null
     if (!time) time = audioContext.currentTime
@@ -29,6 +35,10 @@ export const usePlaybackStore = defineStore('playback', () => {
 
     return index
   }
+  const updateSwsIndex = () => {
+    swsIndex.value = getSwsIndex()
+    return swsIndex.value
+  }
 
   const playSineWaveSpeech = () => {
     startTime.value = audioContext.currentTime
@@ -38,10 +48,12 @@ export const usePlaybackStore = defineStore('playback', () => {
   return {
     audioContext,
     isPlaying,
+    setIsPlaying,
     startTime,
     swsData,
     setSwsData,
-    getSwsIndex,
+    swsIndex,
+    updateSwsIndex,
     playSineWaveSpeech,
   }
 })
