@@ -91,21 +91,36 @@ const playSineWaveSpeech = (time: number) => {
   })
 }
 
+const smoothe = (arr: number[], windowLength: number) => {
+  const result = new Array<number>(arr.length)
+  for (let i = 0; i < arr.length; i++) {
+    const start = Math.max(0, i - windowLength)
+    const end = Math.min(arr.length, i + windowLength)
+    result[i] = arr.slice(start, end).reduce((a, b) => a + b, 0) / (end - start)
+  }
+  return result
+}
+
 const step = () => {
+  if (startTime.value == null) {
+    window.requestAnimationFrame(step)
+    return
+  }
+
   const secondsPerTimestep = swsData.hopSize / swsData.sr
   const index = Math.floor(
     (audioContext.currentTime - startTime.value) / secondsPerTimestep
   )
-  console.log(index)
+
+  const smoothedFrequencies = smoothe(
+    swsData.frequencies.map((x) => x[0]),
+    10
+  )
+
   if (index < swsData.frequencies.length) {
-    // take the average of 10 consecutive frequencies
-    const freq = swsData.frequencies
-      .slice(index, index + 1)
-      .map((x) => x[0])
-      .reduce((a, b) => a + b, 0)
-    coef.value = (freq + 10000) / 5000
+    coef.value = (smoothedFrequencies[index] + 10000) / 5000
   }
-  // console.log(index)
+
   window.requestAnimationFrame(step)
 }
 window.requestAnimationFrame(step)
