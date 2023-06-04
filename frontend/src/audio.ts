@@ -1,10 +1,13 @@
-import { SwsData } from './types'
+import { usePlaybackStore } from './stores/playbackStore'
 
-export const playSineWaveSpeech = (
-  audioContext: AudioContext,
-  swsData: SwsData,
-  time: number
-) => {
+export const playSineWaveSpeechAudio = () => {
+  const playbackStore = usePlaybackStore()
+  const audioContext = playbackStore.audioContext
+  const swsData = playbackStore.swsData
+  const time = audioContext.currentTime
+
+  if (!swsData) return
+
   const oscillators = new Array<OscillatorNode>()
   const gains = new Array<GainNode>()
   const nWaves = swsData.frequencies[0].length

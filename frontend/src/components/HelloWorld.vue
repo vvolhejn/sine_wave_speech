@@ -3,10 +3,13 @@ import { onMounted, ref } from 'vue'
 import sentence from '../assets/sentence-original.wav'
 import swsData from '../assets/sentence-sine-wave.json'
 import SineWave from './SineWave.vue'
-import { playSineWaveSpeech } from '../audio'
+import { usePlaybackStore } from '../stores/playbackStore'
 // https://colorhunt.co/palette/3e3838ae7c7c6cbbb3efe784
+// https://coolors.co/1e152a-4e6766-5ab1bb-a5c882-f7dd72
 
-const audioContext = new window.AudioContext()
+// const audioContext = new window.AudioContext()
+const playbackStore = usePlaybackStore()
+playbackStore.setSwsData(swsData)
 
 // These get set via the ref="..." attribute in the template
 const audioElement = ref<HTMLAudioElement | null>(null)
@@ -20,8 +23,8 @@ const startTime = ref(0)
 onMounted(() => {
   if (!audioElement.value) return
 
-  const track = audioContext.createMediaElementSource(audioElement.value)
-  track.connect(audioContext.destination)
+  const track = playbackStore.audioContext.createMediaElementSource(audioElement.value)
+  track.connect(playbackStore.audioContext.destination)
 })
 
 const onAudioEnded = () => {
@@ -30,8 +33,8 @@ const onAudioEnded = () => {
 
 const onClick = () => {
   // Check if context is in suspended state (autoplay policy)
-  if (audioContext.state === 'suspended') {
-    audioContext.resume()
+  if (playbackStore.audioContext.state === 'suspended') {
+    playbackStore.audioContext.resume()
   }
 
   if (!audioElement.value) return
@@ -44,11 +47,6 @@ const onClick = () => {
     audioElement.value.pause()
     isPlaying.value = false
   }
-}
-
-const onClickSineWaveSpeech = () => {
-  startTime.value = audioContext.currentTime
-  playSineWaveSpeech(audioContext, swsData, audioContext.currentTime)
 }
 
 const smoothe = (arr: number[], windowLength: number) => {
@@ -67,10 +65,11 @@ const step = () => {
     return
   }
 
-  const secondsPerTimestep = swsData.hopSize / swsData.sr
-  const index = Math.floor(
-    (audioContext.currentTime - startTime.value) / secondsPerTimestep
-  )
+  const index = playbackStore.getSwsIndex()
+  if (index == null) {
+    window.requestAnimationFrame(step)
+    return
+  }
 
   const smoothedFrequencies = smoothe(
     swsData.frequencies.map((x) => x[0]),
@@ -81,10 +80,8 @@ const step = () => {
     10
   )
 
-  if (index < swsData.frequencies.length) {
-    visualizationFrequency.value = (smoothedFrequencies[index] + 500) / 500
-    visualizationMagnitude.value = smoothedMagnitudes[index]
-  }
+  visualizationFrequency.value = (smoothedFrequencies[index] + 500) / 500
+  visualizationMagnitude.value = smoothedMagnitudes[index]
 
   window.requestAnimationFrame(step)
 }
@@ -104,7 +101,7 @@ window.requestAnimationFrame(step)
   >
     <span>Play original</span>
   </button>
-  <button @click="onClickSineWaveSpeech">Play Sine Wave Speech</button>
+  <button @click="playbackStore.playSineWaveSpeech">Play Sine Wave Speech</button>
   <SineWave :frequency="visualizationFrequency" :magnitude="visualizationMagnitude" />
 </template>
 
