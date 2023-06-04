@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { SwsData } from '../types'
 import { playSineWaveSpeechAudio } from '../audio'
 
@@ -18,14 +18,16 @@ export const usePlaybackStore = defineStore('playback', () => {
     swsData.value = data
   }
 
-  const swsIndex = ref<number | null>(null)
-  const getSwsIndex = (time?: number) => {
-    if (!swsData.value) return null
-    if (!time) time = audioContext.currentTime
+  const animationTime = ref(0)
+  const updateAnimationTime = () => {
+    animationTime.value = audioContext.currentTime
+  }
 
+  const swsIndex = computed(() => {
+    if (!swsData.value) return null
     const secondsPerTimestep = swsData.value.hopSize / swsData.value.sr
 
-    let index = Math.floor((time - startTime.value) / secondsPerTimestep)
+    let index = Math.floor((animationTime.value - startTime.value) / secondsPerTimestep)
     if (index < 0) {
       index = 0
     }
@@ -34,11 +36,7 @@ export const usePlaybackStore = defineStore('playback', () => {
     }
 
     return index
-  }
-  const updateSwsIndex = () => {
-    swsIndex.value = getSwsIndex()
-    return swsIndex.value
-  }
+  })
 
   const playSineWaveSpeech = () => {
     startTime.value = audioContext.currentTime
@@ -52,8 +50,9 @@ export const usePlaybackStore = defineStore('playback', () => {
     startTime,
     swsData,
     setSwsData,
+    animationTime,
+    updateAnimationTime,
     swsIndex,
-    updateSwsIndex,
     playSineWaveSpeech,
   }
 })

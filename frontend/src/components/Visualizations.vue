@@ -2,6 +2,7 @@
 import { ref } from 'vue'
 import { usePlaybackStore } from '../stores/playbackStore'
 import SineWave from './SineWave.vue'
+import * as d3 from 'd3'
 
 const playbackStore = usePlaybackStore()
 
@@ -20,13 +21,13 @@ const smoothe = (arr: number[], windowLength: number) => {
 
 const step = () => {
   window.requestAnimationFrame(step)
-  playbackStore.updateSwsIndex()
+  playbackStore.updateAnimationTime()
 
   if (playbackStore.startTime == null) {
     return
   }
 
-  const index = playbackStore.updateSwsIndex()
+  const index = playbackStore.swsIndex
   if (index == null) {
     return
   }
@@ -49,9 +50,18 @@ const step = () => {
   visualizationMagnitude.value = smoothedMagnitudes[index]
 }
 window.requestAnimationFrame(step)
+
+const svg = d3.select('#visualization')
+svg.selectAll('*').remove()
+console.log('Cleaned')
+
+let paths = []
+for (let i = 0; i < 2; i++) {
+  paths.push(svg.append('path'))
+}
 </script>
 <template>
   <svg id="visualization"></svg>
-  <SineWave :waveIndex="0" />
-  <SineWave :waveIndex="1" />
+  <SineWave :waveIndex="0" :path="paths[0]" />
+  <SineWave :waveIndex="1" :path="paths[1]" />
 </template>

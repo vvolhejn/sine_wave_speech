@@ -3,7 +3,7 @@ import * as d3 from 'd3'
 import { onMounted, ref, watch } from 'vue'
 import { usePlaybackStore } from '../stores/playbackStore'
 
-const props = defineProps<{ waveIndex: number }>()
+const props = defineProps<{ waveIndex: number; path: any }>()
 
 const path = ref<any>(null)
 
@@ -15,9 +15,8 @@ onMounted(() => {
 
 const playbackStore = usePlaybackStore()
 watch(
-  () => playbackStore.swsIndex,
+  () => playbackStore.animationTime,
   () => {
-    if (!path.value) return
     makePlot()
   }
 )
@@ -68,7 +67,7 @@ const makePlot = () => {
     return
   }
   const scaledFrequency = (frequency + 500) / 500
-  const offset = playbackStore.audioContext.currentTime * 0 //todo
+  const offset = playbackStore.animationTime * 10
 
   const svg = d3.select('#visualization').attr('width', width).attr('height', height)
 
@@ -83,7 +82,7 @@ const makePlot = () => {
     .range([height - margin.bottom, margin.top])
 
   path.value
-    .datum(d3.range(-Math.PI, Math.PI, 0.01))
+    .datum(d3.range(-Math.PI + offset, Math.PI + offset, 0.01))
     .attr('fill', 'none')
     .attr('stroke', 'steelblue')
     .attr('stroke-width', 1.5)
@@ -92,7 +91,12 @@ const makePlot = () => {
       d3
         .line()
         .x((d) => xScale(d))
-        .y((d) => yScale(Math.sin(d * scaledFrequency) * Math.sqrt(magnitude)))
+        .y((d) =>
+          yScale(
+            Math.sin((d - offset) * scaledFrequency + offset) * Math.sqrt(magnitude) +
+              props.waveIndex * 0.3
+          )
+        )
     )
 }
 </script>
