@@ -52,16 +52,31 @@ const step = () => {
 window.requestAnimationFrame(step)
 
 const svg = d3.select('#visualization')
-svg.selectAll('*').remove()
-console.log('Cleaned')
 
-let paths = []
-for (let i = 0; i < 2; i++) {
-  paths.push(svg.append('path'))
-}
+const wavesConfig = [
+  {
+    waveIndex: 0,
+    yOffset: 1.2,
+  },
+  {
+    waveIndex: 1,
+    yOffset: 0.8,
+  },
+  {
+    waveIndex: 2,
+    yOffset: 0.4,
+  },
+  {
+    waveIndex: 3,
+    yOffset: 0.0,
+  },
+]
 </script>
 <template>
   <svg id="visualization"></svg>
-  <SineWave :waveIndex="0" :path="paths[0]" />
-  <SineWave :waveIndex="1" :path="paths[1]" />
+  <SineWave
+    v-for="waveConfig in wavesConfig"
+    :waveIndex="waveConfig.waveIndex"
+    :yOffset="waveConfig.yOffset"
+  />
 </template>

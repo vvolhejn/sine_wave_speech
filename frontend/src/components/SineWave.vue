@@ -3,7 +3,7 @@ import * as d3 from 'd3'
 import { onMounted, ref, watch } from 'vue'
 import { usePlaybackStore } from '../stores/playbackStore'
 
-const props = defineProps<{ waveIndex: number; path: any }>()
+const props = defineProps<{ waveIndex: number; yOffset: number }>()
 
 const path = ref<any>(null)
 
@@ -78,7 +78,7 @@ const makePlot = () => {
 
   const yScale = d3
     .scaleLinear()
-    .domain([-1, 1])
+    .domain([-1, 2])
     .range([height - margin.bottom, margin.top])
 
   path.value
@@ -94,7 +94,7 @@ const makePlot = () => {
         .y((d) =>
           yScale(
             Math.sin((d - offset) * scaledFrequency + offset) * Math.sqrt(magnitude) +
-              props.waveIndex * 0.3
+              props.yOffset
           )
         )
     )
