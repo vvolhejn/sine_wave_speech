@@ -78,7 +78,7 @@ const makePlot = () => {
 
   const yScale = d3
     .scaleLinear()
-    .domain([-1, 2])
+    .domain([-1, 1])
     .range([height - margin.bottom, margin.top])
 
   path.value

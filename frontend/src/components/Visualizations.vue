@@ -21,25 +21,25 @@ const svg = d3.select('#visualization')
 const wavesConfig: WaveConfig[] = [
   {
     waveIndex: 3,
-    yOffset: 1.2,
+    yOffset: 0.6,
     color: tailwindConfig.theme.colors.accent4,
     xSpeed: 1.6,
   },
   {
     waveIndex: 2,
-    yOffset: 0.8,
+    yOffset: 0.2,
     color: tailwindConfig.theme.colors.accent3,
     xSpeed: 1.4,
   },
   {
     waveIndex: 1,
-    yOffset: 0.4,
+    yOffset: -0.2,
     color: tailwindConfig.theme.colors.accent2,
     xSpeed: 1.2,
   },
   {
     waveIndex: 0,
-    yOffset: 0.0,
+    yOffset: -0.6,
     color: tailwindConfig.theme.colors.accent1,
     xSpeed: 1,
   },
