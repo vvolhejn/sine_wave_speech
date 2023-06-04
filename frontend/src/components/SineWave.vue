@@ -22,8 +22,6 @@ watch(
   }
 )
 
-console.log(props.waveConfig.color)
-
 const smoothe = (arr: number[], windowLength: number) => {
   const result = new Array<number>(arr.length)
   for (let i = 0; i < arr.length; i++) {

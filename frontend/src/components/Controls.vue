@@ -46,21 +46,21 @@ const onClick = () => {
 </script>
 
 <template>
-  <h1
-    class="text-8xl text-center mt-[50vh] mix-blend-difference font-[Playfair] italic"
-  >
-    Sine Wave Speech
-  </h1>
-
   <audio :src="sentence" ref="audioElement" @ended="onAudioEnded"></audio>
-  <button
-    data-playing="false"
-    role="switch"
-    aria-checked="false"
-    @click="onClick"
-    ref="playButton"
-  >
-    <span>Play original</span>
-  </button>
-  <button @click="playbackStore.playSineWaveSpeech">Play Sine Wave Speech</button>
+  <div class="flex flex-col min-h-screen justify-center">
+    <button @click="playbackStore.playSineWaveSpeech">
+      <h1 class="text-8xl text-center mix-blend-difference font-[Playfair] italic">
+        Sine Wave Speech
+      </h1>
+    </button>
+    <!-- <button
+      data-playing="false"
+      role="switch"
+      aria-checked="false"
+      @click="onClick"
+      ref="playButton"
+    >
+      <span>Play original</span>
+    </button> -->
+  </div>
 </template>
