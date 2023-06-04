@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { compileToFunction, onMounted, ref, watch } from 'vue'
+import { onMounted, ref } from 'vue'
 import sentence from '../assets/sentence-original.wav'
 import swsData from '../assets/sentence-sine-wave.json'
-import SineWaveVisualization from './SineWaveVisualization.vue'
+import SineWave from './SineWave.vue'
+import { playSineWaveSpeech } from '../audio'
 // https://colorhunt.co/palette/3e3838ae7c7c6cbbb3efe784
 
 const audioContext = new window.AudioContext()
@@ -45,50 +46,9 @@ const onClick = () => {
   }
 }
 
-const playSineWaveSpeech = (time: number) => {
+const onClickSineWaveSpeech = () => {
   startTime.value = audioContext.currentTime
-  const oscillators = new Array<OscillatorNode>()
-  const gains = new Array<GainNode>()
-  const nWaves = swsData.frequencies[0].length
-  const nTimesteps = swsData.frequencies.length
-
-  for (let i = 0; i < nWaves; i++) {
-    const osc = new OscillatorNode(audioContext, {
-      frequency: swsData.frequencies[0][i],
-      type: 'sine',
-    })
-    // swsData.magnitudes[0][i]
-    const gain = new GainNode(audioContext, { gain: 0 })
-    osc.connect(gain).connect(audioContext.destination)
-    oscillators.push(osc)
-    gains.push(gain)
-  }
-
-  // Check if context is in suspended state (autoplay policy)
-  if (audioContext.state === 'suspended') {
-    audioContext.resume()
-  }
-  const secondsPerTimestep = swsData.hopSize / swsData.sr
-
-  for (let t = 0; t < nTimesteps; t++) {
-    for (let i = 0; i < nWaves; i++) {
-      const osc = oscillators[i]
-      const gain = gains[i]
-      osc.frequency.linearRampToValueAtTime(
-        swsData.frequencies[t][i],
-        time + t * secondsPerTimestep
-      )
-      gain.gain.linearRampToValueAtTime(
-        swsData.magnitudes[t][i],
-        time + t * secondsPerTimestep
-      )
-    }
-  }
-
-  oscillators.forEach((oscillator) => {
-    oscillator.start(time)
-    oscillator.stop(time + nTimesteps * secondsPerTimestep)
-  })
+  playSineWaveSpeech(audioContext, swsData, audioContext.currentTime)
 }
 
 const smoothe = (arr: number[], windowLength: number) => {
@@ -144,13 +104,8 @@ window.requestAnimationFrame(step)
   >
     <span>Play original</span>
   </button>
-  <button @click="playSineWaveSpeech(audioContext.currentTime)">
-    Play Sine Wave Speech
-  </button>
-  <SineWaveVisualization
-    :frequency="visualizationFrequency"
-    :magnitude="visualizationMagnitude"
-  />
+  <button @click="onClickSineWaveSpeech">Play Sine Wave Speech</button>
+  <SineWave :frequency="visualizationFrequency" :magnitude="visualizationMagnitude" />
 </template>
 
 <style scoped>
