@@ -1,12 +1,16 @@
 import numpy as np
 
-from sine_wave_speech.lpc import fit_lpc, lpc_coefficients_to_frequencies
+from sine_wave_speech.lpc import (
+    DEFAULT_HOP_SIZE,
+    fit_lpc,
+    lpc_coefficients_to_frequencies,
+)
 
 
 def synthesize(
     normalized_frequencies: np.ndarray,
     magnitudes: np.ndarray,
-    hop_size: int = 128,
+    hop_size: int = DEFAULT_HOP_SIZE,
     wave_fn=np.cos,
 ) -> np.ndarray:
     """Synthesize a signal from sine wave frequencies and magnitudes.

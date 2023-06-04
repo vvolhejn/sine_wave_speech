@@ -1,8 +1,10 @@
 import numpy as np
 import scipy.signal
 
+DEFAULT_HOP_SIZE = 128
 
-def fit_lpc(audio: np.ndarray, p=12, hop_size=128, window_size=None):
+
+def fit_lpc(audio: np.ndarray, p=12, hop_size=DEFAULT_HOP_SIZE, window_size=None):
     """Compute Linear Predictive Coding coefficients and gain for each frame of audio.
 
     Args:
