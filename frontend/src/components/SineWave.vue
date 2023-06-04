@@ -58,9 +58,10 @@ const getFrequencyAndMagnitude = () => {
 }
 
 const makePlot = () => {
-  const width = 800
-  const height = 400
-  const margin = { top: 20, right: 20, bottom: 30, left: 50 }
+  const width = document.body.clientWidth
+  const height = document.body.clientHeight
+
+  const margin = { top: 0, right: -5, bottom: 0, left: -5 }
 
   const [frequency, magnitude] = getFrequencyAndMagnitude()
   if (frequency == null || magnitude == null) {
@@ -68,8 +69,6 @@ const makePlot = () => {
   }
   const scaledFrequency = (frequency + 500) / 500
   const offset = playbackStore.animationTime * 10
-
-  const svg = d3.select('#visualization').attr('width', width).attr('height', height)
 
   const xScale = d3
     .scaleLinear()
@@ -85,7 +84,7 @@ const makePlot = () => {
     .datum(d3.range(-Math.PI + offset, Math.PI + offset, 0.01))
     .attr('fill', 'none')
     .attr('stroke', 'steelblue')
-    .attr('stroke-width', 1.5)
+    .attr('stroke-width', 4)
     .attr(
       'd',
       d3

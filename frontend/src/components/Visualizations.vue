@@ -73,10 +73,12 @@ const wavesConfig = [
 ]
 </script>
 <template>
-  <svg id="visualization"></svg>
-  <SineWave
-    v-for="waveConfig in wavesConfig"
-    :waveIndex="waveConfig.waveIndex"
-    :yOffset="waveConfig.yOffset"
-  />
+  <div class="fixed -z-10">
+    <svg id="visualization" class="w-screen h-screen"></svg>
+    <SineWave
+      v-for="waveConfig in wavesConfig"
+      :waveIndex="waveConfig.waveIndex"
+      :yOffset="waveConfig.yOffset"
+    />
+  </div>
 </template>

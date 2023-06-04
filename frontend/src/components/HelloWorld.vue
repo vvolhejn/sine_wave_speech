@@ -59,7 +59,6 @@ const onClick = () => {
     <span>Play original</span>
   </button>
   <button @click="playbackStore.playSineWaveSpeech">Play Sine Wave Speech</button>
-  <Visualizations />
 </template>
 
 <style scoped>
