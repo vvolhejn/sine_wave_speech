@@ -4,12 +4,12 @@ export default {
   theme: {
     extend: {},
     colors: {
-      background: '#3E3838',
+      background: '#403F4C', // #0C6291
       primary: '#F2F2F2',
       accent1: '#AE7C7C',
       accent2: '#6CBBB3',
-      accent3: '#EFE784',
-      accent4: '#FCBF49',
+      accent3: '#FCBF49',
+      accent4: '#EFE784',
     },
   },
   plugins: [],

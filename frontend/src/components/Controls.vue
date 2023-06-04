@@ -46,7 +46,11 @@ const onClick = () => {
 </script>
 
 <template>
-  <h1>Sine Wave Speech</h1>
+  <h1
+    class="text-8xl text-center mt-[50vh] mix-blend-difference font-[Playfair] italic"
+  >
+    Sine Wave Speech
+  </h1>
 
   <audio :src="sentence" ref="audioElement" @ended="onAudioEnded"></audio>
   <button
@@ -60,9 +64,3 @@ const onClick = () => {
   </button>
   <button @click="playbackStore.playSineWaveSpeech">Play Sine Wave Speech</button>
 </template>
-
-<style scoped>
-.read-the-docs {
-  color: #888;
-}
-</style>

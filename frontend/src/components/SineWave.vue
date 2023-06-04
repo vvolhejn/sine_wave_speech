@@ -28,7 +28,7 @@ const smoothe = (arr: number[], windowLength: number) => {
   const result = new Array<number>(arr.length)
   for (let i = 0; i < arr.length; i++) {
     const start = Math.max(0, i - windowLength)
-    const end = Math.min(arr.length, i + windowLength)
+    const end = i
     result[i] = arr.slice(start, end).reduce((a, b) => a + b, 0) / (end - start)
   }
   return result
@@ -47,11 +47,11 @@ const getFrequencyAndMagnitude = () => {
 
   const smoothedFrequencies = smoothe(
     swsData.frequencies.map((x) => x[props.waveConfig.waveIndex]),
-    10
+    30
   )
   const smoothedMagnitudes = smoothe(
     swsData.magnitudes.map((x) => x[props.waveConfig.waveIndex]),
-    10
+    30
   )
 
   const frequency = smoothedFrequencies[index]
@@ -70,12 +70,12 @@ const makePlot = () => {
   if (frequency == null || magnitude == null) {
     return
   }
-  const scaledFrequency = (frequency + 500) / 500
-  const offset = playbackStore.animationTime * 10
+  const scaledFrequency = (frequency + 500) / 1000
+  const offset = playbackStore.animationTime * props.waveConfig.xSpeed * 2
 
   const xScale = d3
     .scaleLinear()
-    .domain([-Math.PI + offset, Math.PI + offset])
+    .domain([-Math.PI, Math.PI])
     .range([margin.left, width - margin.right])
 
   const yScale = d3
@@ -84,7 +84,7 @@ const makePlot = () => {
     .range([height - margin.bottom, margin.top])
 
   path.value
-    .datum(d3.range(-Math.PI + offset, Math.PI + offset, 0.01))
+    .datum(d3.range(-Math.PI, Math.PI, 0.01))
     .attr('fill', 'none')
     .attr('stroke', props.waveConfig.color || 'white')
     .attr('stroke-width', 4)
@@ -95,7 +95,7 @@ const makePlot = () => {
         .x((d) => xScale(d))
         .y((d) =>
           yScale(
-            Math.sin((d - offset) * scaledFrequency + offset) * Math.sqrt(magnitude) +
+            Math.sin(d * scaledFrequency + offset) * Math.sqrt(magnitude) +
               props.waveConfig.yOffset
           )
         )

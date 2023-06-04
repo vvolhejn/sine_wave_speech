@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import HelloWorld from './components/HelloWorld.vue'
+import Controls from './components/Controls.vue'
 import Visualizations from './components/Visualizations.vue'
 </script>
 
-<template><Visualizations /><HelloWorld /></template>
+<template><Visualizations /><Controls /></template>

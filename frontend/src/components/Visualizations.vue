@@ -20,29 +20,33 @@ const svg = d3.select('#visualization')
 
 const wavesConfig: WaveConfig[] = [
   {
-    waveIndex: 0,
+    waveIndex: 3,
     yOffset: 1.2,
     color: tailwindConfig.theme.colors.accent4,
-  },
-  {
-    waveIndex: 1,
-    yOffset: 0.8,
-    color: tailwindConfig.theme.colors.accent3,
+    xSpeed: 1.6,
   },
   {
     waveIndex: 2,
-    yOffset: 0.4,
-    color: tailwindConfig.theme.colors.accent2,
+    yOffset: 0.8,
+    color: tailwindConfig.theme.colors.accent3,
+    xSpeed: 1.4,
   },
   {
-    waveIndex: 3,
+    waveIndex: 1,
+    yOffset: 0.4,
+    color: tailwindConfig.theme.colors.accent2,
+    xSpeed: 1.2,
+  },
+  {
+    waveIndex: 0,
     yOffset: 0.0,
     color: tailwindConfig.theme.colors.accent1,
+    xSpeed: 1,
   },
 ]
 </script>
 <template>
-  <div class="fixed -z-10">
+  <div class="fixed -z-10 top-0 left-0">
     <svg id="visualization" class="w-screen h-screen"></svg>
     <SineWave v-for="waveConfig in wavesConfig" :waveConfig="waveConfig" />
   </div>
