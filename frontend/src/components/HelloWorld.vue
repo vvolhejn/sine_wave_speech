@@ -12,7 +12,8 @@ const audioElement = ref<HTMLAudioElement | null>(null)
 const playButton = ref<HTMLButtonElement | null>(null)
 
 const isPlaying = ref(false)
-const coef = ref(1)
+const visualizationFrequency = ref(1)
+const visualizationMagnitude = ref(1)
 const startTime = ref(0)
 
 onMounted(() => {
@@ -46,7 +47,6 @@ const onClick = () => {
 
 const playSineWaveSpeech = (time: number) => {
   startTime.value = audioContext.currentTime
-  console.log(audioContext.currentTime)
   const oscillators = new Array<OscillatorNode>()
   const gains = new Array<GainNode>()
   const nWaves = swsData.frequencies[0].length
@@ -116,9 +116,14 @@ const step = () => {
     swsData.frequencies.map((x) => x[0]),
     10
   )
+  const smoothedMagnitudes = smoothe(
+    swsData.magnitudes.map((x) => x[0]),
+    10
+  )
 
   if (index < swsData.frequencies.length) {
-    coef.value = (smoothedFrequencies[index] + 10000) / 5000
+    visualizationFrequency.value = (smoothedFrequencies[index] + 500) / 500
+    visualizationMagnitude.value = smoothedMagnitudes[index]
   }
 
   window.requestAnimationFrame(step)
@@ -142,7 +147,10 @@ window.requestAnimationFrame(step)
   <button @click="playSineWaveSpeech(audioContext.currentTime)">
     Play Sine Wave Speech
   </button>
-  <SineWaveVisualization :coef="coef" />
+  <SineWaveVisualization
+    :frequency="visualizationFrequency"
+    :magnitude="visualizationMagnitude"
+  />
 </template>
 
 <style scoped>

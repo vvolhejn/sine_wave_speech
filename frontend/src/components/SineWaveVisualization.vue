@@ -3,14 +3,17 @@ import * as d3 from 'd3'
 import { onMounted, ref, watch } from 'vue'
 
 const props = defineProps({
-  coef: {
+  frequency: {
+    type: Number,
+    default: 1,
+  },
+  magnitude: {
     type: Number,
     default: 1,
   },
 })
 
 const path = ref<any>(null)
-// const coef = ref<number>(1)
 
 onMounted(() => {
   const svg = d3.select('#wave')
@@ -28,7 +31,7 @@ const makePlot = () => {
 
   const xScale = d3
     .scaleLinear()
-    .domain([0, 2 * Math.PI])
+    .domain([-Math.PI, Math.PI])
     .range([margin.left, width - margin.right])
 
   const yScale = d3
@@ -37,7 +40,7 @@ const makePlot = () => {
     .range([height - margin.bottom, margin.top])
 
   path.value
-    .datum(d3.range(0, 2 * Math.PI, 0.01))
+    .datum(d3.range(-Math.PI, Math.PI, 0.01))
     .attr('fill', 'none')
     .attr('stroke', 'steelblue')
     .attr('stroke-width', 1.5)
@@ -46,12 +49,12 @@ const makePlot = () => {
       d3
         .line()
         .x((d) => xScale(d))
-        .y((d) => yScale(Math.sin(d * props.coef)))
+        .y((d) => yScale(Math.sin(d * props.frequency) * Math.sqrt(props.magnitude)))
     )
 }
 
 watch(
-  () => props.coef,
+  () => props.frequency,
   () => {
     if (!path.value) return
     makePlot()
