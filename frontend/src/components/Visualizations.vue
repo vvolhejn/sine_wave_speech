@@ -24,24 +24,28 @@ const wavesConfig: WaveConfig[] = [
     yOffset: 0.6,
     color: tailwindConfig.theme.colors.accent4,
     xSpeed: 1.6,
+    frequencyWhenPaused: 4000,
   },
   {
     waveIndex: 2,
     yOffset: 0.2,
     color: tailwindConfig.theme.colors.accent3,
     xSpeed: 1.4,
+    frequencyWhenPaused: 3000,
   },
   {
     waveIndex: 1,
     yOffset: -0.2,
     color: tailwindConfig.theme.colors.accent2,
     xSpeed: 1.2,
+    frequencyWhenPaused: 2000,
   },
   {
     waveIndex: 0,
     yOffset: -0.6,
     color: tailwindConfig.theme.colors.accent1,
     xSpeed: 1,
+    frequencyWhenPaused: 1000,
   },
 ]
 </script>

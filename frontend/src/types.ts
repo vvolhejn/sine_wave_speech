@@ -10,4 +10,6 @@ export type WaveConfig = {
   yOffset: number
   color?: string
   xSpeed: number
+  frequencyWhenPaused: number
+  magnitudeWhenPaused?: number
 }

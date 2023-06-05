@@ -2,12 +2,13 @@ import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 import { SwsData } from '../types'
 import { playSineWaveSpeechAudio } from '../audio'
+import * as d3 from 'd3'
 
 const smoothe = (arr: number[], windowLength: number) => {
   const result = new Array<number>(arr.length)
   for (let i = 0; i < arr.length; i++) {
     const start = Math.max(0, i - windowLength)
-    const end = i
+    const end = i + 1
     result[i] = arr.slice(start, end).reduce((a, b) => a + b, 0) / (end - start)
   }
   return result
@@ -64,11 +65,18 @@ export const usePlaybackStore = defineStore('playback', () => {
 
   const animationTime = ref(0)
   const updateAnimationTime = () => {
-    animationTime.value = audioContext.currentTime
+    if (!isPlaying.value) {
+      // Make the waves move even when no audio is playing
+      animationTime.value = d3.now() / 1000
+    } else {
+      animationTime.value = audioContext.currentTime
+    }
   }
 
   const swsIndex = computed(() => {
     if (!swsData.value) return null
+    if (!isPlaying.value) return null
+
     const secondsPerTimestep = swsData.value.hopSize / swsData.value.sr
 
     let index = Math.floor((animationTime.value - startTime.value) / secondsPerTimestep)
@@ -83,7 +91,10 @@ export const usePlaybackStore = defineStore('playback', () => {
   })
 
   const playSineWaveSpeech = () => {
+    if (isPlaying.value) return
+
     startTime.value = audioContext.currentTime
+    isPlaying.value = true
     playSineWaveSpeechAudio()
   }
 

@@ -36,13 +36,10 @@ const getFrequencyAndMagnitude = () => {
   const smoothedFrequencies = playbackStore.smoothedFrequencies
   const smoothedMagnitudes = playbackStore.smoothedMagnitudes
   if (smoothedFrequencies == null || smoothedMagnitudes == null) {
-    console.log('bad')
     return [null, null]
   }
   const frequency = smoothedFrequencies[props.waveConfig.waveIndex][index]
   const magnitude = smoothedMagnitudes[props.waveConfig.waveIndex][index]
-
-  console.log(frequency, magnitude)
 
   return [frequency, magnitude]
 }
@@ -53,10 +50,13 @@ const makePlot = () => {
 
   const margin = { top: 0, right: -5, bottom: 0, left: -5 }
 
-  const [frequency, magnitude] = getFrequencyAndMagnitude()
+  let [frequency, magnitude] = getFrequencyAndMagnitude()
+
   if (frequency == null || magnitude == null) {
-    return
+    frequency = props.waveConfig.frequencyWhenPaused
+    magnitude = props.waveConfig.magnitudeWhenPaused || 0.01
   }
+
   const scaledFrequency = (frequency + 500) / 1000
   const offset = playbackStore.animationTime * props.waveConfig.xSpeed * 2
 
@@ -88,5 +88,7 @@ const makePlot = () => {
         )
     )
 }
+
+watch(() => [document.body.clientWidth, document.body.clientHeight], makePlot)
 </script>
 <template><svg ref=""></svg></template>

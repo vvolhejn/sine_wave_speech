@@ -18,7 +18,7 @@ export const playSineWaveSpeechAudio = () => {
       frequency: swsData.frequencies[0][i],
       type: 'sine',
     })
-    // swsData.magnitudes[0][i]
+
     const gain = new GainNode(audioContext, { gain: 0 })
     osc.connect(gain).connect(audioContext.destination)
     oscillators.push(osc)
@@ -40,7 +40,7 @@ export const playSineWaveSpeechAudio = () => {
         time + t * secondsPerTimestep
       )
       gain.gain.linearRampToValueAtTime(
-        swsData.magnitudes[t][i],
+        swsData.magnitudes[t][i] * 0.1,
         time + t * secondsPerTimestep
       )
     }
