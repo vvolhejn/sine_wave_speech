@@ -22,16 +22,6 @@ watch(
   }
 )
 
-const smoothe = (arr: number[], windowLength: number) => {
-  const result = new Array<number>(arr.length)
-  for (let i = 0; i < arr.length; i++) {
-    const start = Math.max(0, i - windowLength)
-    const end = i
-    result[i] = arr.slice(start, end).reduce((a, b) => a + b, 0) / (end - start)
-  }
-  return result
-}
-
 const getFrequencyAndMagnitude = () => {
   const index = playbackStore.swsIndex
   if (index == null) {
@@ -43,17 +33,16 @@ const getFrequencyAndMagnitude = () => {
     return [null, null]
   }
 
-  const smoothedFrequencies = smoothe(
-    swsData.frequencies.map((x) => x[props.waveConfig.waveIndex]),
-    30
-  )
-  const smoothedMagnitudes = smoothe(
-    swsData.magnitudes.map((x) => x[props.waveConfig.waveIndex]),
-    30
-  )
+  const smoothedFrequencies = playbackStore.smoothedFrequencies
+  const smoothedMagnitudes = playbackStore.smoothedMagnitudes
+  if (smoothedFrequencies == null || smoothedMagnitudes == null) {
+    console.log('bad')
+    return [null, null]
+  }
+  const frequency = smoothedFrequencies[props.waveConfig.waveIndex][index]
+  const magnitude = smoothedMagnitudes[props.waveConfig.waveIndex][index]
 
-  const frequency = smoothedFrequencies[index]
-  const magnitude = smoothedMagnitudes[index]
+  console.log(frequency, magnitude)
 
   return [frequency, magnitude]
 }

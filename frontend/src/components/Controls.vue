@@ -1,9 +1,8 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
 import sentence from '../assets/sentence-original.wav'
-import swsData from '../assets/sentence-sine-wave.json'
+import swsData from '../assets/virgil-abloh-clip.json'
 import { usePlaybackStore } from '../stores/playbackStore'
-import Visualizations from './Visualizations.vue'
 // https://colorhunt.co/palette/3e3838ae7c7c6cbbb3efe784
 // https://coolors.co/1e152a-4e6766-5ab1bb-a5c882-f7dd72
 

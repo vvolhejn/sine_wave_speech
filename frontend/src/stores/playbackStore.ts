@@ -3,6 +3,16 @@ import { computed, ref } from 'vue'
 import { SwsData } from '../types'
 import { playSineWaveSpeechAudio } from '../audio'
 
+const smoothe = (arr: number[], windowLength: number) => {
+  const result = new Array<number>(arr.length)
+  for (let i = 0; i < arr.length; i++) {
+    const start = Math.max(0, i - windowLength)
+    const end = i
+    result[i] = arr.slice(start, end).reduce((a, b) => a + b, 0) / (end - start)
+  }
+  return result
+}
+
 export const usePlaybackStore = defineStore('playback', () => {
   const audioContext = new AudioContext()
 
@@ -17,6 +27,40 @@ export const usePlaybackStore = defineStore('playback', () => {
   const setSwsData = (data: SwsData) => {
     swsData.value = data
   }
+
+  /** Note that `smoothedFrequencies` has transposed axes compared to `frequencies`.
+   * So `smoothedFrequencies[i][j]` is the smoothed frequency of the i-th sine wave
+   * at timestep j.
+   */
+  const smoothedFrequencies = computed(() => {
+    if (!swsData.value) return null
+    const parts = []
+    for (let i = 0; i < swsData.value.frequencies[0].length; i++) {
+      parts.push(
+        smoothe(
+          swsData.value.frequencies.map((x) => x[i]),
+          30
+        )
+      )
+    }
+
+    return parts
+  })
+
+  /** See note above smoothedFrequencies - also applies here. */
+  const smoothedMagnitudes = computed(() => {
+    if (!swsData.value) return null
+    const parts = []
+    for (let i = 0; i < swsData.value.magnitudes[0].length; i++) {
+      parts.push(
+        smoothe(
+          swsData.value.magnitudes.map((x) => x[i]),
+          30
+        )
+      )
+    }
+    return parts
+  })
 
   const animationTime = ref(0)
   const updateAnimationTime = () => {
@@ -50,6 +94,8 @@ export const usePlaybackStore = defineStore('playback', () => {
     startTime,
     swsData,
     setSwsData,
+    smoothedFrequencies,
+    smoothedMagnitudes,
     animationTime,
     updateAnimationTime,
     swsIndex,
