@@ -20,7 +20,9 @@ onMounted(() => {
   const track = playbackStore.audioContext.createMediaElementSource(audioElement.value)
   track.connect(playbackStore.audioContext.destination)
 
-  setUpSineWaveSpeechAudio()
+  // Without this little timeout, there is a white screen as the CPU-intensive operation
+  // prevents the component from loading - even with async
+  setTimeout(setUpSineWaveSpeechAudio, 100)
 })
 
 const onAudioEnded = () => {
