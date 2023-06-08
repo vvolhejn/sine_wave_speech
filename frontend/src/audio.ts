@@ -46,6 +46,8 @@ export const setUpSineWaveSpeechAudio = () => {
     oscillator.start(time)
     oscillator.stop(time + nTimesteps * secondsPerTimestep)
   })
+
+  playbackStore.onAudioSetupDone()
 }
 
 export const playSineWaveSpeechAudio = () => {

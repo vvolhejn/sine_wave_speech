@@ -65,9 +65,14 @@ export const usePlaybackStore = defineStore('playback', () => {
 
   const animationTime = ref(0)
   const updateAnimationTime = () => {
+    if (!audioSetupDoneAt.value) {
+      // setting up the audio is computationally intensive, so to avoid visible stutter,
+      // disable the movement before we are done
+      return 0
+    }
     if (!isPlaying.value) {
       // Make the waves move even when no audio is playing
-      animationTime.value = d3.now() / 1000
+      animationTime.value = (d3.now() - audioSetupDoneAt.value) / 1000
     } else {
       animationTime.value = audioContext.currentTime
     }
@@ -98,6 +103,11 @@ export const usePlaybackStore = defineStore('playback', () => {
     playSineWaveSpeechAudio()
   }
 
+  const audioSetupDoneAt = ref<number | null>(null)
+  const onAudioSetupDone = () => {
+    audioSetupDoneAt.value = d3.now()
+  }
+
   return {
     audioContext,
     isPlaying,
@@ -111,5 +121,7 @@ export const usePlaybackStore = defineStore('playback', () => {
     updateAnimationTime,
     swsIndex,
     playSineWaveSpeech,
+    audioSetupDoneAt,
+    onAudioSetupDone,
   }
 })
