@@ -50,8 +50,8 @@ const wavesConfig: WaveConfig[] = [
 ]
 </script>
 <template>
-  <div class="fixed -z-10 top-0 left-0">
-    <svg id="visualization" class="w-screen h-screen"></svg>
+  <div class="fixed -z-10 top-0 left-0 w-screen h-screen" id="visualization-div">
+    <svg id="visualization" class="w-full h-full"></svg>
     <SineWave v-for="waveConfig in wavesConfig" :waveConfig="waveConfig" />
   </div>
 </template>

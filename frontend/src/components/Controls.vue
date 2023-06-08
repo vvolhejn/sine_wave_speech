@@ -57,4 +57,9 @@ const onClick = () => {
       </template>
     </button>
   </div>
+  <div class="flex flex-col min-h-screen justify-center">
+    <h1 class="text-8xl text-center mix-blend-difference font-[Playfair] italic">
+      Original
+    </h1>
+  </div>
 </template>

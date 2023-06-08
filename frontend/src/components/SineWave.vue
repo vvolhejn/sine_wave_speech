@@ -46,8 +46,12 @@ const getFrequencyAndMagnitude = () => {
 }
 
 const makePlot = (animationTime: number) => {
-  const width = document.body.clientWidth
-  const height = document.body.clientHeight
+  const visualizationDiv = document.getElementById('visualization-div')
+  if (!visualizationDiv) {
+    throw new Error("Couldn't find #visualization-div")
+  }
+  const width = visualizationDiv.clientWidth
+  const height = visualizationDiv.clientHeight
 
   const margin = { top: 0, right: -5, bottom: 0, left: -5 }
 
