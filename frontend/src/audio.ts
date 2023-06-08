@@ -1,6 +1,6 @@
 import { usePlaybackStore } from './stores/playbackStore'
 
-export const playSineWaveSpeechAudio = () => {
+export const setUpSineWaveSpeechAudio = () => {
   const playbackStore = usePlaybackStore()
   const audioContext = playbackStore.audioContext
   const swsData = playbackStore.swsData
@@ -25,10 +25,6 @@ export const playSineWaveSpeechAudio = () => {
     gains.push(gain)
   }
 
-  // Check if context is in suspended state (autoplay policy)
-  if (audioContext.state === 'suspended') {
-    audioContext.resume()
-  }
   const secondsPerTimestep = swsData.hopSize / swsData.sr
 
   for (let t = 0; t < nTimesteps; t++) {
@@ -50,4 +46,14 @@ export const playSineWaveSpeechAudio = () => {
     oscillator.start(time)
     oscillator.stop(time + nTimesteps * secondsPerTimestep)
   })
+}
+
+export const playSineWaveSpeechAudio = () => {
+  const playbackStore = usePlaybackStore()
+  const audioContext = playbackStore.audioContext
+
+  // Check if context is in suspended state (autoplay policy)
+  if (audioContext.state === 'suspended') {
+    audioContext.resume()
+  }
 }
