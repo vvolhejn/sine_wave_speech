@@ -4,6 +4,10 @@ import { SwsData } from '../types'
 import { playSineWaveSpeechAudio } from '../audio'
 import * as d3 from 'd3'
 
+const secondsNow = () => {
+  return d3.now() / 1000
+}
+
 export const usePlaybackStore = defineStore('playback', () => {
   const audioContext = new AudioContext()
 
@@ -28,9 +32,9 @@ export const usePlaybackStore = defineStore('playback', () => {
     }
     if (!isPlaying.value) {
       // Make the waves move even when no audio is playing
-      animationTime.value = (d3.now() - audioSetupDoneAt.value) / 1000
+      animationTime.value = secondsNow() - audioSetupDoneAt.value
     } else {
-      animationTime.value = audioContext.currentTime + startTime.value / 1000
+      animationTime.value = audioContext.currentTime + startTime.value
     }
   }
 
@@ -58,14 +62,14 @@ export const usePlaybackStore = defineStore('playback', () => {
   const playSineWaveSpeech = () => {
     if (isPlaying.value) return
 
-    startTime.value = (animationTime.value - audioContext.currentTime) * 1000
+    startTime.value = animationTime.value - audioContext.currentTime
     isPlaying.value = true
     playSineWaveSpeechAudio()
   }
 
   const audioSetupDoneAt = ref<number | null>(null)
   const onAudioSetupDone = () => {
-    audioSetupDoneAt.value = d3.now()
+    audioSetupDoneAt.value = secondsNow()
   }
 
   return {
