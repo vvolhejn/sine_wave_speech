@@ -4,16 +4,6 @@ import { SwsData } from '../types'
 import { playSineWaveSpeechAudio } from '../audio'
 import * as d3 from 'd3'
 
-const smoothe = (arr: number[], windowLength: number) => {
-  const result = new Array<number>(arr.length)
-  for (let i = 0; i < arr.length; i++) {
-    const start = Math.max(0, i - windowLength)
-    const end = i + 1
-    result[i] = arr.slice(start, end).reduce((a, b) => a + b, 0) / (end - start)
-  }
-  return result
-}
-
 export const usePlaybackStore = defineStore('playback', () => {
   const audioContext = new AudioContext()
 
@@ -29,40 +19,6 @@ export const usePlaybackStore = defineStore('playback', () => {
     swsData.value = data
   }
 
-  /** Note that `smoothedFrequencies` has transposed axes compared to `frequencies`.
-   * So `smoothedFrequencies[i][j]` is the smoothed frequency of the i-th sine wave
-   * at timestep j.
-   */
-  const smoothedFrequencies = computed(() => {
-    if (!swsData.value) return null
-    const parts = []
-    for (let i = 0; i < swsData.value.frequencies[0].length; i++) {
-      parts.push(
-        smoothe(
-          swsData.value.frequencies.map((x) => x[i]),
-          30
-        )
-      )
-    }
-
-    return parts
-  })
-
-  /** See note above smoothedFrequencies - also applies here. */
-  const smoothedMagnitudes = computed(() => {
-    if (!swsData.value) return null
-    const parts = []
-    for (let i = 0; i < swsData.value.magnitudes[0].length; i++) {
-      parts.push(
-        smoothe(
-          swsData.value.magnitudes.map((x) => x[i]),
-          30
-        )
-      )
-    }
-    return parts
-  })
-
   const animationTime = ref(0)
   const updateAnimationTime = () => {
     if (!audioSetupDoneAt.value) {
@@ -74,7 +30,7 @@ export const usePlaybackStore = defineStore('playback', () => {
       // Make the waves move even when no audio is playing
       animationTime.value = (d3.now() - audioSetupDoneAt.value) / 1000
     } else {
-      animationTime.value = audioContext.currentTime
+      animationTime.value = audioContext.currentTime + startTime.value / 1000
     }
   }
 
@@ -84,7 +40,9 @@ export const usePlaybackStore = defineStore('playback', () => {
 
     const secondsPerTimestep = swsData.value.hopSize / swsData.value.sr
 
-    let index = Math.floor((animationTime.value - startTime.value) / secondsPerTimestep)
+    let index = Math.floor(
+      (animationTime.value - startTime.value / 1000) / secondsPerTimestep
+    )
     if (index < 0) {
       index = 0
     }
@@ -98,7 +56,7 @@ export const usePlaybackStore = defineStore('playback', () => {
   const playSineWaveSpeech = () => {
     if (isPlaying.value) return
 
-    startTime.value = audioContext.currentTime
+    startTime.value = d3.now() - (audioSetupDoneAt.value || 0)
     isPlaying.value = true
     playSineWaveSpeechAudio()
   }
@@ -115,8 +73,6 @@ export const usePlaybackStore = defineStore('playback', () => {
     startTime,
     swsData,
     setSwsData,
-    smoothedFrequencies,
-    smoothedMagnitudes,
     animationTime,
     updateAnimationTime,
     swsIndex,

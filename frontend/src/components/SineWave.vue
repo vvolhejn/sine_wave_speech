@@ -3,10 +3,13 @@ import * as d3 from 'd3'
 import { onMounted, ref, watch } from 'vue'
 import { usePlaybackStore } from '../stores/playbackStore'
 import { WaveConfig } from '../types'
+import { Smoother } from '../smoother'
 
 const props = defineProps<{ waveConfig: WaveConfig }>()
 
 const path = ref<any>(null)
+
+const frequencySmoother = new Smoother(0.1, props.waveConfig.frequencyWhenPaused)
 
 onMounted(() => {
   const svg = d3.select('#visualization')
@@ -17,34 +20,28 @@ onMounted(() => {
 const playbackStore = usePlaybackStore()
 watch(
   () => playbackStore.animationTime,
-  () => {
-    makePlot()
+  (animationTime) => {
+    makePlot(animationTime)
   }
 )
 
 const getFrequencyAndMagnitude = () => {
   const index = playbackStore.swsIndex
-  if (index == null) {
-    return [null, null]
-  }
-
   const swsData = playbackStore.swsData
-  if (swsData == null) {
-    return [null, null]
+  if (index == null || swsData == null) {
+    return [
+      props.waveConfig.frequencyWhenPaused,
+      props.waveConfig.magnitudeWhenPaused || 0.01,
+    ]
   }
 
-  const smoothedFrequencies = playbackStore.smoothedFrequencies
-  const smoothedMagnitudes = playbackStore.smoothedMagnitudes
-  if (smoothedFrequencies == null || smoothedMagnitudes == null) {
-    return [null, null]
-  }
-  const frequency = smoothedFrequencies[props.waveConfig.waveIndex][index]
-  const magnitude = smoothedMagnitudes[props.waveConfig.waveIndex][index]
+  const frequency = swsData.frequencies[index][props.waveConfig.waveIndex]
+  const magnitude = swsData.magnitudes[index][props.waveConfig.waveIndex]
 
   return [frequency, magnitude]
 }
 
-const makePlot = () => {
+const makePlot = (animationTime: number) => {
   const width = document.body.clientWidth
   const height = document.body.clientHeight
 
@@ -52,9 +49,13 @@ const makePlot = () => {
 
   let [frequency, magnitude] = getFrequencyAndMagnitude()
 
-  if (frequency == null || magnitude == null) {
-    frequency = props.waveConfig.frequencyWhenPaused
-    magnitude = props.waveConfig.magnitudeWhenPaused || 0.01
+  magnitude = 0.01
+
+  // Filter away outliers
+  if (frequency > 100) {
+    frequency = frequencySmoother.update(animationTime, frequency)
+  } else {
+    frequency = frequencySmoother.value
   }
 
   const scaledFrequency = (frequency + 500) / 1000
