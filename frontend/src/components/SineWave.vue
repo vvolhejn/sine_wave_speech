@@ -9,12 +9,16 @@ const props = defineProps<{ waveConfig: WaveConfig }>()
 
 const path = ref<any>(null)
 
-const frequencySmoother = new Smoother(0.1, props.waveConfig.frequencyWhenPaused)
+const frequencySmoother = new Smoother(0.2, props.waveConfig.frequencyWhenPaused)
+const magnitudeSmoother = new Smoother(
+  0.2,
+  props.waveConfig.magnitudeWhenPaused || 0.01
+)
 
 onMounted(() => {
   const svg = d3.select('#visualization')
   path.value = svg.append('path')
-  makePlot()
+  makePlot(playbackStore.animationTime)
 })
 
 const playbackStore = usePlaybackStore()
@@ -49,14 +53,14 @@ const makePlot = (animationTime: number) => {
 
   let [frequency, magnitude] = getFrequencyAndMagnitude()
 
-  magnitude = 0.01
-
   // Filter away outliers
   if (frequency > 100) {
     frequency = frequencySmoother.update(animationTime, frequency)
   } else {
     frequency = frequencySmoother.value
   }
+
+  magnitude = magnitudeSmoother.update(animationTime, magnitude)
 
   const scaledFrequency = (frequency + 500) / 1000
   const offset = playbackStore.animationTime * props.waveConfig.xSpeed * 2
