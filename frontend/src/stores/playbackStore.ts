@@ -40,9 +40,11 @@ export const usePlaybackStore = defineStore('playback', () => {
 
     const secondsPerTimestep = swsData.value.hopSize / swsData.value.sr
 
+    // Pretend we're using animationTime to trick Vue into thinking we depend on it
     let index = Math.floor(
-      (animationTime.value - startTime.value / 1000) / secondsPerTimestep
+      (animationTime.value * 0.0 + audioContext.currentTime) / secondsPerTimestep
     )
+
     if (index < 0) {
       index = 0
     }
@@ -56,7 +58,7 @@ export const usePlaybackStore = defineStore('playback', () => {
   const playSineWaveSpeech = () => {
     if (isPlaying.value) return
 
-    startTime.value = d3.now() - (audioSetupDoneAt.value || 0)
+    startTime.value = (animationTime.value - audioContext.currentTime) * 1000
     isPlaying.value = true
     playSineWaveSpeechAudio()
   }

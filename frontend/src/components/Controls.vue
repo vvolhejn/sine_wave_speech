@@ -14,6 +14,8 @@ playbackStore.setSwsData(swsData)
 // This gets set via the ref="..." attribute in the template
 const audioElement = ref<HTMLAudioElement | null>(null)
 
+const debug = false
+
 onMounted(() => {
   if (!audioElement.value) return
 
@@ -48,6 +50,11 @@ const onClick = () => {
       <h1 class="text-8xl text-center mix-blend-difference font-[Playfair] italic">
         Sine Wave Speech
       </h1>
+      <template v-if="debug">
+        <p>animationTime {{ playbackStore.animationTime.toFixed(2) }}</p>
+        <p>isPlaying {{ playbackStore.isPlaying }}</p>
+        <p>startTime {{ playbackStore.startTime }}</p>
+      </template>
     </button>
   </div>
 </template>
