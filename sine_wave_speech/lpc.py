@@ -1,7 +1,7 @@
 import numpy as np
 import scipy.signal
 
-DEFAULT_HOP_SIZE = 128
+DEFAULT_HOP_SIZE = 256
 
 
 def fit_lpc(audio: np.ndarray, p=12, hop_size=DEFAULT_HOP_SIZE, window_size=None):
@@ -10,7 +10,7 @@ def fit_lpc(audio: np.ndarray, p=12, hop_size=DEFAULT_HOP_SIZE, window_size=None
     Args:
         audio (np.ndarray): Audio signal.
         p (int, optional): Order of the LPC filter. Defaults to 12.
-        hop_size (int, optional): Hop size. Defaults to 128.
+        hop_size (int, optional): Hop size. Defaults to 256.
         window_size (int, optional): Window size. Defaults to 2 * hop_size.
     """
     if window_size is None:
@@ -46,6 +46,7 @@ def fit_lpc(audio: np.ndarray, p=12, hop_size=DEFAULT_HOP_SIZE, window_size=None
                 autocorrelated[:p], autocorrelated[1 : p + 1]
             )
         except scipy.linalg.LinAlgError:  # "Singular principal minor"
+            print("Singular principal minor")
             continue
 
         cur_lpc_coefficients = np.concatenate([[1], -cur_lpc_coefficients])
@@ -89,6 +90,13 @@ def lpc_coefficients_to_frequencies(lpc_coefficients, gain):
         roots = np.roots(np.concatenate([[1], cur_lpc_coefficients]))
 
         cur_frequencies = np.angle(roots)
+
+        # frequencies of 0 and pi correspond to real-only roots and seem to be useless.
+        # (I don't understand the math behind this, but it seems to work).
+        # The pi frequency in radians/sample corresponds to sr/2 Hz.
+        # Setting it to -pi instead of pi makes us filter the root out later.
+        cur_frequencies[cur_frequencies == np.pi] = -np.pi
+
         cur_magnitudes = gain[hop] / (1 - np.abs(roots))
 
         # Sort the frequencies so that the sine waves don't cross when we upsample.
