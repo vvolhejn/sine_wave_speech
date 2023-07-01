@@ -42,11 +42,13 @@ export const usePlaybackStore = defineStore('playback', () => {
     }
   }
 
+  const scrollFraction = ref(0)
   const setScrollFraction = (value: number) => {
     if (!audioNodes.value) return
 
     audioNodes.value.originalGain.gain.value = value
     audioNodes.value.swsGain.gain.value = 1 - value
+    scrollFraction.value = value
   }
 
   const swsIndex = computed(() => {
@@ -110,6 +112,7 @@ export const usePlaybackStore = defineStore('playback', () => {
     setSwsData,
     animationTime,
     updateAnimationTime,
+    scrollFraction,
     setScrollFraction,
     swsIndex,
     playSineWaveSpeech,

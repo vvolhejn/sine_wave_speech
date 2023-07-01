@@ -5,6 +5,8 @@ import { usePlaybackStore } from '../stores/playbackStore'
 import { WaveConfig } from '../types'
 import { Smoother } from '../smoother'
 
+const N_WAVES = 4
+
 const props = defineProps<{ waveConfig: WaveConfig }>()
 
 const path = ref<any>(null)
@@ -87,12 +89,20 @@ const makePlot = (animationTime: number) => {
     .range([height - margin.bottom, margin.top])
 
   const getY = (d: number) => {
-    let y = Math.sin(d * scaledFrequency + offset) * Math.sqrt(magnitude)
-    y += props.waveConfig.yOffset
-    // y +=
-    //   (dataArray[Math.floor(((d + Math.PI) / (2 * Math.PI)) * bufferLength)] - 128) /
-    //     255 +
-    //   props.waveConfig.yOffset
+    const scrollFraction = playbackStore.scrollFraction
+
+    let y = Math.sin(d * scaledFrequency + offset) * Math.sqrt(magnitude) * 0.5
+
+    // Offset the waves vertically, getting closer as you scroll down
+    y += props.waveConfig.yOffset * (1 - scrollFraction)
+
+    // Make each wave use a different part of the buffer so that they
+    // don't all move in sync
+    let xFraction = (d + Math.PI) / (2 * Math.PI)
+    xFraction = xFraction / N_WAVES + props.waveConfig.waveIndex / N_WAVES
+    const dataArrayIndex = Math.floor(xFraction * bufferLength)
+
+    y += ((dataArray[dataArrayIndex] - 128) / 255) * scrollFraction
 
     return y
   }

@@ -18,7 +18,7 @@ const audioElement = ref<HTMLAudioElement | null>(null)
 
 const debug = false
 
-const handleScroll: EventListener = (e: Event) => {
+const handleScroll = () => {
   const maxScroll = document.body.scrollHeight - window.innerHeight
   const scrollFraction = window.scrollY / maxScroll
   playbackStore.setScrollFraction(scrollFraction)
@@ -35,7 +35,8 @@ onMounted(() => {
   // prevents the component from loading - even with async
   setTimeout(setUpSineWaveSpeechAudio, 100)
 
-  throttledHandleScroll = _.throttle(handleScroll, 100)
+  // throttle to 60 FPS (are we actually throttling anything?)
+  throttledHandleScroll = _.throttle(handleScroll, 1000 / 60)
   window.addEventListener('scroll', throttledHandleScroll)
 })
 
