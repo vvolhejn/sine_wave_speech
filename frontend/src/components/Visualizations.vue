@@ -13,6 +13,9 @@ const playbackStore = usePlaybackStore()
 const step = () => {
   window.requestAnimationFrame(step)
   playbackStore.updateAnimationTime()
+
+  const analyser = playbackStore.audioNodes?.analyser
+  if (!analyser) return
 }
 window.requestAnimationFrame(step)
 

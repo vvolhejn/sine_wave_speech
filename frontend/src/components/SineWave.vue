@@ -69,6 +69,13 @@ const makePlot = (animationTime: number) => {
   const scaledFrequency = (frequency + 500) / 1000
   const offset = playbackStore.animationTime * props.waveConfig.xSpeed * 2
 
+  const analyser = playbackStore.audioNodes?.analyser
+  if (!analyser) return
+  const bufferLength = analyser.frequencyBinCount
+  const dataArray = new Uint8Array(bufferLength)
+  playbackStore.audioNodes?.analyser.getByteTimeDomainData(dataArray)
+  // console.log(dataArray)
+
   const xScale = d3
     .scaleLinear()
     .domain([-Math.PI, Math.PI])
@@ -78,6 +85,17 @@ const makePlot = (animationTime: number) => {
     .scaleLinear()
     .domain([-1, 1])
     .range([height - margin.bottom, margin.top])
+
+  const getY = (d: number) => {
+    let y = Math.sin(d * scaledFrequency + offset) * Math.sqrt(magnitude)
+    y += props.waveConfig.yOffset
+    // y +=
+    //   (dataArray[Math.floor(((d + Math.PI) / (2 * Math.PI)) * bufferLength)] - 128) /
+    //     255 +
+    //   props.waveConfig.yOffset
+
+    return y
+  }
 
   path.value
     .datum(d3.range(-Math.PI, Math.PI, 0.01))
@@ -89,12 +107,7 @@ const makePlot = (animationTime: number) => {
       d3
         .line()
         .x((d) => xScale(d))
-        .y((d) =>
-          yScale(
-            Math.sin(d * scaledFrequency + offset) * Math.sqrt(magnitude) +
-              props.waveConfig.yOffset
-          )
-        )
+        .y((d) => yScale(getY(d)))
     )
 }
 

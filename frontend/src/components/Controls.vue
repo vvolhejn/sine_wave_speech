@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { onBeforeUnmount, onMounted, ref } from 'vue'
-import originalAudio from '../assets/virgil-abloh-clip.mp3'
-import swsData from '../assets/virgil-abloh-clip.json'
+import originalAudio from '../assets/ag-cook-clip.mp3'
+import swsData from '../assets/ag-cook-clip.json'
 import { usePlaybackStore } from '../stores/playbackStore'
 import { setUpSineWaveSpeechAudio } from '../audio'
 import _ from 'lodash'
