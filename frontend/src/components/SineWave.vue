@@ -6,6 +6,7 @@ import { WaveConfig } from '../types'
 import { Smoother } from '../smoother'
 
 const N_WAVES = 4
+const DEFAULT_MAGNITUDE = 0.05
 
 const props = defineProps<{ waveConfig: WaveConfig }>()
 
@@ -14,7 +15,7 @@ const path = ref<any>(null)
 const frequencySmoother = new Smoother(0.2, props.waveConfig.frequencyWhenPaused)
 const magnitudeSmoother = new Smoother(
   0.2,
-  props.waveConfig.magnitudeWhenPaused || 0.01
+  props.waveConfig.magnitudeWhenPaused || DEFAULT_MAGNITUDE
 )
 
 onMounted(() => {
@@ -37,7 +38,7 @@ const getFrequencyAndMagnitude = () => {
   if (index == null || swsData == null) {
     return [
       props.waveConfig.frequencyWhenPaused,
-      props.waveConfig.magnitudeWhenPaused || 0.01,
+      props.waveConfig.magnitudeWhenPaused || DEFAULT_MAGNITUDE,
     ]
   }
 
@@ -111,7 +112,7 @@ const makePlot = (animationTime: number) => {
     .datum(d3.range(-Math.PI, Math.PI, 0.01))
     .attr('fill', 'none')
     .attr('stroke', props.waveConfig.color || 'white')
-    .attr('stroke-width', 4)
+    .attr('stroke-width', 6)
     .attr(
       'd',
       d3

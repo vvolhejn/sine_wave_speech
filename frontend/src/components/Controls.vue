@@ -5,6 +5,7 @@ import swsData from '../assets/ag-cook-clip.json'
 import { usePlaybackStore } from '../stores/playbackStore'
 import { setUpSineWaveSpeechAudio } from '../audio'
 import _ from 'lodash'
+import Header from './Header.vue'
 
 // https://colorhunt.co/palette/3e3838ae7c7c6cbbb3efe784
 // https://coolors.co/1e152a-4e6766-5ab1bb-a5c882-f7dd72
@@ -15,8 +16,6 @@ playbackStore.setSwsData(swsData)
 
 // This gets set via the ref="..." attribute in the template
 const audioElement = ref<HTMLAudioElement | null>(null)
-
-const debug = false
 
 const handleScroll = () => {
   const maxScroll = document.body.scrollHeight - window.innerHeight
@@ -64,21 +63,6 @@ const onClick = () => {
 
 <template>
   <audio :src="originalAudio" ref="audioElement" @ended="onAudioEnded"></audio>
-  <div class="flex flex-col min-h-screen justify-center">
-    <button @click="onClick">
-      <h1 class="text-8xl text-center mix-blend-difference font-[Playfair] italic">
-        Sine Wave Speech
-      </h1>
-      <template v-if="debug">
-        <p>animationTime {{ playbackStore.animationTime.toFixed(2) }}</p>
-        <p>isPlaying {{ playbackStore.isPlaying }}</p>
-        <p>startTime {{ playbackStore.startTime }}</p>
-      </template>
-    </button>
-  </div>
-  <div class="flex flex-col min-h-screen justify-center">
-    <h1 class="text-8xl text-center mix-blend-difference font-[Playfair] italic">
-      Original
-    </h1>
-  </div>
+  <Header :on-click="onClick">Sine Wave Speech</Header>
+  <Header :on-click="onClick">Original</Header>
 </template>
