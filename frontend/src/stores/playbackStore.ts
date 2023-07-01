@@ -43,13 +43,10 @@ export const usePlaybackStore = defineStore('playback', () => {
   }
 
   const setScrollFraction = (value: number) => {
-    if (!gains.value) return
+    if (!audioNodes.value) return
 
-    const originalGain = gains.value.original
-    const swsGain = gains.value.sws
-
-    originalGain.gain.value = value
-    swsGain.gain.value = 1 - value
+    audioNodes.value.originalGain.gain.value = value
+    audioNodes.value.swsGain.gain.value = 1 - value
   }
 
   const swsIndex = computed(() => {
@@ -87,14 +84,19 @@ export const usePlaybackStore = defineStore('playback', () => {
   }
 
   const audioSetupDoneAt = ref<number | null>(null)
-  const onAudioSetupDone = () => {
+  const audioNodes = ref<{
+    originalGain: GainNode
+    swsGain: GainNode
+    analyser: AnalyserNode
+  } | null>(null)
+
+  const onAudioSetupDone = (
+    originalGain: GainNode,
+    swsGain: GainNode,
+    analyser: AnalyserNode
+  ) => {
     audioSetupDoneAt.value = secondsNow()
-  }
-
-  const gains = ref<{ original: GainNode; sws: GainNode } | null>(null)
-
-  const setGains = (originalGain: GainNode, swsGain: GainNode) => {
-    gains.value = { original: originalGain, sws: swsGain }
+    audioNodes.value = { originalGain, swsGain, analyser }
   }
 
   return {
@@ -113,7 +115,6 @@ export const usePlaybackStore = defineStore('playback', () => {
     playSineWaveSpeech,
     audioSetupDoneAt,
     onAudioSetupDone,
-    gains,
-    setGains,
+    audioNodes,
   }
 })

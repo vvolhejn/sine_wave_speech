@@ -13,7 +13,11 @@ export const setUpSineWaveSpeechAudio = () => {
     playbackStore.audioElement
   )
   const originalGain = new GainNode(audioContext, { gain: 0.0 })
-  originalAudio.connect(originalGain).connect(audioContext.destination)
+  const analyser = new AnalyserNode(audioContext)
+  originalAudio
+    .connect(analyser)
+    .connect(originalGain)
+    .connect(audioContext.destination)
 
   const swsGain = new GainNode(audioContext, { gain: 1.0 })
   swsGain.connect(audioContext.destination)
@@ -57,7 +61,5 @@ export const setUpSineWaveSpeechAudio = () => {
     oscillator.stop(time + nTimesteps * secondsPerTimestep)
   })
 
-  playbackStore.setGains(originalGain, swsGain)
-
-  playbackStore.onAudioSetupDone()
+  playbackStore.onAudioSetupDone(originalGain, swsGain, analyser)
 }
