@@ -7,6 +7,16 @@ export const setUpSineWaveSpeechAudio = () => {
   const time = audioContext.currentTime
 
   if (!swsData) return
+  if (!playbackStore.audioElement) return
+
+  const originalAudio = audioContext.createMediaElementSource(
+    playbackStore.audioElement
+  )
+  const originalGain = new GainNode(audioContext, { gain: 0.0 })
+  originalAudio.connect(originalGain).connect(audioContext.destination)
+
+  const swsGain = new GainNode(audioContext, { gain: 1.0 })
+  swsGain.connect(audioContext.destination)
 
   const oscillators = new Array<OscillatorNode>()
   const gains = new Array<GainNode>()
@@ -20,7 +30,7 @@ export const setUpSineWaveSpeechAudio = () => {
     })
 
     const gain = new GainNode(audioContext, { gain: 0 })
-    osc.connect(gain).connect(audioContext.destination)
+    osc.connect(gain).connect(swsGain)
     oscillators.push(osc)
     gains.push(gain)
   }
@@ -47,15 +57,7 @@ export const setUpSineWaveSpeechAudio = () => {
     oscillator.stop(time + nTimesteps * secondsPerTimestep)
   })
 
+  playbackStore.setGains(originalGain, swsGain)
+
   playbackStore.onAudioSetupDone()
-}
-
-export const playSineWaveSpeechAudio = () => {
-  const playbackStore = usePlaybackStore()
-  const audioContext = playbackStore.audioContext
-
-  // Check if context is in suspended state (autoplay policy)
-  if (audioContext.state === 'suspended') {
-    audioContext.resume()
-  }
 }

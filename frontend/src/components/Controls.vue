@@ -1,9 +1,11 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
-import sentence from '../assets/sentence-original.wav'
+import { onBeforeUnmount, onMounted, ref } from 'vue'
+import originalAudio from '../assets/virgil-abloh-clip.mp3'
 import swsData from '../assets/virgil-abloh-clip.json'
 import { usePlaybackStore } from '../stores/playbackStore'
 import { setUpSineWaveSpeechAudio } from '../audio'
+import _ from 'lodash'
+
 // https://colorhunt.co/palette/3e3838ae7c7c6cbbb3efe784
 // https://coolors.co/1e152a-4e6766-5ab1bb-a5c882-f7dd72
 
@@ -16,15 +18,31 @@ const audioElement = ref<HTMLAudioElement | null>(null)
 
 const debug = false
 
+const handleScroll: EventListener = (e: Event) => {
+  const maxScroll = document.body.scrollHeight - window.innerHeight
+  const scrollFraction = window.scrollY / maxScroll
+  playbackStore.setScrollFraction(scrollFraction)
+}
+
+let throttledHandleScroll: EventListener | null = null
+
 onMounted(() => {
   if (!audioElement.value) return
 
-  const track = playbackStore.audioContext.createMediaElementSource(audioElement.value)
-  track.connect(playbackStore.audioContext.destination)
+  playbackStore.setAudioElement(audioElement.value)
 
   // Without this little timeout, there is a white screen as the CPU-intensive operation
   // prevents the component from loading - even with async
   setTimeout(setUpSineWaveSpeechAudio, 100)
+
+  throttledHandleScroll = _.throttle(handleScroll, 100)
+  window.addEventListener('scroll', throttledHandleScroll)
+})
+
+onBeforeUnmount(() => {
+  if (throttledHandleScroll) {
+    window.removeEventListener('scroll', throttledHandleScroll)
+  }
 })
 
 const onAudioEnded = () => {
@@ -44,7 +62,7 @@ const onClick = () => {
 </script>
 
 <template>
-  <audio :src="sentence" ref="audioElement" @ended="onAudioEnded"></audio>
+  <audio :src="originalAudio" ref="audioElement" @ended="onAudioEnded"></audio>
   <div class="flex flex-col min-h-screen justify-center">
     <button @click="onClick">
       <h1 class="text-8xl text-center mix-blend-difference font-[Playfair] italic">

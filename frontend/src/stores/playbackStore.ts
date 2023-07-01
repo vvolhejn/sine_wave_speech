@@ -1,7 +1,6 @@
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 import { SwsData } from '../types'
-import { playSineWaveSpeechAudio } from '../audio'
 import * as d3 from 'd3'
 
 const secondsNow = () => {
@@ -10,6 +9,11 @@ const secondsNow = () => {
 
 export const usePlaybackStore = defineStore('playback', () => {
   const audioContext = new AudioContext()
+
+  const audioElement = ref<HTMLAudioElement | null>(null)
+  const setAudioElement = (element: HTMLAudioElement) => {
+    audioElement.value = element
+  }
 
   const isPlaying = ref(false)
   const setIsPlaying = (value: boolean) => {
@@ -38,6 +42,16 @@ export const usePlaybackStore = defineStore('playback', () => {
     }
   }
 
+  const setScrollFraction = (value: number) => {
+    if (!gains.value) return
+
+    const originalGain = gains.value.original
+    const swsGain = gains.value.sws
+
+    originalGain.gain.value = value
+    swsGain.gain.value = 1 - value
+  }
+
   const swsIndex = computed(() => {
     if (!swsData.value) return null
     if (!isPlaying.value) return null
@@ -64,7 +78,12 @@ export const usePlaybackStore = defineStore('playback', () => {
 
     startTime.value = animationTime.value - audioContext.currentTime
     isPlaying.value = true
-    playSineWaveSpeechAudio()
+
+    // Check if context is in suspended state (autoplay policy)
+    if (audioContext.state === 'suspended') {
+      audioContext.resume()
+      audioElement.value?.play()
+    }
   }
 
   const audioSetupDoneAt = ref<number | null>(null)
@@ -72,8 +91,16 @@ export const usePlaybackStore = defineStore('playback', () => {
     audioSetupDoneAt.value = secondsNow()
   }
 
+  const gains = ref<{ original: GainNode; sws: GainNode } | null>(null)
+
+  const setGains = (originalGain: GainNode, swsGain: GainNode) => {
+    gains.value = { original: originalGain, sws: swsGain }
+  }
+
   return {
     audioContext,
+    audioElement,
+    setAudioElement,
     isPlaying,
     setIsPlaying,
     startTime,
@@ -81,9 +108,12 @@ export const usePlaybackStore = defineStore('playback', () => {
     setSwsData,
     animationTime,
     updateAnimationTime,
+    setScrollFraction,
     swsIndex,
     playSineWaveSpeech,
     audioSetupDoneAt,
     onAudioSetupDone,
+    gains,
+    setGains,
   }
 })
