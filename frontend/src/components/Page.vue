@@ -21,7 +21,7 @@ const message = computed(() => {
 <template>
   <div class="flex flex-col items-center min-h-screen font-header text-center">
     <button @click="props.onClick">
-      <h1 class="text-8xl italic mt-[35vh]">
+      <h1 class="text-8xl italic mt-[20vh] md:mt-[35vh]">
         <slot />
       </h1>
       <template v-if="debug">
@@ -30,7 +30,7 @@ const message = computed(() => {
         <p>startTime {{ playbackStore.startTime }}</p>
       </template>
     </button>
-    <div class="text-3xl mt-20 max-w-xl font-body" @click="props.onClick">
+    <div class="text-3xl mt-20 p-4 max-w-xl font-body" @click="props.onClick">
       {{ message }}
     </div>
   </div>
