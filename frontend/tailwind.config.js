@@ -11,6 +11,10 @@ export default {
       accent3: '#FCBF49',
       accent4: '#EFE784',
     },
+    fontFamily: {
+      header: ['"Playfair"'],
+      body: ['"Playfair Display"'],
+    },
   },
   plugins: [],
 }

@@ -101,9 +101,12 @@ const makePlot = (animationTime: number) => {
     // don't all move in sync
     let xFraction = (d + Math.PI) / (2 * Math.PI)
     xFraction = xFraction / N_WAVES + props.waveConfig.waveIndex / N_WAVES
+    // "Squish" the wave and repeat it. It looks nicer.
+    xFraction = (xFraction * 10) % 1
+
     const dataArrayIndex = Math.floor(xFraction * bufferLength)
 
-    y += ((dataArray[dataArrayIndex] - 128) / 255) * scrollFraction
+    y += ((dataArray[dataArrayIndex] - 128) / 255) * scrollFraction * 0.5
 
     return y
   }

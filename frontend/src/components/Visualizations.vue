@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { usePlaybackStore } from '../stores/playbackStore'
 import SineWave from './SineWave.vue'
-import * as d3 from 'd3'
 import { WaveConfig } from '../types'
 import resolveConfig from 'tailwindcss/resolveConfig'
 import partialTailwindConfig from '../../tailwind.config.js'
@@ -19,36 +18,24 @@ const step = () => {
 }
 window.requestAnimationFrame(step)
 
-const wavesConfig: WaveConfig[] = [
-  {
-    waveIndex: 3,
-    yOffset: 0.6,
-    color: tailwindConfig.theme.colors.accent4,
-    xSpeed: 1.6,
-    frequencyWhenPaused: 4000,
-  },
-  {
-    waveIndex: 2,
-    yOffset: 0.2,
-    color: tailwindConfig.theme.colors.accent3,
-    xSpeed: 1.4,
-    frequencyWhenPaused: 3000,
-  },
-  {
-    waveIndex: 1,
-    yOffset: -0.2,
-    color: tailwindConfig.theme.colors.accent2,
-    xSpeed: 1.2,
-    frequencyWhenPaused: 2000,
-  },
-  {
-    waveIndex: 0,
-    yOffset: -0.6,
-    color: tailwindConfig.theme.colors.accent1,
-    xSpeed: 1,
-    frequencyWhenPaused: 1000,
-  },
+const X_SPEED_COEF = 1.2
+
+const accentColors = [
+  tailwindConfig.theme.colors.accent4,
+  tailwindConfig.theme.colors.accent3,
+  tailwindConfig.theme.colors.accent2,
+  tailwindConfig.theme.colors.accent1,
 ]
+
+const wavesConfig: WaveConfig[] = [0, 1, 2, 3].map((i) => {
+  return {
+    waveIndex: 3 - i,
+    yOffset: 0.6 - i * 0.4,
+    color: accentColors[i],
+    xSpeed: X_SPEED_COEF ** (3 - i),
+    frequencyWhenPaused: 4000 - 1000 * i,
+  }
+})
 </script>
 <template>
   <div class="fixed -z-10 top-0 left-0 w-screen h-screen" id="visualization-div">

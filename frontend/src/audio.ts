@@ -13,7 +13,7 @@ export const setUpSineWaveSpeechAudio = () => {
     playbackStore.audioElement
   )
   const originalGain = new GainNode(audioContext, { gain: 0.0 })
-  const analyser = new AnalyserNode(audioContext, { fftSize: 2 ** 14 })
+  const analyser = new AnalyserNode(audioContext, { fftSize: 2 ** 11 })
   originalAudio
     .connect(analyser)
     .connect(originalGain)
