@@ -64,7 +64,7 @@ export const useMessageStore = defineStore('message', () => {
     if (timeout) {
       setTimeout(() => {
         setMessage(currentMessage.value.goTo)
-      }, timeout * 0.1)
+      }, timeout)
     }
   }
 
