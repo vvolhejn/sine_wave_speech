@@ -19,8 +19,6 @@ const step = () => {
 }
 window.requestAnimationFrame(step)
 
-const svg = d3.select('#visualization')
-
 const wavesConfig: WaveConfig[] = [
   {
     waveIndex: 3,

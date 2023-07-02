@@ -10,7 +10,7 @@ const playbackStore = usePlaybackStore()
 <template>
   <div class="flex flex-col min-h-screen justify-center">
     <button @click="props.onClick">
-      <h1 class="text-8xl text-center mix-blend-difference font-[Playfair] italic z-30">
+      <h1 class="text-8xl text-center font-[Playfair] italic">
         <slot />
       </h1>
       <template v-if="debug">
