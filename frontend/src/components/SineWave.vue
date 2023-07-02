@@ -120,11 +120,15 @@ const makePlot = (animationTime: number) => {
       'd',
       d3
         .line()
-        .x((d) => xScale(d))
-        .y((d) => yScale(getY(d)))
+        // typescript thinks d is [number, number] but it's actually just number
+        .x((d) => xScale(d as unknown as number))
+        .y((d) => yScale(getY(d as unknown as number)))
     )
 }
 
-watch(() => [document.body.clientWidth, document.body.clientHeight], makePlot)
+watch(
+  () => [document.body.clientWidth, document.body.clientHeight],
+  () => makePlot(playbackStore.animationTime)
+)
 </script>
 <template><svg ref=""></svg></template>

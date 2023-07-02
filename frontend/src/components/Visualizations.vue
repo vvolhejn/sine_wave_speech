@@ -3,6 +3,7 @@ import { usePlaybackStore } from '../stores/playbackStore'
 import SineWave from './SineWave.vue'
 import { WaveConfig } from '../types'
 import resolveConfig from 'tailwindcss/resolveConfig'
+// @ts-ignore
 import partialTailwindConfig from '../../tailwind.config.js'
 
 const tailwindConfig = resolveConfig(partialTailwindConfig)
