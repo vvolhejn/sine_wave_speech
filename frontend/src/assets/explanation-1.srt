@@ -1,0 +1,116 @@
+1
+00:00:00,020 --> 00:00:02,690
+Do you hear these weird sci-fi sounds?
+
+2
+00:00:02,999 --> 00:00:03,899
+Surprise.
+
+3
+00:00:03,929 --> 00:00:06,539
+It's actually me, Václav, speaking.
+
+4
+00:00:06,901 --> 00:00:10,771
+My voice is filtered using sine
+wave speech, which is a technique
+
+5
+00:00:10,801 --> 00:00:13,201
+that radically simplifies the sound.
+
+6
+00:00:13,620 --> 00:00:18,090
+When I speak, only four sine waves
+are playing at any given time.
+
+7
+00:00:18,690 --> 00:00:21,570
+A sine wave is the simplest
+sound that you can make.
+
+8
+00:00:21,900 --> 00:00:23,880
+Here's what a single one sounds like.
+
+9
+00:00:26,012 --> 00:00:29,732
+You can actually reproduce
+any sound whatsoever using a
+
+10
+00:00:29,732 --> 00:00:33,392
+combination of sine waves at the
+right frequencies and volumes.
+
+11
+00:00:33,872 --> 00:00:37,292
+You would need a lot more than
+four to do that well, though.
+
+12
+00:00:37,772 --> 00:00:41,912
+With four waves, all you get
+is this R2D2-like whistling.
+
+13
+00:00:42,689 --> 00:00:45,659
+You might be wondering what
+my voice sounds like normally.
+
+14
+00:00:46,169 --> 00:00:48,779
+To find out, scroll to
+the bottom of this page.
+
+15
+00:00:49,149 --> 00:00:52,119
+You can scroll up and down to
+switch smoothly between the
+
+16
+00:00:52,119 --> 00:00:54,009
+processed and the original version.
+
+17
+00:00:54,361 --> 00:00:58,141
+The thing that fascinates me the
+most about sine wave speech is the
+
+18
+00:00:58,171 --> 00:01:01,591
+fact that after a bit of practice
+and hearing the same voice before
+
+19
+00:01:01,591 --> 00:01:05,371
+and after, you should be able to
+make out what the person is saying.
+
+20
+00:01:05,981 --> 00:01:09,671
+And that's despite the fact that only
+minutes earlier, you thought that
+
+21
+00:01:09,671 --> 00:01:11,591
+these were just nonsensical whistles.
+
+22
+00:01:12,214 --> 00:01:14,824
+If you want to check that you
+really understand the sound.
+
+23
+00:01:14,914 --> 00:01:16,894
+Try not looking at the subtitles.
+
+24
+00:01:17,304 --> 00:01:19,074
+Here, I'll play this clip again.
+[I actually won't, still need to implement that]
+
+25
+00:01:19,554 --> 00:01:20,844
+See, if you can understand it.
+[I actually won't, still need to implement that]

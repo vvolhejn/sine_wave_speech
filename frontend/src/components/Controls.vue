@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
-import originalAudio from '../assets/ag-cook-clip.mp3'
-import swsData from '../assets/ag-cook-clip.json'
+import originalAudio from '../assets/explanation-1.mp3'
+import swsData from '../assets/explanation-1.json'
 import { usePlaybackStore } from '../stores/playbackStore'
 import { setUpSineWaveSpeechAudio } from '../audio'
 import _ from 'lodash'
@@ -65,7 +65,13 @@ const onClick = () => {
 }
 
 const showLowerHeader = computed(() => {
-  return !['init', 'basics', 'basics2'].includes(messageStore.currentMessageKey)
+  // Mention this dependency so that this computed is re-run when animationTime changes.
+  // We actually care about the audioContext time, but that's not reactive.
+  playbackStore.animationTime
+
+  const ALLOW_SCROLL_FROM_SEC = 42.0
+  return playbackStore.audioContext.currentTime > ALLOW_SCROLL_FROM_SEC
+  // return !['init', 'basics', 'basics2'].includes(messageStore.currentMessageKey)
 })
 </script>
 
