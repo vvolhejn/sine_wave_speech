@@ -1,7 +1,10 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted } from 'vue'
+// temporarily disabled for debugging
 import originalAudio from '../assets/explanation-1.mp3'
 import swsData from '../assets/explanation-1.json'
+// import originalAudio from '../assets/sentence-sine-wave.wav'
+// import swsData from '../assets/sentence-sine-wave.json'
 import { usePlaybackStore } from '../stores/playbackStore'
 import { setUpSineWaveSpeechAudio } from '../audio'
 import _ from 'lodash'
@@ -14,9 +17,6 @@ import Page from './Page.vue'
 const playbackStore = usePlaybackStore()
 playbackStore.setSwsData(swsData)
 
-// This gets set via the ref="..." attribute in the template
-const audioElement = ref<HTMLAudioElement | null>(null)
-
 const handleScroll = () => {
   const maxScroll = document.body.scrollHeight - window.innerHeight
   const scrollFraction = window.scrollY / maxScroll
@@ -26,13 +26,7 @@ const handleScroll = () => {
 let throttledHandleScroll: EventListener | null = null
 
 onMounted(() => {
-  if (!audioElement.value) return
-
-  playbackStore.setAudioElement(audioElement.value)
-
-  // Without this little timeout, there is a white screen as the CPU-intensive operation
-  // prevents the component from loading - even with async
-  setTimeout(setUpSineWaveSpeechAudio, 100)
+  setUpSineWaveSpeechAudio(originalAudio)
 
   // throttle to 60 FPS (are we actually throttling anything?)
   throttledHandleScroll = _.throttle(handleScroll, 1000 / 60)
@@ -44,10 +38,6 @@ onBeforeUnmount(() => {
     window.removeEventListener('scroll', throttledHandleScroll)
   }
 })
-
-const onAudioEnded = () => {
-  playbackStore.setIsPlaying(false)
-}
 
 const onClick = () => {
   // Play or pause track depending on state
@@ -72,7 +62,6 @@ const showLowerHeader = computed(() => {
 </script>
 
 <template>
-  <audio :src="originalAudio" ref="audioElement" @ended="onAudioEnded"></audio>
   <Page :on-click="onClick" :is-original="false">Sine Wave Speech</Page>
   <Page :on-click="onClick" :is-original="true" v-if="showLowerHeader">Original</Page>
 </template>

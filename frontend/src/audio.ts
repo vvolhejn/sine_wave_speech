@@ -1,17 +1,32 @@
 import { usePlaybackStore } from './stores/playbackStore'
 
-export const setUpSineWaveSpeechAudio = () => {
+const getFile = async (audioFile: string) => {
   const playbackStore = usePlaybackStore()
+
+  const response = await fetch(audioFile)
+  const arrayBuffer = await response.arrayBuffer()
+  const audioBuffer = await playbackStore.audioContext.decodeAudioData(arrayBuffer)
+  return audioBuffer
+}
+
+export const setUpSineWaveSpeechAudio = async (audioFile: string) => {
+  const playbackStore = usePlaybackStore()
+
+  const audioBuffer = await getFile(audioFile)
+  const originalAudio = new AudioBufferSourceNode(playbackStore.audioContext, {
+    buffer: audioBuffer,
+  })
+  originalAudio.start(0)
+  originalAudio.onended = () => {
+    playbackStore.setIsPlaying(false)
+  }
+
   const audioContext = playbackStore.audioContext
   const swsData = playbackStore.swsData
   const time = audioContext.currentTime
 
   if (!swsData) return
-  if (!playbackStore.audioElement) return
 
-  const originalAudio = audioContext.createMediaElementSource(
-    playbackStore.audioElement
-  )
   const originalGain = new GainNode(audioContext, { gain: 0.0 })
   const analyser = new AnalyserNode(audioContext, { fftSize: 2 ** 11 })
   originalAudio
