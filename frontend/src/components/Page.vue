@@ -17,6 +17,10 @@ const messageStore = useMessageStore()
       </h1>
       <template v-if="debug">
         <p>animationTime {{ playbackStore.animationTime.toFixed(2) }}</p>
+        <p>
+          audioContext.currentTime
+          {{ playbackStore.audioContext.currentTime.toFixed(2) }}
+        </p>
         <p>isPlaying {{ playbackStore.isPlaying }}</p>
         <p>startTime {{ playbackStore.startTime }}</p>
       </template>

@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted } from 'vue'
-// temporarily disabled for debugging
 import originalAudio from '../assets/explanation-1.mp3'
 import swsData from '../assets/explanation-1.json'
-// import originalAudio from '../assets/sentence-sine-wave.wav'
+// for debugging:
+// import originalAudio from '../assets/sentence-original.wav'
 // import swsData from '../assets/sentence-sine-wave.json'
 import { usePlaybackStore } from '../stores/playbackStore'
-import { setUpSineWaveSpeechAudio } from '../audio'
+import { playSineWaveSpeech, getAudioBuffer } from '../audio'
 import _ from 'lodash'
 import Page from './Page.vue'
 
@@ -25,8 +25,14 @@ const handleScroll = () => {
 
 let throttledHandleScroll: EventListener | null = null
 
+const setup = async () => {
+  const audioBuffer = await getAudioBuffer(originalAudio)
+  playbackStore.setOriginalAudioBuffer(audioBuffer)
+  playSineWaveSpeech()
+}
+
 onMounted(() => {
-  setUpSineWaveSpeechAudio(originalAudio)
+  setup()
 
   // throttle to 60 FPS (are we actually throttling anything?)
   throttledHandleScroll = _.throttle(handleScroll, 1000 / 60)
@@ -56,8 +62,7 @@ const showLowerHeader = computed(() => {
   playbackStore.animationTime
 
   const ALLOW_SCROLL_FROM_SEC = 42.0
-  return playbackStore.audioContext.currentTime > ALLOW_SCROLL_FROM_SEC
-  // return !['init', 'basics', 'basics2'].includes(messageStore.currentMessageKey)
+  return playbackStore.audioContext.currentTime >= ALLOW_SCROLL_FROM_SEC
 })
 </script>
 

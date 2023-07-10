@@ -1,6 +1,6 @@
 import { usePlaybackStore } from './stores/playbackStore'
 
-const getFile = async (audioFile: string) => {
+export const getAudioBuffer = async (audioFile: string) => {
   const playbackStore = usePlaybackStore()
 
   const response = await fetch(audioFile)
@@ -9,21 +9,23 @@ const getFile = async (audioFile: string) => {
   return audioBuffer
 }
 
-export const setUpSineWaveSpeechAudio = async (audioFile: string) => {
+export const playSineWaveSpeech = async () => {
   const playbackStore = usePlaybackStore()
-
-  const audioBuffer = await getFile(audioFile)
-  const originalAudio = new AudioBufferSourceNode(playbackStore.audioContext, {
-    buffer: audioBuffer,
-  })
-  originalAudio.start(0)
-  originalAudio.onended = () => {
-    playbackStore.setIsPlaying(false)
-  }
-
   const audioContext = playbackStore.audioContext
-  const swsData = playbackStore.swsData
+
+  const originalAudio = new AudioBufferSourceNode(audioContext, {
+    buffer: playbackStore.originalAudioBuffer,
+  })
+
   const time = audioContext.currentTime
+
+  originalAudio.onended = () => {
+    // We can start a new loop by simply calling playSineWaveSpeech() again.
+    playSineWaveSpeech()
+  }
+  originalAudio.start(time)
+
+  const swsData = playbackStore.swsData
 
   if (!swsData) return
 

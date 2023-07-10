@@ -10,11 +10,6 @@ const secondsNow = () => {
 export const usePlaybackStore = defineStore('playback', () => {
   const audioContext = new AudioContext()
 
-  const audioElement = ref<HTMLAudioElement | null>(null)
-  const setAudioElement = (element: HTMLAudioElement) => {
-    audioElement.value = element
-  }
-
   const isPlaying = ref(false)
   const setIsPlaying = (value: boolean) => {
     isPlaying.value = value
@@ -51,15 +46,25 @@ export const usePlaybackStore = defineStore('playback', () => {
     scrollFraction.value = value
   }
 
+  /**
+   * When did the current loop start, in audioContext time (seconds)? This is used to
+   * calculate the current index in the SWS data, because the audioContext time goes on
+   * even after the first loop and doesn't restart to 0.
+   */
+  const loopStartTime = ref(0)
+
   const swsIndex = computed(() => {
     if (!swsData.value) return null
     if (!isPlaying.value) return null
 
     const secondsPerTimestep = swsData.value.hopSize / swsData.value.sr
 
-    // Pretend we're using animationTime to trick Vue into thinking we depend on it
+    // Pretend we're using animationTime to trick Vue into thinking we depend on it.
+    // It doesn't notice when audioContext.currentTime changes, so we have to do this.
+    animationTime.value
+
     let index = Math.floor(
-      (animationTime.value * 0.0 + audioContext.currentTime) / secondsPerTimestep
+      (audioContext.currentTime - loopStartTime.value) / secondsPerTimestep
     )
 
     if (index < 0) {
@@ -81,8 +86,12 @@ export const usePlaybackStore = defineStore('playback', () => {
     // Check if context is in suspended state (autoplay policy)
     if (audioContext.state === 'suspended') {
       audioContext.resume()
-      audioElement.value?.play()
     }
+  }
+
+  const originalAudioBuffer = ref<AudioBuffer | null>(null)
+  const setOriginalAudioBuffer = (buffer: AudioBuffer) => {
+    originalAudioBuffer.value = buffer
   }
 
   const audioSetupDoneAt = ref<number | null>(null)
@@ -97,14 +106,15 @@ export const usePlaybackStore = defineStore('playback', () => {
     swsGain: GainNode,
     analyser: AnalyserNode
   ) => {
-    audioSetupDoneAt.value = secondsNow()
+    if (audioSetupDoneAt.value == null) {
+      audioSetupDoneAt.value = secondsNow()
+    }
+    loopStartTime.value = audioContext.currentTime
     audioNodes.value = { originalGain, swsGain, analyser }
   }
 
   return {
     audioContext,
-    audioElement,
-    setAudioElement,
     isPlaying,
     setIsPlaying,
     startTime,
@@ -116,6 +126,8 @@ export const usePlaybackStore = defineStore('playback', () => {
     setScrollFraction,
     swsIndex,
     playSineWaveSpeech,
+    originalAudioBuffer,
+    setOriginalAudioBuffer,
     audioSetupDoneAt,
     onAudioSetupDone,
     audioNodes,
