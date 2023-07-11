@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import * as d3 from 'd3'
 import { onMounted, ref, watch } from 'vue'
+
+import { Smoother } from '../smoother'
 import { usePlaybackStore } from '../stores/playbackStore'
 import { WaveConfig } from '../types'
-import { Smoother } from '../smoother'
 
 const N_WAVES = 4
 const DEFAULT_MAGNITUDE = 0.05

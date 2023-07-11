@@ -1,7 +1,8 @@
 import { defineStore } from 'pinia'
-import { computed } from 'vue'
 // @ts-ignore
 import * as parser from 'subtitles-parser'
+import { computed } from 'vue'
+
 import { subtitles as rawSubtitles } from '../dataFiles'
 import { usePlaybackStore } from './playbackStore'
 

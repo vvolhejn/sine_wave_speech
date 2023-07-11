@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { usePlaybackStore } from '../stores/playbackStore'
-import SineWave from './SineWave.vue'
-import { WaveConfig } from '../types'
 import resolveConfig from 'tailwindcss/resolveConfig'
+
 // @ts-ignore
 import partialTailwindConfig from '../../tailwind.config.js'
+import { usePlaybackStore } from '../stores/playbackStore'
+import { WaveConfig } from '../types'
+import SineWave from './SineWave.vue'
 
 const tailwindConfig = resolveConfig(partialTailwindConfig)
 

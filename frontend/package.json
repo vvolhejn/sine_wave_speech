@@ -20,6 +20,7 @@
     "vue": "^3.2.47"
   },
   "devDependencies": {
+    "@trivago/prettier-plugin-sort-imports": "^4.1.1",
     "@types/lodash": "^4.14.195",
     "@vitejs/plugin-vue": "^4.1.0",
     "autoprefixer": "^10.4.14",
@@ -36,6 +37,10 @@
     "tabWidth": 2,
     "semi": false,
     "singleQuote": true,
-    "printWidth": 88
+    "printWidth": 88,
+    "importOrder": [
+      "^[./]"
+    ],
+    "importOrderSeparation": true
   }
 }

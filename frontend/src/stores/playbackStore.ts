@@ -1,7 +1,8 @@
+import * as d3 from 'd3'
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
+
 import { SwsData } from '../types'
-import * as d3 from 'd3'
 
 const secondsNow = () => {
   return d3.now() / 1000
