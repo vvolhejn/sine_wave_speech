@@ -1,13 +1,10 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted } from 'vue'
-import originalAudio from '../assets/explanation-1.mp3'
-import swsData from '../assets/explanation-1.json'
-// for debugging:
-// import originalAudio from '../assets/sentence-original.wav'
-// import swsData from '../assets/sentence-sine-wave.json'
-import { usePlaybackStore } from '../stores/playbackStore'
-import { playSineWaveSpeech, getAudioBuffer } from '../audio'
 import _ from 'lodash'
+import { computed, onBeforeUnmount, onMounted } from 'vue'
+
+import { playSineWaveSpeech, getAudioBuffer } from '../audio'
+import { originalAudio, swsData } from '../dataFiles'
+import { usePlaybackStore } from '../stores/playbackStore'
 import Page from './Page.vue'
 
 // https://colorhunt.co/palette/3e3838ae7c7c6cbbb3efe784
