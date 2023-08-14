@@ -21,8 +21,7 @@ export const useMessageStore = defineStore('message', () => {
   const playbackStore = usePlaybackStore()
 
   const currentMessage = computed(() => {
-    playbackStore.animationTime
-    const timeMs = playbackStore.audioContext.currentTime * 1000
+    const timeMs = playbackStore.relativeAudioTime * 1000
 
     if (timeMs === 0) {
       return 'Click to play audio.'

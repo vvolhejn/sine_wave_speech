@@ -54,19 +54,25 @@ export const usePlaybackStore = defineStore('playback', () => {
    */
   const loopStartTime = ref(0)
 
+  /**
+   * How far along in the audio playback are we, in seconds? Correctly resets when the
+   * audio loops, unlike audioContext.currentTime.
+   */
+  const relativeAudioTime = computed(() => {
+    // Pretend we're using animationTime to trick Vue into thinking we depend on it.
+    // It doesn't notice when audioContext.currentTime changes, so we have to do this.
+    animationTime.value
+
+    return audioContext.currentTime - loopStartTime.value
+  })
+
   const swsIndex = computed(() => {
     if (!swsData.value) return null
     if (!isPlaying.value) return null
 
     const secondsPerTimestep = swsData.value.hopSize / swsData.value.sr
 
-    // Pretend we're using animationTime to trick Vue into thinking we depend on it.
-    // It doesn't notice when audioContext.currentTime changes, so we have to do this.
-    animationTime.value
-
-    let index = Math.floor(
-      (audioContext.currentTime - loopStartTime.value) / secondsPerTimestep
-    )
+    let index = Math.floor(relativeAudioTime.value / secondsPerTimestep)
 
     if (index < 0) {
       index = 0
@@ -125,6 +131,7 @@ export const usePlaybackStore = defineStore('playback', () => {
     updateAnimationTime,
     scrollFraction,
     setScrollFraction,
+    relativeAudioTime,
     swsIndex,
     playSineWaveSpeech,
     originalAudioBuffer,

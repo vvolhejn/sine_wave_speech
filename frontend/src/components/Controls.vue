@@ -15,7 +15,7 @@ const playbackStore = usePlaybackStore()
 playbackStore.setSwsData(swsData)
 
 const handleScroll = () => {
-  const maxScroll = document.body.scrollHeight - window.innerHeight
+  const maxScroll = Math.max(document.body.scrollHeight - window.innerHeight, 1)
   const scrollFraction = window.scrollY / maxScroll
   playbackStore.setScrollFraction(scrollFraction)
 }
