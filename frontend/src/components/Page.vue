@@ -10,22 +10,23 @@ const playbackStore = usePlaybackStore()
 const messageStore = useMessageStore()
 </script>
 <template>
-  <div class="flex flex-col items-center min-h-screen font-header text-center">
-    <button @click="props.onClick">
-      <h1 class="text-8xl italic mt-[20vh] md:mt-[35vh]">
-        <slot />
-      </h1>
-      <template v-if="debug">
-        <p>animationTime {{ playbackStore.animationTime.toFixed(2) }}</p>
-        <p>
-          audioContext.currentTime
-          {{ playbackStore.audioContext.currentTime.toFixed(2) }}
-        </p>
-        <p>isPlaying {{ playbackStore.isPlaying }}</p>
-        <p>startTime {{ playbackStore.startTime }}</p>
-      </template>
-    </button>
-    <div class="text-3xl mt-16 p-4 max-w-xl font-body h-40" @click="props.onClick">
+  <div
+    class="flex flex-col items-center min-h-screen font-header text-center"
+    @click="props.onClick"
+  >
+    <h1 class="text-8xl italic mt-[20vh] md:mt-[35vh]">
+      <slot />
+    </h1>
+    <template v-if="debug">
+      <p>animationTime {{ playbackStore.animationTime.toFixed(2) }}</p>
+      <p>
+        audioContext.currentTime
+        {{ playbackStore.audioContext.currentTime.toFixed(2) }}
+      </p>
+      <p>isPlaying {{ playbackStore.isPlaying }}</p>
+      <p>startTime {{ playbackStore.startTime }}</p>
+    </template>
+    <div class="text-3xl mt-16 p-4 max-w-xl font-body h-40">
       {{ messageStore.currentMessage }}
     </div>
     <div v-if="!isOriginal && playbackStore.showLowerHeader">

@@ -24,7 +24,7 @@ export const useMessageStore = defineStore('message', () => {
     const timeMs = playbackStore.relativeAudioTime * 1000
 
     if (timeMs === 0) {
-      return 'Click to play audio.'
+      return 'Click anywhere to play audio.'
     }
 
     for (let i = 0; i < subtitles.length; i++) {
