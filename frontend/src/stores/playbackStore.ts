@@ -120,6 +120,15 @@ export const usePlaybackStore = defineStore('playback', () => {
     audioNodes.value = { originalGain, swsGain, analyser }
   }
 
+  const showLowerHeader = computed(() => {
+    // Mention this dependency so that this computed is re-run when animationTime changes.
+    // We actually care about the audioContext time, but that's not reactive.
+    animationTime.value
+
+    const ALLOW_SCROLL_FROM_SEC = 42.0
+    return audioContext.currentTime >= ALLOW_SCROLL_FROM_SEC
+  })
+
   return {
     audioContext,
     isPlaying,
@@ -139,5 +148,6 @@ export const usePlaybackStore = defineStore('playback', () => {
     audioSetupDoneAt,
     onAudioSetupDone,
     audioNodes,
+    showLowerHeader,
   }
 })

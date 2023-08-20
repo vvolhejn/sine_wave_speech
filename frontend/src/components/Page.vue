@@ -25,8 +25,11 @@ const messageStore = useMessageStore()
         <p>startTime {{ playbackStore.startTime }}</p>
       </template>
     </button>
-    <div class="text-3xl mt-20 p-4 max-w-xl font-body" @click="props.onClick">
+    <div class="text-3xl mt-16 p-4 max-w-xl font-body h-40" @click="props.onClick">
       {{ messageStore.currentMessage }}
+    </div>
+    <div v-if="!isOriginal && playbackStore.showLowerHeader">
+      <img src="../assets/down-arrow-svgrepo-com.svg" class="invert w-10" />
     </div>
   </div>
 </template>

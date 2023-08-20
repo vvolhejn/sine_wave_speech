@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import _ from 'lodash'
-import { computed, onBeforeUnmount, onMounted } from 'vue'
+import { onBeforeUnmount, onMounted } from 'vue'
 
 import { playSineWaveSpeech, getAudioBuffer } from '../audio'
 import { originalAudio, swsData } from '../dataFiles'
@@ -52,18 +52,11 @@ const onClick = () => {
     playbackStore.setIsPlaying(false)
   }
 }
-
-const showLowerHeader = computed(() => {
-  // Mention this dependency so that this computed is re-run when animationTime changes.
-  // We actually care about the audioContext time, but that's not reactive.
-  playbackStore.animationTime
-
-  const ALLOW_SCROLL_FROM_SEC = 42.0
-  return playbackStore.audioContext.currentTime >= ALLOW_SCROLL_FROM_SEC
-})
 </script>
 
 <template>
   <Page :on-click="onClick" :is-original="false">Sine Wave Speech</Page>
-  <Page :on-click="onClick" :is-original="true" v-if="showLowerHeader">Original</Page>
+  <Page :on-click="onClick" :is-original="true" v-if="playbackStore.showLowerHeader"
+    >Original</Page
+  >
 </template>
