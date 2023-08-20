@@ -13,6 +13,6 @@ def to_json(
     return {
         "sr": sr,
         "hopSize": hop_size,
-        "frequencies": normalized_to_hz(frequencies, sr=sr).tolist(),
-        "magnitudes": magnitudes.tolist(),
+        "frequencies": normalized_to_hz(frequencies, sr=sr).round(2).tolist(),
+        "magnitudes": magnitudes.round(4).tolist(),
     }

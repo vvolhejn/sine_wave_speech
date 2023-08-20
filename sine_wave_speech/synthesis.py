@@ -94,4 +94,8 @@ def to_sine_wave_speech(audio: np.ndarray, n_waves: int = 4) -> np.ndarray:
     lpc_coefficients, gain, residual = fit_lpc(audio, p=n_waves * 2)
     frequencies, magnitudes = lpc_coefficients_to_frequencies(lpc_coefficients, gain)
 
+    # Limit the really extreme values. I'm not sure at what value the should be limited
+    # to avoid clipping but this at least seemed to get rid of the really extreme values.
+    magnitudes = magnitudes.clip(max=2)
+
     return synthesize(frequencies, magnitudes)
