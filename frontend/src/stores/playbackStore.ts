@@ -42,6 +42,13 @@ export const usePlaybackStore = defineStore('playback', () => {
   const setScrollFraction = (value: number) => {
     if (!audioNodes.value) return
 
+    if (!showLowerHeader.value) {
+      // If the page doesn't fit vertically when the lower header is off, we'd allow
+      // scrolling - and therefore playing the original sound - even when we don't
+      // want to.
+      value = 0
+    }
+
     audioNodes.value.originalGain.gain.value = value
     audioNodes.value.swsGain.gain.value = 1 - value
     scrollFraction.value = value
@@ -125,7 +132,7 @@ export const usePlaybackStore = defineStore('playback', () => {
     // We actually care about the audioContext time, but that's not reactive.
     animationTime.value
 
-    const ALLOW_SCROLL_FROM_SEC = 42.0
+    const ALLOW_SCROLL_FROM_SEC = 1.0
     return audioContext.currentTime >= ALLOW_SCROLL_FROM_SEC
   })
 
