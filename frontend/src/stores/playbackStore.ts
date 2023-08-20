@@ -132,7 +132,7 @@ export const usePlaybackStore = defineStore('playback', () => {
     // We actually care about the audioContext time, but that's not reactive.
     animationTime.value
 
-    const ALLOW_SCROLL_FROM_SEC = 1.0
+    const ALLOW_SCROLL_FROM_SEC = 42.0
     return audioContext.currentTime >= ALLOW_SCROLL_FROM_SEC
   })
 
