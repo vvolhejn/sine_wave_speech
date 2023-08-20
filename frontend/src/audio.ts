@@ -37,7 +37,9 @@ export const playSineWaveSpeech = async () => {
     .connect(audioContext.destination)
 
   const swsGain = new GainNode(audioContext, { gain: 1.0 })
-  swsGain.connect(audioContext.destination)
+  const swsConstantGain = new GainNode(audioContext, { gain: 2.0 })
+  swsGain.connect(swsConstantGain)
+  swsConstantGain.connect(audioContext.destination)
 
   const oscillators = new Array<OscillatorNode>()
   const gains = new Array<GainNode>()
