@@ -6,9 +6,9 @@ export default {
     colors: {
       background: '#403F4C', // #0C6291
       primary: '#F2F2F2',
-      accent1: '#AE7C7C',
-      accent2: '#6CBBB3',
-      accent3: '#FCBF49',
+      accent1: '#FCBF49',
+      accent2: '#AE7C7C',
+      accent3: '#6CBBB3',
       accent4: '#EFE784',
     },
     fontFamily: {
