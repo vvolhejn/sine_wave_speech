@@ -26,7 +26,14 @@ const messageStore = useMessageStore()
       <p>isPlaying {{ playbackStore.isPlaying }}</p>
       <p>startTime {{ playbackStore.startTime }}</p>
     </template>
-    <div class="text-3xl mt-16 p-4 max-w-xl font-body h-40">
+    <!--
+      Add a bigger margin for the bottom page to avoid overlapping with the sine
+      wave visualization.
+    -->
+    <div
+      class="text-3xl p-4 max-w-xl font-body h-40"
+      :class="isOriginal ? ['mt-40'] : ['mt-16']"
+    >
       {{ messageStore.currentMessage }}
     </div>
     <div v-if="!isOriginal && playbackStore.showLowerHeader">
