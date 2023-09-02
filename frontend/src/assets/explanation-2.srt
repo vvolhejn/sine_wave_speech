@@ -1,0 +1,101 @@
+1
+00:00:00,020 --> 00:00:02,690
+Do you hear these weird sci-fi sounds?
+
+2
+00:00:02,999 --> 00:00:03,899
+Surprise.
+
+3
+00:00:03,929 --> 00:00:06,539
+It's actually me, Václav, speaking.
+
+4
+00:00:06,901 --> 00:00:10,771
+My voice is filtered using sine
+wave speech, which is a technique
+
+5
+00:00:10,801 --> 00:00:13,201
+that radically simplifies the sound.
+
+6
+00:00:13,836 --> 00:00:16,806
+You might be wondering what
+my voice sounds like normally.
+
+7
+00:00:17,316 --> 00:00:19,926
+To find out, scroll to
+the bottom of this page.
+
+8
+00:00:20,382 --> 00:00:24,852
+When I speak, only four sine waves
+are playing at any given time.
+
+9
+00:00:25,452 --> 00:00:27,432
+Here's what a single one sounds like.
+
+10
+00:00:29,564 --> 00:00:33,284
+You can actually reproduce
+any sound whatsoever using a
+
+11
+00:00:33,284 --> 00:00:36,944
+combination of sine waves at the
+right frequencies and volumes.
+
+12
+00:00:37,424 --> 00:00:40,844
+You would need a lot more than
+four to do that well, though.
+
+13
+00:00:41,324 --> 00:00:45,464
+With four waves, all you get
+is this R2D2-like whistling.
+
+14
+00:00:45,804 --> 00:00:49,584
+The thing that fascinates me the
+most about sine wave speech is the
+
+15
+00:00:49,614 --> 00:00:53,034
+fact that after a bit of practice
+and hearing the same voice before
+
+16
+00:00:53,034 --> 00:00:56,814
+and after, you should be able to
+make out what the person is saying.
+
+17
+00:00:57,424 --> 00:01:01,114
+And that's despite the fact that only
+minutes earlier, you thought that
+
+18
+00:01:01,114 --> 00:01:03,034
+these were just nonsensical whistles.
+
+19
+00:01:03,656 --> 00:01:06,266
+If you want to check that you
+really understand the sound.
+
+20
+00:01:06,356 --> 00:01:08,336
+Try not looking at the subtitles.
+
+21
+00:01:08,746 --> 00:01:10,516
+Here, I'll play this clip again.
+
+22
+00:01:10,996 --> 00:01:12,286
+See, if you can understand it.
+

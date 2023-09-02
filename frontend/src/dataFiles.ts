@@ -6,9 +6,9 @@
 // import explanationSwsData from './assets/explanation-1-short.json'
 // import explanationOriginalAudio from './assets/explanation-1-short.mp3'
 // import explanationSubtitles from './assets/explanation-1-short.srt?raw'
-import explanationSwsData from './assets/explanation-1.json'
-import explanationOriginalAudio from './assets/explanation-1.mp3'
-import explanationSubtitles from './assets/explanation-1.srt?raw'
+import explanationSwsData from './assets/explanation-2.json'
+import explanationOriginalAudio from './assets/explanation-2.mp3'
+import explanationSubtitles from './assets/explanation-2.srt?raw'
 
 export const originalAudio = explanationOriginalAudio
 export const swsData = explanationSwsData
