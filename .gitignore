@@ -3,6 +3,8 @@ data/
 
 __pycache__/
 
+for-video/
+
 # Created by https://www.gitignore.io/api/intellij
 
 ### Intellij ###

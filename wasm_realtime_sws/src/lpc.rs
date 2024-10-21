@@ -2,7 +2,7 @@ use ndarray::{concatenate, prelude::*, stack};
 use rustfft::{num_complex::Complex, FftPlanner};
 use std::f32::consts::PI;
 
-use crate::signal_processing::{autocorrelate, lfilter};
+use crate::signal_processing::{autocorrelate, hann_window, lfilter};
 
 // Original Python: def fit_lpc(audio: np.ndarray, p=12, hop_size=DEFAULT_HOP_SIZE, window_size=None):
 pub fn fit_lpc(
@@ -86,11 +86,6 @@ pub fn fit_lpc(
 
 fn pre_emphasis_filter(audio: &Array1<f32>, alpha: f32) -> Array1<f32> {
     // Implement pre-emphasis filter
-    unimplemented!()
-}
-
-fn hann_window(size: usize) -> Array1<f32> {
-    // Implement Hann window
     unimplemented!()
 }
 

@@ -1,3 +1,4 @@
+use approx::{assert_abs_diff_eq, AbsDiffEq};
 use ndarray::{Array1, ArrayView1};
 
 pub fn lfilter(coeffs: &Array1<f32>, signal: &Array1<f32>) -> Array1<f32> {
@@ -33,10 +34,35 @@ pub fn autocorrelate(signal: ArrayView1<f32>) -> Array1<f32> {
     result
 }
 
+pub fn hann_window(size: usize) -> Array1<f32> {
+    Array1::from_iter((0..size).map(|n| {
+        let x = 2.0 * std::f32::consts::PI * n as f32 / size as f32;
+        0.5 * (1.0 - x.cos())
+    }))
+}
+
+fn assert_array_eq(actual: &Array1<f32>, expected: &Array1<f32>, epsilon: f32) {
+    assert_eq!(
+        actual.len(),
+        expected.len(),
+        "Arrays have different lengths. \nActual: {:?}\nExpected: {:?}",
+        actual,
+        expected
+    );
+
+    for (i, (a, e)) in actual.iter().zip(expected.iter()).enumerate() {
+        if !a.abs_diff_eq(e, epsilon) {
+            panic!(
+                "Assertion failed at index {}.\nActual array: {:?}\nExpected array: {:?}\nDifference at index {}: {} vs {}",
+                i, actual, expected, i, a, e
+            );
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
-    use approx::assert_abs_diff_eq;
     use ndarray::array;
 
     #[test]
@@ -47,11 +73,7 @@ mod tests {
         // Expected results (calculated manually)
         let expected = array![55.0, 40.0, 26.0, 14.0, 5.0];
 
-        assert_eq!(autocorrelation.len(), signal.len());
-
-        for (a, e) in autocorrelation.iter().zip(expected.iter()) {
-            assert_abs_diff_eq!(a, e, epsilon = 1e-6);
-        }
+        assert_array_eq(&autocorrelation, &expected, 1e-6);
     }
 
     #[test]
@@ -62,9 +84,23 @@ mod tests {
 
         let result = lfilter(&coeffs, &signal);
 
-        assert_eq!(result.len(), expected.len());
-        for (a, b) in result.iter().zip(expected.iter()) {
-            assert_abs_diff_eq!(a, b, epsilon = 1e-6);
-        }
+        assert_array_eq(&result, &expected, 1e-6);
+    }
+
+    #[test]
+    fn test_hann_window() {
+        let window = hann_window(4);
+        let expected = array![0.0, 0.5, 1.0, 0.5];
+
+        assert_array_eq(&window, &expected, 1e-6);
+
+        let window = hann_window(16);
+        // Values from scipy.signal.get_window("hann", 16)
+        let expected = array![
+            0., 0.03806023, 0.14644661, 0.30865828, 0.5, 0.69134172, 0.85355339, 0.96193977, 1.,
+            0.96193977, 0.85355339, 0.69134172, 0.5, 0.30865828, 0.14644661, 0.03806023
+        ];
+
+        assert_array_eq(&window, &expected, 1e-6);
     }
 }
