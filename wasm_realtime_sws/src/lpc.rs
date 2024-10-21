@@ -91,3 +91,46 @@ pub fn fit_lpc(
 
     (lpc_coefficients, gain, residual)
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::signal_processing::assert_array_eq;
+
+    use super::*;
+    use ndarray::array;
+
+    #[derive(serde::Deserialize)]
+    struct FitLpcOutput {
+        // Can't use Array1<f32> directly, getting:
+        // Failed to load test data: Syntax("invalid type: floating point `-0.0005080277333036065`, expected u8")
+        // perhaps because rmp_serde serializes it into a different format than for Vec?
+        audio: Vec<f32>,
+        p: usize,
+        hop_size: usize,
+        lpc_coefficients: Vec<Vec<f32>>,
+        gain: Vec<f32>,
+        residual: Vec<f32>,
+    }
+
+    #[test]
+    fn test_fit_lpc() {
+        // load from msgpack
+        let input: FitLpcOutput =
+            rmp_serde::from_slice(include_bytes!("../fixtures/fit_lpc_results.msgpack"))
+                .expect("Failed to load test data");
+
+        let audio = Array1::from_vec(input.audio);
+
+        let (lpc_coefficients, gain, residual) = fit_lpc(&audio, input.p, input.hop_size, None);
+
+        // let expected_lpc_coefficients = Array2::from_shape_vec(
+        //     (input.lpc_coefficients.len(), input.lpc_coefficients[0].len()),
+        //     input.lpc_coefficients,
+        // )
+        // TODO fix for 2D
+        // assert_array_eq(&lpc_coefficients, &expected, 1e-6);
+
+        assert_array_eq(&gain, &Array1::from_vec(input.gain), 1e-6);
+        assert_array_eq(&residual, &Array1::from_vec(input.residual), 1e-6);
+    }
+}

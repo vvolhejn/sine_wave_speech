@@ -1,4 +1,5 @@
 import numpy as np
+import scipy.linalg
 import scipy.signal
 
 DEFAULT_HOP_SIZE = 256
