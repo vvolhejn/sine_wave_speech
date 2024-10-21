@@ -33,7 +33,7 @@ pub fn fit_lpc(
     let mut residual = Array1::zeros((n_hops - 1) * hop_size + window_size);
 
     // Original Python: audio = scipy.signal.lfilter(np.array([1.0, -0.9]), 1, audio)
-    let audio = pre_emphasis_filter(&audio, 0.9);
+    let audio = lfilter(&array![1.0, -0.9], &audio);
 
     for hop in 0..n_hops {
         let cur_audio = audio.slice(s![hop * hop_size..hop * hop_size + window_size]);
@@ -82,11 +82,6 @@ pub fn fit_lpc(
         .to_owned();
 
     (lpc_coefficients, gain, residual)
-}
-
-fn pre_emphasis_filter(audio: &Array1<f32>, alpha: f32) -> Array1<f32> {
-    // Implement pre-emphasis filter
-    unimplemented!()
 }
 
 fn solve_toeplitz(
