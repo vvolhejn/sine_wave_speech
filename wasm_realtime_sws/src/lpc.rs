@@ -2,7 +2,9 @@ use ndarray::{concatenate, prelude::*, stack};
 use rustfft::{num_complex::Complex, FftPlanner};
 use std::f32::consts::PI;
 
-use crate::signal_processing::{autocorrelate, hann_window, lfilter};
+use crate::signal_processing::{
+    autocorrelate, hann_window, lfilter, solve_toeplitz, ToeplitzError,
+};
 
 // Original Python: def fit_lpc(audio: np.ndarray, p=12, hop_size=DEFAULT_HOP_SIZE, window_size=None):
 pub fn fit_lpc(
@@ -51,16 +53,22 @@ pub fn fit_lpc(
         // except scipy.linalg.LinAlgError:  # "Singular principal minor"
         //     print("Singular principal minor")
         //     continue
-        let cur_lpc_coefficients = match solve_toeplitz(
-            &autocorrelated.slice(s![..p]),
-            &autocorrelated.slice(s![1..p + 1]),
-        ) {
-            Ok(coeffs) => coeffs,
-            Err(_) => {
-                println!("Singular principal minor");
-                continue;
-            }
-        };
+
+        // construct the toeplitz matrix argument represented as 1d array of the "edge"
+        let toeplitz = concatenate![
+            Axis(0),
+            autocorrelated.slice(s![..p - 1;-1]),
+            autocorrelated.slice(s![..p]),
+        ];
+
+        let cur_lpc_coefficients =
+            match solve_toeplitz(toeplitz.view(), autocorrelated.slice(s![1..p + 1])) {
+                Ok(coeffs) => coeffs,
+                Err(ToeplitzError::SingularPrincipalMinor) => {
+                    println!("Singular principal minor");
+                    continue;
+                }
+            };
 
         let cur_lpc_coefficients = concatenate![Axis(0), arr1(&[1.0]), -cur_lpc_coefficients];
         let cur_residual = lfilter(&cur_lpc_coefficients, &windowed_audio);
@@ -82,12 +90,4 @@ pub fn fit_lpc(
         .to_owned();
 
     (lpc_coefficients, gain, residual)
-}
-
-fn solve_toeplitz(
-    r: &ArrayView1<f32>,
-    b: &ArrayView1<f32>,
-) -> Result<Array1<f32>, Box<dyn std::error::Error>> {
-    // Implement Toeplitz matrix solver
-    unimplemented!()
 }
