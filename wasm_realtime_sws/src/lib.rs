@@ -1,7 +1,6 @@
 use ndarray::Array;
 use pitch_detection::{McLeodDetector, PitchDetector};
 use wasm_bindgen::prelude::*;
-use web_sys::console;
 
 mod lpc;
 mod signal_processing;

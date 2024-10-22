@@ -128,6 +128,7 @@ pub fn solve_toeplitz(
     Ok(x)
 }
 
+#[cfg(test)] // Only used in tests, this keeps Rust from complaining about unused code
 pub fn assert_array_eq(actual: &Array1<f32>, expected: &Array1<f32>, epsilon: f32) {
     assert_eq!(
         actual.len(),
@@ -147,6 +148,7 @@ pub fn assert_array_eq(actual: &Array1<f32>, expected: &Array1<f32>, epsilon: f3
     }
 }
 
+#[cfg(test)] // Only used in tests, this keeps Rust from complaining about unused code
 pub fn assert_array2_eq(actual: &Array2<f32>, expected: &Array2<f32>, epsilon: f32) {
     assert_eq!(
         actual.shape(),
