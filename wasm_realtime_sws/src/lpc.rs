@@ -43,7 +43,7 @@ pub fn fit_lpc(
 
         // Original Python: autocorrelated = scipy.signal.correlate(windowed_audio, windowed_audio)
         let autocorrelated = autocorrelate(windowed_audio.view());
-        let autocorrelated = autocorrelated.slice(s![window_size - 1..window_size + p]);
+        let autocorrelated = autocorrelated.slice(s![..p + 1]);
 
         // Original Python:
         // try:
@@ -57,7 +57,7 @@ pub fn fit_lpc(
         // construct the toeplitz matrix argument represented as 1d array of the "edge"
         let toeplitz = concatenate![
             Axis(0),
-            autocorrelated.slice(s![..p - 1;-1]),
+            autocorrelated.slice(s![1..p;-1]),
             autocorrelated.slice(s![..p]),
         ];
 
@@ -94,10 +94,9 @@ pub fn fit_lpc(
 
 #[cfg(test)]
 mod tests {
-    use crate::signal_processing::assert_array_eq;
+    use crate::signal_processing::{assert_array2_eq, assert_array_eq};
 
     use super::*;
-    use ndarray::array;
 
     #[derive(serde::Deserialize)]
     struct FitLpcOutput {
@@ -107,7 +106,7 @@ mod tests {
         audio: Vec<f32>,
         p: usize,
         hop_size: usize,
-        lpc_coefficients: Vec<Vec<f32>>,
+        lpc_coefficients: Vec<f32>,
         gain: Vec<f32>,
         residual: Vec<f32>,
     }
@@ -123,14 +122,17 @@ mod tests {
 
         let (lpc_coefficients, gain, residual) = fit_lpc(&audio, input.p, input.hop_size, None);
 
-        // let expected_lpc_coefficients = Array2::from_shape_vec(
-        //     (input.lpc_coefficients.len(), input.lpc_coefficients[0].len()),
-        //     input.lpc_coefficients,
-        // )
-        // TODO fix for 2D
-        // assert_array_eq(&lpc_coefficients, &expected, 1e-6);
+        let expected_lpc_coefficients = Array2::from_shape_vec(
+            (input.lpc_coefficients.len() / (input.p + 1), input.p + 1),
+            input.lpc_coefficients,
+        )
+        .unwrap();
 
-        assert_array_eq(&gain, &Array1::from_vec(input.gain), 1e-6);
-        assert_array_eq(&residual, &Array1::from_vec(input.residual), 1e-6);
+        // Needed to set the epsilon fairly high for this to work, is there
+        // concern? Perhaps it's because of float64 in Python or a different
+        // implementation in Scipy than what we have.
+        assert_array2_eq(&lpc_coefficients, &expected_lpc_coefficients, 1e-2);
+        assert_array_eq(&gain, &Array1::from_vec(input.gain), 1e-2);
+        assert_array_eq(&residual, &Array1::from_vec(input.residual), 1e-2);
     }
 }

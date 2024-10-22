@@ -1,5 +1,5 @@
 use approx::{assert_abs_diff_eq, AbsDiffEq};
-use ndarray::{Array1, ArrayView1};
+use ndarray::{Array1, Array2, ArrayView1};
 use thiserror::Error;
 
 pub fn lfilter(coeffs: &Array1<f32>, signal: &Array1<f32>) -> Array1<f32> {
@@ -142,6 +142,25 @@ pub fn assert_array_eq(actual: &Array1<f32>, expected: &Array1<f32>, epsilon: f3
             panic!(
                 "Assertion failed at index {}.\nActual array: {:?}\nExpected array: {:?}\nDifference at index {}: {} vs {}",
                 i, actual, expected, i, a, e
+            );
+        }
+    }
+}
+
+pub fn assert_array2_eq(actual: &Array2<f32>, expected: &Array2<f32>, epsilon: f32) {
+    assert_eq!(
+        actual.shape(),
+        expected.shape(),
+        "Arrays have different shapes.\nActual shape: {:?}\nExpected shape: {:?}",
+        actual.shape(),
+        expected.shape()
+    );
+
+    for (((i, j), a), e) in actual.indexed_iter().zip(expected.iter()) {
+        if !a.abs_diff_eq(e, epsilon) {
+            panic!(
+                "Assertion failed at index [{}, {}].\nActual array:\n{:?}\nExpected array:\n{:?}\nDifference at [{}, {}]: {} vs {}",
+                i, j, actual, expected, i, j, a, e
             );
         }
     }

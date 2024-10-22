@@ -29,7 +29,10 @@ def main():
                 "audio": audio.astype(np.float32).tolist(),
                 "p": p,
                 "hop_size": hop_size,
-                "lpc_coefficients": lpc_coefficients.astype(np.float32).tolist(),
+                # Flatten to 1D because it's easier to parse that on the Rust side
+                "lpc_coefficients": lpc_coefficients.astype(np.float32)
+                .flatten()
+                .tolist(),
                 "gain": gain.astype(np.float32).tolist(),
                 "residual": residual.astype(np.float32).tolist(),
             },
