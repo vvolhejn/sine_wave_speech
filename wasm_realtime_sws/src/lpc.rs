@@ -92,7 +92,7 @@ pub fn fit_lpc(
 
 #[cfg(test)]
 mod tests {
-    use crate::signal_processing::{assert_array2_eq, assert_array_eq};
+    use crate::signal_processing::tests::{assert_array2_eq, assert_array_eq};
 
     use super::*;
 

@@ -128,49 +128,49 @@ pub fn solve_toeplitz(
 }
 
 #[cfg(test)] // Only used in tests, this keeps Rust from complaining about unused code
-pub fn assert_array_eq(actual: &Array1<f32>, expected: &Array1<f32>, epsilon: f32) {
-    assert_eq!(
-        actual.len(),
-        expected.len(),
-        "Arrays have different lengths. \nActual: {:?}\nExpected: {:?}",
-        actual,
-        expected
-    );
-
-    for (i, (a, e)) in actual.iter().zip(expected.iter()).enumerate() {
-        if !a.abs_diff_eq(e, epsilon) {
-            panic!(
-                "Assertion failed at index {}.\nActual array: {:?}\nExpected array: {:?}\nDifference at index {}: {} vs {}",
-                i, actual, expected, i, a, e
-            );
-        }
-    }
-}
-
-#[cfg(test)] // Only used in tests, this keeps Rust from complaining about unused code
-pub fn assert_array2_eq(actual: &Array2<f32>, expected: &Array2<f32>, epsilon: f32) {
-    assert_eq!(
-        actual.shape(),
-        expected.shape(),
-        "Arrays have different shapes.\nActual shape: {:?}\nExpected shape: {:?}",
-        actual.shape(),
-        expected.shape()
-    );
-
-    for (((i, j), a), e) in actual.indexed_iter().zip(expected.iter()) {
-        if !a.abs_diff_eq(e, epsilon) {
-            panic!(
-                "Assertion failed at index [{}, {}].\nActual array:\n{:?}\nExpected array:\n{:?}\nDifference at [{}, {}]: {} vs {}",
-                i, j, actual, expected, i, j, a, e
-            );
-        }
-    }
-}
-
-#[cfg(test)]
-mod tests {
+pub mod tests {
+    // Module declared as public to export helper fns - perhaps there is a better solution...
     use super::*;
-    use ndarray::array;
+    use approx::AbsDiffEq;
+    use ndarray::{array, Array2};
+
+    pub fn assert_array_eq(actual: &Array1<f32>, expected: &Array1<f32>, epsilon: f32) {
+        assert_eq!(
+            actual.len(),
+            expected.len(),
+            "Arrays have different lengths. \nActual: {:?}\nExpected: {:?}",
+            actual,
+            expected
+        );
+
+        for (i, (a, e)) in actual.iter().zip(expected.iter()).enumerate() {
+            if !a.abs_diff_eq(e, epsilon) {
+                panic!(
+                    "Assertion failed at index {}.\nActual array: {:?}\nExpected array: {:?}\nDifference at index {}: {} vs {}",
+                    i, actual, expected, i, a, e
+                );
+            }
+        }
+    }
+
+    pub fn assert_array2_eq(actual: &Array2<f32>, expected: &Array2<f32>, epsilon: f32) {
+        assert_eq!(
+            actual.shape(),
+            expected.shape(),
+            "Arrays have different shapes.\nActual shape: {:?}\nExpected shape: {:?}",
+            actual.shape(),
+            expected.shape()
+        );
+
+        for (((i, j), a), e) in actual.indexed_iter().zip(expected.iter()) {
+            if !a.abs_diff_eq(e, epsilon) {
+                panic!(
+                    "Assertion failed at index [{}, {}].\nActual array:\n{:?}\nExpected array:\n{:?}\nDifference at [{}, {}]: {} vs {}",
+                    i, j, actual, expected, i, j, a, e
+                );
+            }
+        }
+    }
 
     #[test]
     fn test_autocorrelate() {
