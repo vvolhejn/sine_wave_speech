@@ -1,5 +1,4 @@
-use approx::{assert_abs_diff_eq, AbsDiffEq};
-use ndarray::{Array1, Array2, ArrayView1};
+use ndarray::{Array1, ArrayView1};
 use thiserror::Error;
 
 pub fn lfilter(coeffs: &Array1<f32>, signal: &Array1<f32>) -> Array1<f32> {

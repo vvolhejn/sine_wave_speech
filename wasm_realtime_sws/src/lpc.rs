@@ -1,6 +1,4 @@
-use ndarray::{concatenate, prelude::*, stack};
-use rustfft::{num_complex::Complex, FftPlanner};
-use std::f32::consts::PI;
+use ndarray::{concatenate, prelude::*};
 
 use crate::signal_processing::{
     autocorrelate, hann_window, lfilter, solve_toeplitz, ToeplitzError,
