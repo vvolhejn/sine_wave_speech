@@ -2,6 +2,7 @@ use ndarray::Array;
 use pitch_detection::{McLeodDetector, PitchDetector};
 use wasm_bindgen::prelude::*;
 
+mod linear_algebra;
 mod lpc;
 mod signal_processing;
 mod utils;

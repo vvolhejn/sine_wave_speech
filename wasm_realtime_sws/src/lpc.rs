@@ -90,9 +90,21 @@ pub fn fit_lpc(
     (lpc_coefficients, gain, residual)
 }
 
+// pub fn lpc_coefficients_to_frequencies(lpc_coefficients: Array2<f32>, gain: Array1<f32>) {
+//     let n_hops = lpc_coefficients.len_of(Axis(0));
+//     let p = lpc_coefficients.len_of(Axis(0)) - 1;
+
+//     let mut frequencies: Array2<f32> = Array::zeros((n_hops, p / 2));
+//     let mut magnitudes: Array2<f32> = Array::zeros((n_hops, p / 2));
+
+//     for hop in 0..n_hops {
+//         let (eigs, vecs) = a.eig().unwrap();
+//     }
+// }
+
 #[cfg(test)]
 mod tests {
-    use crate::signal_processing::tests::{assert_array2_eq, assert_array_eq};
+    use crate::signal_processing::tests::{assert_array1_eq, assert_array2_eq};
 
     use super::*;
 
@@ -130,7 +142,7 @@ mod tests {
         // concern? Perhaps it's because of float64 in Python or a different
         // implementation in Scipy than what we have.
         assert_array2_eq(&lpc_coefficients, &expected_lpc_coefficients, 1e-2);
-        assert_array_eq(&gain, &Array1::from_vec(input.gain), 1e-2);
-        assert_array_eq(&residual, &Array1::from_vec(input.residual), 1e-2);
+        assert_array1_eq(&gain, &Array1::from_vec(input.gain), 1e-2);
+        assert_array1_eq(&residual, &Array1::from_vec(input.residual), 1e-2);
     }
 }

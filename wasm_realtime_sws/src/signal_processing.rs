@@ -132,9 +132,17 @@ pub mod tests {
     // Module declared as public to export helper fns - perhaps there is a better solution...
     use super::*;
     use approx::AbsDiffEq;
+    use nalgebra::Complex;
     use ndarray::{array, Array2};
 
-    pub fn assert_array_eq(actual: &Array1<f32>, expected: &Array1<f32>, epsilon: f32) {
+    use std::fmt::Debug;
+
+    // TODO: why doesn't this work for me with nalgebra::Complex? :(
+    pub fn assert_array1_eq<T>(actual: &Array1<T>, expected: &Array1<T>, epsilon: T::Epsilon)
+    where
+        T: AbsDiffEq + Debug,
+        T::Epsilon: Copy,
+    {
         assert_eq!(
             actual.len(),
             expected.len(),
@@ -146,11 +154,27 @@ pub mod tests {
         for (i, (a, e)) in actual.iter().zip(expected.iter()).enumerate() {
             if !a.abs_diff_eq(e, epsilon) {
                 panic!(
-                    "Assertion failed at index {}.\nActual array: {:?}\nExpected array: {:?}\nDifference at index {}: {} vs {}",
-                    i, actual, expected, i, a, e
-                );
+                "Assertion failed at index {}.\nActual array: {:?}\nExpected array: {:?}\nDifference at index {}: {:?} vs {:?}",
+                i, actual, expected, i, a, e
+            );
             }
         }
+    }
+
+    pub fn assert_complex_array1_eq(
+        actual: &Array1<Complex<f32>>,
+        expected: &Array1<Complex<f32>>,
+        epsilon: f32,
+    ) {
+        let actual_re = actual.mapv(|x| x.re);
+        let actual_im = actual.mapv(|x| x.im);
+        let expected_re = expected.mapv(|x| x.re);
+        let expected_im = expected.mapv(|x| x.im);
+
+        // TODO: I couldn't get `assert_array_eq` to work directly with the complex numbers
+        //   even though nalgebra::Complex implements AbsDiffEq
+        assert_array1_eq(&actual_re, &expected_re, epsilon);
+        assert_array1_eq(&actual_im, &expected_im, epsilon);
     }
 
     pub fn assert_array2_eq(actual: &Array2<f32>, expected: &Array2<f32>, epsilon: f32) {
@@ -180,7 +204,7 @@ pub mod tests {
         // Expected results (calculated manually)
         let expected = array![55.0, 40.0, 26.0, 14.0, 5.0];
 
-        assert_array_eq(&autocorrelation, &expected, 1e-6);
+        assert_array1_eq(&autocorrelation, &expected, 1e-6);
     }
 
     #[test]
@@ -191,7 +215,7 @@ pub mod tests {
 
         let result = lfilter(&coeffs, &signal);
 
-        assert_array_eq(&result, &expected, 1e-6);
+        assert_array1_eq(&result, &expected, 1e-6);
     }
 
     #[test]
@@ -199,7 +223,7 @@ pub mod tests {
         let window = hann_window(4);
         let expected = array![0.0, 0.5, 1.0, 0.5];
 
-        assert_array_eq(&window, &expected, 1e-6);
+        assert_array1_eq(&window, &expected, 1e-6);
 
         let window = hann_window(16);
         // Values from scipy.signal.get_window("hann", 16)
@@ -208,7 +232,7 @@ pub mod tests {
             0.96193977, 0.85355339, 0.69134172, 0.5, 0.30865828, 0.14644661, 0.03806023
         ];
 
-        assert_array_eq(&window, &expected, 1e-6);
+        assert_array1_eq(&window, &expected, 1e-6);
     }
 
     #[test]
@@ -231,7 +255,7 @@ pub mod tests {
         match solve_toeplitz(a.view(), b.view()) {
             Ok(x) => {
                 let expected: Array1<f32> = array![0.6, -1.5, 4., -1.9];
-                assert_array_eq(&x, &expected, 1e-6);
+                assert_array1_eq(&x, &expected, 1e-6);
             }
             Err(e) => panic!("Expected Ok result, but got Err: {:?}", e),
         }
