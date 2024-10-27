@@ -10,7 +10,7 @@ use nshare::{IntoNalgebra, IntoNdarray1};
 /// `coefs` should not contain the x^n coefficient.
 /// The coefficients are in increasing order of degree, meaning
 /// coefs[i] is the coefficient of x^i.
-pub fn find_roots(coefs: Array1<f32>) -> Array1<Complex<f32>> {
+pub fn find_roots(coefs: ArrayView1<f32>) -> Array1<Complex<f32>> {
     let companion_matrix = get_companion_matrix(coefs);
     let eigenvalues = companion_matrix.into_nalgebra().complex_eigenvalues();
     eigenvalues.into_ndarray1()
@@ -20,7 +20,7 @@ pub fn find_roots(coefs: Array1<f32>) -> Array1<Complex<f32>> {
 /// `coefs` should not contain the x^n coefficient.
 /// /// The coefficients are in increasing order of degree, meaning
 /// coefs[i] is the coefficient of x^i.
-fn get_companion_matrix(coefs: Array1<f32>) -> Array2<f32> {
+fn get_companion_matrix(coefs: ArrayView1<f32>) -> Array2<f32> {
     let degree = coefs.len() + 1;
     let mut matrix = Array2::zeros((degree - 1, degree - 1));
     for i in 0..degree - 2 {
@@ -43,7 +43,7 @@ pub mod tests {
     #[test]
     fn test_companion_matrix() {
         let polynomial = array![8., -3., 2.];
-        let actual = get_companion_matrix(polynomial);
+        let actual = get_companion_matrix(polynomial.view());
         let expected = array![[0., 1., 0.,], [0., 0., 1.,], [-8., 3., -2.,]];
         assert_array2_eq(&actual, &expected, 1e-6);
     }
@@ -96,7 +96,7 @@ pub mod tests {
         ];
 
         for (polynomial, expected_roots) in test_cases {
-            let roots = super::find_roots(polynomial);
+            let roots = super::find_roots(polynomial.view());
             let mut roots = roots.to_vec();
             // The sorting is stable, meaning this sorts lexicographically
             // by (re, im).
