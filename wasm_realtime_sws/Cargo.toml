@@ -3,6 +3,9 @@ name = "wasm-audio"
 version = "0.1.0"
 authors = ["Václav Volhejn <vaclav.volhejn@gmail.com>"]
 edition = "2018"
+description = "Sine wave speech audio effect in WebAssembly"
+license = "MIT"
+repository = "https://github.com/vvolhejn/sine_wave_speech"
 
 [lib]
 crate-type = ["cdylib", "rlib"]

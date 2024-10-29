@@ -1,0 +1,26 @@
+{
+  "name": "wasm-audio",
+  "type": "module",
+  "collaborators": [
+    "Václav Volhejn <vaclav.volhejn@gmail.com>"
+  ],
+  "description": "Sine wave speech audio effect in WebAssembly",
+  "version": "0.1.0",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/vvolhejn/sine_wave_speech"
+  },
+  "files": [
+    "wasm_audio_bg.wasm",
+    "wasm_audio.js",
+    "wasm_audio.d.ts",
+    "LICENSE_APACHE",
+    "LICENSE_MIT"
+  ],
+  "main": "wasm_audio.js",
+  "types": "wasm_audio.d.ts",
+  "sideEffects": [
+    "./snippets/*"
+  ]
+}
