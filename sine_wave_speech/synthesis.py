@@ -15,10 +15,10 @@ def synthesize(
 ) -> np.ndarray:
     """Synthesize a signal from sine wave frequencies and magnitudes.
 
-    We don't need to know the sample rate because the frequencies are in radians/s.
+    We don't need to know the sample rate because the frequencies are in radians/sample.
 
     Args:
-        normalized_frequencies: Sine wave frequencies in radians/s of shape
+        normalized_frequencies: Sine wave frequencies in radians/sample of shape
             (n_frames, n_channels).
         magnitudes: Sine wave magnitudes of shape (n_frames, n_channels).
         hop_size: Hop size - the number of samples between two consecutive frames.

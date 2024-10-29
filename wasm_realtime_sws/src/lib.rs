@@ -1,5 +1,4 @@
-use ndarray::Array;
-use pitch_detection::{McLeodDetector, PitchDetector};
+use ndarray::{Array, Array2};
 use wasm_bindgen::prelude::*;
 
 mod linear_algebra;
@@ -7,73 +6,79 @@ mod lpc;
 mod signal_processing;
 mod utils;
 
+/// Note that the converter doesn't care about the sample rate,
 #[wasm_bindgen]
-pub struct WasmPitchDetector {
-    sample_rate: usize,
-    fft_size: usize,
-    detector: McLeodDetector<f32>,
+pub struct SineWaveSpeechConverter {
+    pub n_waves: usize,  // 4 is the default in Python
+    pub hop_size: usize, // 256 is the default in Python
 }
 
 #[wasm_bindgen]
-impl WasmPitchDetector {
-    pub fn new(sample_rate: usize, fft_size: usize) -> WasmPitchDetector {
+pub struct SineWaveStep {
+    /// Frequency expressed as radians/sample
+    pub normalized_frequency: f32,
+    pub magnitude: f32,
+}
+
+#[wasm_bindgen]
+impl SineWaveSpeechConverter {
+    pub fn new(n_waves: usize, hop_size: usize) -> SineWaveSpeechConverter {
         utils::set_panic_hook();
 
-        let fft_pad = fft_size / 2;
-
-        WasmPitchDetector {
-            sample_rate,
-            fft_size,
-            detector: McLeodDetector::<f32>::new(fft_size, fft_pad),
-        }
+        SineWaveSpeechConverter { n_waves, hop_size }
     }
 
-    pub fn detect_pitch(&mut self, audio_samples: Vec<f32>) -> f32 {
-        if audio_samples.len() < self.fft_size {
+    pub fn convert(&mut self, audio_samples: Vec<f32>) -> Vec<SineWaveStep> {
+        if audio_samples.len() < self.hop_size {
             panic!(
                 "Insufficient samples passed to detect_pitch(). \
                 Expected an array containing {} elements but got {}",
-                self.fft_size,
+                self.hop_size,
                 audio_samples.len(),
             );
         }
 
-        // Include only notes that exceed a power threshold which relates to the
-        // amplitude of frequencies in the signal. Use the suggested default
-        // value of 5.0 from the library.
-        const POWER_THRESHOLD: f32 = 5.0;
-
-        console_log!("POWER_THRESHOLD: {}", POWER_THRESHOLD);
-
-        const HOP_SIZE: usize = 256; // default from Python
-        let x = Array::from_vec(audio_samples.clone());
-        let n_waves = 4;
-        let (lpc_coefficients, gain, residual) = lpc::fit_lpc(&x, n_waves * 2, HOP_SIZE, None);
+        let (lpc_coefficients, gain, _residual) = lpc::fit_lpc(
+            &Array::from_vec(audio_samples),
+            self.n_waves * 2,
+            self.hop_size,
+            None,
+        );
         let (frequencies, magnitudes) =
             lpc::lpc_coefficients_to_frequencies(lpc_coefficients.view(), gain.view());
-        console_log!("lpc_coefficients: {:?}", lpc_coefficients);
-        console_log!("gain: {:?}", gain);
-        console_log!("residual: {:?}", residual);
-        console_log!("frequencies: {:?}", frequencies);
-        console_log!("magnitudes: {:?}", magnitudes);
 
-        // The clarity measure describes how coherent the sound of a note is. For
-        // example, the background sound in a crowded room would typically be would
-        // have low clarity and a ringing tuning fork would have high clarity.
-        // This threshold is used to accept detect notes that are clear enough
-        // (valid values are in the range 0-1).
-        const CLARITY_THRESHOLD: f32 = 0.6;
+        // console_log!("lpc_coefficients: {:?}", lpc_coefficients);
+        // console_log!("gain: {:?}", gain);
+        // console_log!("residual: {:?}", residual);
+        // console_log!("frequencies: {:?}", frequencies);
+        // console_log!("magnitudes: {:?}", magnitudes);
 
-        let optional_pitch = self.detector.get_pitch(
-            &audio_samples,
-            self.sample_rate,
-            POWER_THRESHOLD,
-            CLARITY_THRESHOLD,
-        );
+        parse_results(frequencies, magnitudes, self.n_waves)
+    }
+}
 
-        match optional_pitch {
-            Some(pitch) => pitch.frequency,
-            None => 0.0,
+/// Return a flat vector of SineWaveStep structs from the 2D arrays of frequencies and magnitudes.
+/// The frequency and magnitude of the j-th sine wave at the i-th time step
+/// will be at index i * n_waves + j in the flat vector.
+/// I didn't figure out how to return a 2D vector to JS, so I'm returning a flat one.
+fn parse_results(
+    frequencies: Array2<f32>,
+    magnitudes: Array2<f32>,
+    n_waves: usize,
+) -> Vec<SineWaveStep> {
+    let mut results = Vec::new();
+
+    for i in 0..frequencies.shape()[0] {
+        for j in 0..n_waves {
+            let normalized_frequency = frequencies[[i, j]];
+            let magnitude = magnitudes[[i, j]];
+
+            results.push(SineWaveStep {
+                normalized_frequency,
+                magnitude,
+            });
         }
     }
+
+    results
 }

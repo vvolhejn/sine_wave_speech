@@ -38,6 +38,15 @@ function getStringFromWasm0(ptr, len) {
     return cachedTextDecoder.decode(getUint8ArrayMemory0().subarray(ptr, ptr + len));
 }
 
+function addHeapObject(obj) {
+    if (heap_next === heap.length) heap.push(heap.length + 1);
+    const idx = heap_next;
+    heap_next = heap[idx];
+
+    heap[idx] = obj;
+    return idx;
+}
+
 let cachedFloat32ArrayMemory0 = null;
 
 function getFloat32ArrayMemory0() {
@@ -56,13 +65,23 @@ function passArrayF32ToWasm0(arg, malloc) {
     return ptr;
 }
 
-function addHeapObject(obj) {
-    if (heap_next === heap.length) heap.push(heap.length + 1);
-    const idx = heap_next;
-    heap_next = heap[idx];
+let cachedDataViewMemory0 = null;
 
-    heap[idx] = obj;
-    return idx;
+function getDataViewMemory0() {
+    if (cachedDataViewMemory0 === null || cachedDataViewMemory0.buffer.detached === true || (cachedDataViewMemory0.buffer.detached === undefined && cachedDataViewMemory0.buffer !== wasm.memory.buffer)) {
+        cachedDataViewMemory0 = new DataView(wasm.memory.buffer);
+    }
+    return cachedDataViewMemory0;
+}
+
+function getArrayJsValueFromWasm0(ptr, len) {
+    ptr = ptr >>> 0;
+    const mem = getDataViewMemory0();
+    const result = [];
+    for (let i = ptr; i < ptr + 4 * len; i += 4) {
+        result.push(takeObject(mem.getUint32(i, true)));
+    }
+    return result;
 }
 
 const cachedTextEncoder = (typeof TextEncoder !== 'undefined' ? new TextEncoder('utf-8') : { encode: () => { throw Error('TextEncoder not available') } } );
@@ -119,58 +138,141 @@ function passStringToWasm0(arg, malloc, realloc) {
     return ptr;
 }
 
-let cachedDataViewMemory0 = null;
-
-function getDataViewMemory0() {
-    if (cachedDataViewMemory0 === null || cachedDataViewMemory0.buffer.detached === true || (cachedDataViewMemory0.buffer.detached === undefined && cachedDataViewMemory0.buffer !== wasm.memory.buffer)) {
-        cachedDataViewMemory0 = new DataView(wasm.memory.buffer);
-    }
-    return cachedDataViewMemory0;
-}
-
-const WasmPitchDetectorFinalization = (typeof FinalizationRegistry === 'undefined')
+const SineWaveSpeechConverterFinalization = (typeof FinalizationRegistry === 'undefined')
     ? { register: () => {}, unregister: () => {} }
-    : new FinalizationRegistry(ptr => wasm.__wbg_wasmpitchdetector_free(ptr >>> 0, 1));
-
-export class WasmPitchDetector {
+    : new FinalizationRegistry(ptr => wasm.__wbg_sinewavespeechconverter_free(ptr >>> 0, 1));
+/**
+ * Note that the converter doesn't care about the sample rate,
+ */
+export class SineWaveSpeechConverter {
 
     static __wrap(ptr) {
         ptr = ptr >>> 0;
-        const obj = Object.create(WasmPitchDetector.prototype);
+        const obj = Object.create(SineWaveSpeechConverter.prototype);
         obj.__wbg_ptr = ptr;
-        WasmPitchDetectorFinalization.register(obj, obj.__wbg_ptr, obj);
+        SineWaveSpeechConverterFinalization.register(obj, obj.__wbg_ptr, obj);
         return obj;
     }
 
     __destroy_into_raw() {
         const ptr = this.__wbg_ptr;
         this.__wbg_ptr = 0;
-        WasmPitchDetectorFinalization.unregister(this);
+        SineWaveSpeechConverterFinalization.unregister(this);
         return ptr;
     }
 
     free() {
         const ptr = this.__destroy_into_raw();
-        wasm.__wbg_wasmpitchdetector_free(ptr, 0);
+        wasm.__wbg_sinewavespeechconverter_free(ptr, 0);
     }
     /**
-     * @param {number} sample_rate
-     * @param {number} fft_size
-     * @returns {WasmPitchDetector}
+     * @returns {number}
      */
-    static new(sample_rate, fft_size) {
-        const ret = wasm.wasmpitchdetector_new(sample_rate, fft_size);
-        return WasmPitchDetector.__wrap(ret);
+    get n_waves() {
+        const ret = wasm.__wbg_get_sinewavespeechconverter_n_waves(this.__wbg_ptr);
+        return ret >>> 0;
+    }
+    /**
+     * @param {number} arg0
+     */
+    set n_waves(arg0) {
+        wasm.__wbg_set_sinewavespeechconverter_n_waves(this.__wbg_ptr, arg0);
+    }
+    /**
+     * @returns {number}
+     */
+    get hop_size() {
+        const ret = wasm.__wbg_get_sinewavespeechconverter_hop_size(this.__wbg_ptr);
+        return ret >>> 0;
+    }
+    /**
+     * @param {number} arg0
+     */
+    set hop_size(arg0) {
+        wasm.__wbg_set_sinewavespeechconverter_hop_size(this.__wbg_ptr, arg0);
+    }
+    /**
+     * @param {number} n_waves
+     * @param {number} hop_size
+     * @returns {SineWaveSpeechConverter}
+     */
+    static new(n_waves, hop_size) {
+        const ret = wasm.sinewavespeechconverter_new(n_waves, hop_size);
+        return SineWaveSpeechConverter.__wrap(ret);
     }
     /**
      * @param {Float32Array} audio_samples
+     * @returns {(SineWaveStep)[]}
+     */
+    convert(audio_samples) {
+        try {
+            const retptr = wasm.__wbindgen_add_to_stack_pointer(-16);
+            const ptr0 = passArrayF32ToWasm0(audio_samples, wasm.__wbindgen_malloc);
+            const len0 = WASM_VECTOR_LEN;
+            wasm.sinewavespeechconverter_convert(retptr, this.__wbg_ptr, ptr0, len0);
+            var r0 = getDataViewMemory0().getInt32(retptr + 4 * 0, true);
+            var r1 = getDataViewMemory0().getInt32(retptr + 4 * 1, true);
+            var v2 = getArrayJsValueFromWasm0(r0, r1).slice();
+            wasm.__wbindgen_free(r0, r1 * 4, 4);
+            return v2;
+        } finally {
+            wasm.__wbindgen_add_to_stack_pointer(16);
+        }
+    }
+}
+
+const SineWaveStepFinalization = (typeof FinalizationRegistry === 'undefined')
+    ? { register: () => {}, unregister: () => {} }
+    : new FinalizationRegistry(ptr => wasm.__wbg_sinewavestep_free(ptr >>> 0, 1));
+
+export class SineWaveStep {
+
+    static __wrap(ptr) {
+        ptr = ptr >>> 0;
+        const obj = Object.create(SineWaveStep.prototype);
+        obj.__wbg_ptr = ptr;
+        SineWaveStepFinalization.register(obj, obj.__wbg_ptr, obj);
+        return obj;
+    }
+
+    __destroy_into_raw() {
+        const ptr = this.__wbg_ptr;
+        this.__wbg_ptr = 0;
+        SineWaveStepFinalization.unregister(this);
+        return ptr;
+    }
+
+    free() {
+        const ptr = this.__destroy_into_raw();
+        wasm.__wbg_sinewavestep_free(ptr, 0);
+    }
+    /**
+     * Frequency expressed as radians/sample
      * @returns {number}
      */
-    detect_pitch(audio_samples) {
-        const ptr0 = passArrayF32ToWasm0(audio_samples, wasm.__wbindgen_malloc);
-        const len0 = WASM_VECTOR_LEN;
-        const ret = wasm.wasmpitchdetector_detect_pitch(this.__wbg_ptr, ptr0, len0);
+    get normalized_frequency() {
+        const ret = wasm.__wbg_get_sinewavestep_normalized_frequency(this.__wbg_ptr);
         return ret;
+    }
+    /**
+     * Frequency expressed as radians/sample
+     * @param {number} arg0
+     */
+    set normalized_frequency(arg0) {
+        wasm.__wbg_set_sinewavestep_normalized_frequency(this.__wbg_ptr, arg0);
+    }
+    /**
+     * @returns {number}
+     */
+    get magnitude() {
+        const ret = wasm.__wbg_get_sinewavestep_magnitude(this.__wbg_ptr);
+        return ret;
+    }
+    /**
+     * @param {number} arg0
+     */
+    set magnitude(arg0) {
+        wasm.__wbg_set_sinewavestep_magnitude(this.__wbg_ptr, arg0);
     }
 }
 
@@ -208,8 +310,9 @@ async function __wbg_load(module, imports) {
 function __wbg_get_imports() {
     const imports = {};
     imports.wbg = {};
-    imports.wbg.__wbg_log_574bdcdf3868d33a = function(arg0, arg1) {
-        console.log(getStringFromWasm0(arg0, arg1));
+    imports.wbg.__wbg_sinewavestep_new = function(arg0) {
+        const ret = SineWaveStep.__wrap(arg0);
+        return addHeapObject(ret);
     };
     imports.wbg.__wbg_new_abda76e883ba8a5f = function() {
         const ret = new Error();

@@ -1,27 +1,50 @@
 /* tslint:disable */
 /* eslint-disable */
-export class WasmPitchDetector {
+/**
+ * Note that the converter doesn't care about the sample rate,
+ */
+export class SineWaveSpeechConverter {
   free(): void;
   /**
-   * @param {number} sample_rate
-   * @param {number} fft_size
-   * @returns {WasmPitchDetector}
+   * @param {number} n_waves
+   * @param {number} hop_size
+   * @returns {SineWaveSpeechConverter}
    */
-  static new(sample_rate: number, fft_size: number): WasmPitchDetector;
+  static new(n_waves: number, hop_size: number): SineWaveSpeechConverter;
   /**
    * @param {Float32Array} audio_samples
-   * @returns {number}
+   * @returns {(SineWaveStep)[]}
    */
-  detect_pitch(audio_samples: Float32Array): number;
+  convert(audio_samples: Float32Array): (SineWaveStep)[];
+  hop_size: number;
+  n_waves: number;
+}
+export class SineWaveStep {
+  free(): void;
+  magnitude: number;
+/**
+ * Frequency expressed as radians/sample
+ */
+  normalized_frequency: number;
 }
 
 export type InitInput = RequestInfo | URL | Response | BufferSource | WebAssembly.Module;
 
 export interface InitOutput {
   readonly memory: WebAssembly.Memory;
-  readonly __wbg_wasmpitchdetector_free: (a: number, b: number) => void;
-  readonly wasmpitchdetector_new: (a: number, b: number) => number;
-  readonly wasmpitchdetector_detect_pitch: (a: number, b: number, c: number) => number;
+  readonly __wbg_sinewavespeechconverter_free: (a: number, b: number) => void;
+  readonly __wbg_get_sinewavespeechconverter_n_waves: (a: number) => number;
+  readonly __wbg_set_sinewavespeechconverter_n_waves: (a: number, b: number) => void;
+  readonly __wbg_get_sinewavespeechconverter_hop_size: (a: number) => number;
+  readonly __wbg_set_sinewavespeechconverter_hop_size: (a: number, b: number) => void;
+  readonly __wbg_sinewavestep_free: (a: number, b: number) => void;
+  readonly __wbg_get_sinewavestep_normalized_frequency: (a: number) => number;
+  readonly __wbg_set_sinewavestep_normalized_frequency: (a: number, b: number) => void;
+  readonly __wbg_get_sinewavestep_magnitude: (a: number) => number;
+  readonly __wbg_set_sinewavestep_magnitude: (a: number, b: number) => void;
+  readonly sinewavespeechconverter_new: (a: number, b: number) => number;
+  readonly sinewavespeechconverter_convert: (a: number, b: number, c: number, d: number) => void;
+  readonly __wbindgen_add_to_stack_pointer: (a: number) => number;
   readonly __wbindgen_malloc: (a: number, b: number) => number;
   readonly __wbindgen_free: (a: number, b: number, c: number) => void;
   readonly __wbindgen_realloc: (a: number, b: number, c: number, d: number) => number;
