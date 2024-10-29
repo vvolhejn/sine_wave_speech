@@ -8,18 +8,6 @@ mod signal_processing;
 mod utils;
 
 #[wasm_bindgen]
-extern "C" {
-    // Use `js_namespace` here to bind `console.log(..)` instead of just
-    // `log(..)`
-    #[wasm_bindgen(js_namespace = console)]
-    fn log(s: &str);
-}
-
-macro_rules! console_log {
-    ($($t:tt)*) => (log(&format_args!($($t)*).to_string()))
-}
-
-#[wasm_bindgen]
 pub struct WasmPitchDetector {
     sample_rate: usize,
     fft_size: usize,
@@ -57,12 +45,17 @@ impl WasmPitchDetector {
 
         console_log!("POWER_THRESHOLD: {}", POWER_THRESHOLD);
 
-        const HOP_SIZE: usize = 128;
+        const HOP_SIZE: usize = 256; // default from Python
         let x = Array::from_vec(audio_samples.clone());
-        let (lpc_coefficients, gain, residual) = lpc::fit_lpc(&x, self.fft_size, HOP_SIZE, None);
+        let n_waves = 4;
+        let (lpc_coefficients, gain, residual) = lpc::fit_lpc(&x, n_waves * 2, HOP_SIZE, None);
+        let (frequencies, magnitudes) =
+            lpc::lpc_coefficients_to_frequencies(lpc_coefficients.view(), gain.view());
         console_log!("lpc_coefficients: {:?}", lpc_coefficients);
         console_log!("gain: {:?}", gain);
         console_log!("residual: {:?}", residual);
+        console_log!("frequencies: {:?}", frequencies);
+        console_log!("magnitudes: {:?}", magnitudes);
 
         // The clarity measure describes how coherent the sound of a note is. For
         // example, the background sound in a crowded room would typically be would
