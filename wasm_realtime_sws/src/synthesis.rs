@@ -13,13 +13,14 @@ pub fn synthesize(
     magnitudes: ArrayView2<f32>,
     hop_size: usize,
     wave_fn: impl Fn(f32) -> f32,
-) -> Array1<f32> {
+) -> (Array1<f32>, Array1<f32>) {
     assert_eq!(normalized_frequencies.shape(), magnitudes.shape());
     assert_eq!(normalized_frequencies.ndim(), 2);
 
     let (n_frames, n_waves) = normalized_frequencies.dim();
     let output_samples = 1 + (n_frames - 1) * hop_size;
     let mut output = Array1::zeros(output_samples);
+    let mut last_phases = Array1::zeros(n_waves);
 
     for i in 0..n_waves {
         let freq_slice = normalized_frequencies.slice(s![.., i]);
@@ -31,7 +32,8 @@ pub fn synthesize(
             hop_size,
             &wave_fn,
         );
-        output += &cur;
+        output += &cur.0;
+        last_phases[i] = cur.1;
     }
 
     // Normalize output to [-1, 1]
@@ -40,7 +42,7 @@ pub fn synthesize(
         output.mapv_inplace(|x| x / max_abs);
     }
 
-    output
+    (output, last_phases)
 }
 
 /// Synthesize one wave from normalized frequencies and magnitudes.
@@ -49,7 +51,7 @@ pub fn synthesize_one(
     magnitudes: &Array1<f32>,
     hop_size: usize,
     wave_fn: impl Fn(f32) -> f32,
-) -> Array1<f32> {
+) -> (Array1<f32>, f32) {
     assert_eq!(normalized_frequencies.shape(), magnitudes.shape());
     assert_eq!(normalized_frequencies.ndim(), 1);
 
@@ -65,7 +67,10 @@ pub fn synthesize_one(
     }
 
     // Apply wave function and magnitudes
-    phase.mapv(|x| wave_fn(x)) * &magnitudes_upsampled
+    (
+        phase.mapv(|x| wave_fn(x)) * &magnitudes_upsampled,
+        phase[phase.len() - 1],
+    )
 }
 
 /// Upsamples a signal, stretching it by an integer factor.

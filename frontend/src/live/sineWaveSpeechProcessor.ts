@@ -63,11 +63,14 @@ class SineWaveSpeechProcessor extends AudioWorkletProcessor {
         combinedFrequencies,
         combinedMagnitudes
       )
+      const audio = converted.slice(0, this.hopSize + 1)
+      const lastPhases = converted.slice(this.hopSize + 1)
+      console.log('Last phases', lastPhases)
+
+      outputAudio.set(audio.slice(1))
 
       this.lastFrequencies = frequencies
       this.lastMagnitudes = magnitudes
-
-      outputAudio.set(converted.slice(1))
     }
 
     return true

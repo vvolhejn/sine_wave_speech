@@ -237,25 +237,6 @@ export class SineWaveSpeechConverter {
             wasm.__wbindgen_add_to_stack_pointer(16);
         }
     }
-    /**
-     * @param {Float32Array} audio_samples
-     * @returns {Float32Array}
-     */
-    convert(audio_samples) {
-        try {
-            const retptr = wasm.__wbindgen_add_to_stack_pointer(-16);
-            const ptr0 = passArrayF32ToWasm0(audio_samples, wasm.__wbindgen_malloc);
-            const len0 = WASM_VECTOR_LEN;
-            wasm.sinewavespeechconverter_convert(retptr, this.__wbg_ptr, ptr0, len0);
-            var r0 = getDataViewMemory0().getInt32(retptr + 4 * 0, true);
-            var r1 = getDataViewMemory0().getInt32(retptr + 4 * 1, true);
-            var v2 = getArrayF32FromWasm0(r0, r1).slice();
-            wasm.__wbindgen_free(r0, r1 * 4, 4);
-            return v2;
-        } finally {
-            wasm.__wbindgen_add_to_stack_pointer(16);
-        }
-    }
 }
 
 async function __wbg_load(module, imports) {
