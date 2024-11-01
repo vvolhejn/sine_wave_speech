@@ -1,4 +1,4 @@
-use ndarray::{s, Array1, ArrayView2};
+use ndarray::{s, Array1, ArrayView2, Axis};
 
 /// Synthesizes a signal from sine wave frequencies and magnitudes.
 ///
@@ -11,13 +11,18 @@ pub fn synthesize(
     first_phases: Option<Array1<f32>>,
 ) -> (Array1<f32>, Array1<f32>) {
     assert_eq!(normalized_frequencies.shape(), magnitudes.shape());
-    assert_eq!(normalized_frequencies.ndim(), 2);
+    if (normalized_frequencies.len_of(Axis(0)) < 2) {
+        panic!(
+            "At least two frames are required, but normalized_frequencies has length {}",
+            normalized_frequencies.len_of(Axis(0))
+        );
+    }
 
     let first_phases =
         first_phases.unwrap_or_else(|| Array1::zeros(normalized_frequencies.dim().1));
 
     let (n_frames, n_waves) = normalized_frequencies.dim();
-    let output_samples = 1 + (n_frames - 1) * hop_size;
+    let output_samples = (n_frames - 1) * hop_size;
     let mut output = Array1::zeros(output_samples);
     let mut last_phases = Array1::zeros(n_waves);
 
@@ -56,8 +61,8 @@ pub fn synthesize_one(
     assert_eq!(normalized_frequencies.shape(), magnitudes.shape());
     assert_eq!(normalized_frequencies.ndim(), 1);
 
-    let frequencies_upsampled = upsample(normalized_frequencies, hop_size);
-    let magnitudes_upsampled = upsample(magnitudes, hop_size);
+    let frequencies_upsampled = upsample(normalized_frequencies, hop_size, false);
+    let magnitudes_upsampled = upsample(magnitudes, hop_size, false);
 
     // Calculate cumulative sum for phase
     let mut phase = Array1::zeros(frequencies_upsampled.len());
@@ -67,31 +72,34 @@ pub fn synthesize_one(
         phase[i] = sum;
     }
 
-    // Apply wave function and magnitudes
     (
+        // Apply wave function and scale by magnitudes
         phase.mapv(|x| wave_fn(x)) * &magnitudes_upsampled,
         phase[phase.len() - 1] % (2.0 * std::f32::consts::PI),
     )
 }
 
 /// Upsamples a signal, stretching it by an integer factor.
-pub fn upsample(x: &Array1<f32>, factor: usize) -> Array1<f32> {
+/// Linearly interpolates between the original samples.
+/// Returns an array of size (x.len() - 1) * factor,
+/// or one more if include_last is true.
+/// For example, if you have [a, b, c] and factor = 3, you end
+/// up with axxbxxc, where x represent interpolated values.
+/// If include_last is false, you get axxbxx.
+pub fn upsample(x: &Array1<f32>, factor: usize, include_last: bool) -> Array1<f32> {
     // Replace NaN values with 0.0
     let x = x.mapv(|v| if v.is_nan() { 0.0 } else { v });
 
-    let output_size = (x.len() - 1) * factor + 1;
+    let output_size = (x.len() - 1) * factor + (if include_last { 1 } else { 0 });
     let mut output = Array1::zeros(output_size);
 
-    // Pre-calculate factor as f32 to avoid repeated conversions
-    let factor_f = factor as f32;
-
     for i in 0..output_size {
-        let idx_f = i as f32 / factor_f;
-        let idx_low = idx_f.floor() as usize;
-        let idx_high = (idx_low + 1).min(x.len() - 1);
-        let frac = idx_f - idx_low as f32;
+        let global_fraction = i as f32 / factor as f32;
+        let i_low = global_fraction.floor() as usize;
+        let i_high = (i_low + 1).min(x.len() - 1);
+        let local_fraction = global_fraction - i_low as f32;
 
-        output[i] = x[idx_low].mul_add(1.0 - frac, x[idx_high] * frac);
+        output[i] = x[i_low].mul_add(1.0 - local_fraction, x[i_high] * local_fraction);
     }
 
     output
@@ -99,17 +107,19 @@ pub fn upsample(x: &Array1<f32>, factor: usize) -> Array1<f32> {
 
 #[cfg(test)]
 mod tests {
+    use crate::signal_processing::tests::assert_array1_eq;
+
     use super::*;
-    use approx::assert_relative_eq;
 
     #[test]
     fn test_upsample() {
         let input = Array1::from_vec(vec![0.0, 1.0, 2.0]);
-        let upsampled = upsample(&input, 2);
+        let upsampled = upsample(&input, 2, true);
         let expected = Array1::from_vec(vec![0.0, 0.5, 1.0, 1.5, 2.0]);
+        assert_array1_eq(&upsampled, &expected, 1e-6);
 
-        for (a, b) in upsampled.iter().zip(expected.iter()) {
-            assert_relative_eq!(a, b, epsilon = 1e-5);
-        }
+        let upsampled = upsample(&input, 2, false);
+        let expected = Array1::from_vec(vec![0.0, 0.5, 1.0, 1.5]);
+        assert_array1_eq(&upsampled, &expected, 1e-6);
     }
 }

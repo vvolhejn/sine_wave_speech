@@ -69,10 +69,10 @@ class SineWaveSpeechProcessor extends AudioWorkletProcessor {
         // so that the sine wave can continue from where it left off
         this.lastPhases
       )
-      const audio = converted.slice(0, this.hopSize + 1)
-      const lastPhases = converted.slice(this.hopSize + 1)
+      const audio = converted.slice(0, this.hopSize)
+      const lastPhases = converted.slice(this.hopSize)
 
-      outputAudio.set(audio.slice(1))
+      outputAudio.set(audio)
 
       this.lastFrequencies = frequencies
       this.lastMagnitudes = magnitudes
