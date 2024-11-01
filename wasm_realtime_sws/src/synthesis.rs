@@ -41,11 +41,8 @@ pub fn synthesize(
         last_phases[i] = cur.1;
     }
 
-    // Normalize output to [-1, 1]
-    let max_abs = output.fold(0.0f32, |acc, &x| acc.max(x.abs()));
-    if max_abs > 0.0 {
-        output.mapv_inplace(|x| x / max_abs);
-    }
+    // Apply compression to avoid clipping
+    output.mapv_inplace(|x| x.atan());
 
     (output, last_phases)
 }

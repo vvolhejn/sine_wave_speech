@@ -35,7 +35,7 @@ impl SineWaveSpeechConverter {
 
         // Limit the really extreme values. I'm not sure at what value the should be limited to
         // but this at least seemed to get rid of the really extreme values.
-        // Note that in synthesize() we normalize the output to [-1, 1] so there is no clipping,
+        // Note that in synthesize() we make sure values end up in [01, 1] so there is no clipping,
         // it's just that some values are really extreme.
         magnitudes.mapv_inplace(|x| x.min(2.0));
 

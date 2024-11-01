@@ -21,9 +21,41 @@ const getAudioBuffer = async (audioContext: AudioContext, audioFile: string) => 
   return audioBuffer
 }
 
-async function setupAudio() {
+const getWebAudioMediaStream = async () => {
+  if (!window.navigator.mediaDevices) {
+    throw new Error('This browser does not support web audio or it is not enabled.')
+  }
+
+  try {
+    const result = await window.navigator.mediaDevices.getUserMedia({
+      audio: true,
+      video: false,
+    })
+
+    return result
+  } catch (e: any) {
+    switch (e.name) {
+      case 'NotAllowedError':
+        throw new Error(
+          'A recording device was found but has been disallowed for this application. Enable the device in the browser settings.'
+        )
+
+      case 'NotFoundError':
+        throw new Error(
+          'No recording device was found. Please attach a microphone and click Retry.'
+        )
+
+      default:
+        throw e
+    }
+  }
+}
+
+const setupAudio = async () => {
   // The sample rate heavily affects the sine wave speech effect, 8000 is the tested one.
   const audioContext = new window.AudioContext({ sampleRate: 8000 })
+
+  const mediaStream = await getWebAudioMediaStream()
 
   // Fetch the raw WebAssembly module
   const response = await window.fetch(wasmUrl)
@@ -40,32 +72,47 @@ async function setupAudio() {
     wasmBytes
   )
 
-  return { audioContext, sineWaveSpeechNode }
+  return { audioContext, sineWaveSpeechNode, mediaStream }
 }
 
-const handleClick = async () => {
+const startPlayingAudio = async (fromMicrophone: boolean) => {
   if (!converter) {
     console.log('Converter not initialized')
     return
   }
 
-  const { audioContext, sineWaveSpeechNode } = await setupAudio()
+  const { audioContext, sineWaveSpeechNode, mediaStream } = await setupAudio()
 
-  const dryAudioBuffer = await getAudioBuffer(audioContext, sentenceAudio)
+  let source: AudioNode
 
-  var source = audioContext.createBufferSource()
-  source.buffer = dryAudioBuffer
+  if (fromMicrophone) {
+    source = audioContext.createMediaStreamSource(mediaStream)
+  } else {
+    const dryAudioBuffer = await getAudioBuffer(audioContext, sentenceAudio)
+    let bufferSource = audioContext.createBufferSource()
+    bufferSource.buffer = dryAudioBuffer
+    source = bufferSource
+    bufferSource.start()
+  }
 
   source.connect(sineWaveSpeechNode).connect(audioContext.destination)
-  source.start()
 }
 </script>
 
 <template>
   <div class="grid grid-cols-1 content-center h-screen">
     <p>Work in progress, stay tuned.</p>
-    <button @click="handleClick" class="button text-center grid-auto text-5xl p-20">
-      Click me!
+    <button
+      @click="() => startPlayingAudio(true)"
+      class="button text-center grid-auto text-5xl p-20"
+    >
+      From microphone
+    </button>
+    <button
+      @click="() => startPlayingAudio(false)"
+      class="button text-center grid-auto text-5xl p-20"
+    >
+      From file
     </button>
   </div>
 </template>

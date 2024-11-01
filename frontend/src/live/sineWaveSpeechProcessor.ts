@@ -56,6 +56,8 @@ class SineWaveSpeechProcessor extends AudioWorkletProcessor {
     if (!canProcess(inputList, outputList)) {
       return true
     }
+    // It seems that even if there are two channels, we get stereo output even
+    // though we're only writing one channel - why?
     const inputAudio = inputList[0][0]
     const outputAudio = outputList[0][0]
 
@@ -143,7 +145,6 @@ const canProcess = (inputList: Float32Array[][], outputList: Float32Array[][]) =
     throw new Error('Expected exactly 1 output')
   }
   const inputChannels = inputList[0]
-  const outputChannels = outputList[0]
 
   if (inputChannels.length === 0) {
     // Silently skip - this happens if we're not getting any input.
@@ -151,12 +152,6 @@ const canProcess = (inputList: Float32Array[][], outputList: Float32Array[][]) =
     return false
   }
 
-  if (inputChannels.length !== 1) {
-    throw new Error('Expected exactly 1 input channel, got ' + inputChannels.length)
-  }
-  if (outputChannels.length !== 1) {
-    throw new Error('Expected exactly 1 output channel')
-  }
   if (inputChannels[0].length !== BLOCK_SIZE) {
     throw new Error(`Expected ${BLOCK_SIZE} samples, got ${inputChannels[0].length}`)
   }
