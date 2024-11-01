@@ -1,6 +1,7 @@
-use ndarray::{Array, Array2};
+use ndarray::{s, Array, Array2};
 use synthesis::synthesize;
 use wasm_bindgen::prelude::*;
+use web_sys::js_sys;
 
 mod linear_algebra;
 mod lpc;
@@ -24,15 +25,6 @@ impl SineWaveSpeechConverter {
     }
 
     pub fn convert(&mut self, audio_samples: Vec<f32>) -> Vec<f32> {
-        if audio_samples.len() < self.hop_size {
-            panic!(
-                "Insufficient samples passed to detect_pitch(). \
-                Expected an array containing {} elements but got {}",
-                self.hop_size,
-                audio_samples.len(),
-            );
-        }
-
         let (lpc_coefficients, gain, _residual) = lpc::fit_lpc(
             &Array::from_vec(audio_samples),
             self.n_waves * 2,
@@ -48,7 +40,12 @@ impl SineWaveSpeechConverter {
         // it's just that some values are really extreme.
         magnitudes.mapv_inplace(|x| x.min(2.0));
 
-        let sws = synthesize(frequencies.view(), magnitudes.view(), None, f32::cos);
+        let sws = synthesize(
+            frequencies.view(),
+            magnitudes.view(),
+            self.hop_size,
+            f32::sin,
+        );
 
         // console_log!("lpc_coefficients: {:?}", lpc_coefficients);
         // console_log!("gain: {:?}", gain);

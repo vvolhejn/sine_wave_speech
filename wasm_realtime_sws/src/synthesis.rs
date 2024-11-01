@@ -11,13 +11,12 @@ const DEFAULT_HOP_SIZE: usize = 256;
 pub fn synthesize(
     normalized_frequencies: ArrayView2<f32>,
     magnitudes: ArrayView2<f32>,
-    hop_size: Option<usize>,
+    hop_size: usize,
     wave_fn: impl Fn(f32) -> f32,
 ) -> Array1<f32> {
     assert_eq!(normalized_frequencies.shape(), magnitudes.shape());
     assert_eq!(normalized_frequencies.ndim(), 2);
 
-    let hop_size = hop_size.unwrap_or(DEFAULT_HOP_SIZE);
     let (n_frames, n_waves) = normalized_frequencies.dim();
     let output_samples = 1 + (n_frames - 1) * hop_size;
     let mut output = Array1::zeros(output_samples);

@@ -1,3 +1,4 @@
+import './TextEncoder.js'
 let wasm;
 
 const heap = new Array(128).fill(undefined);
@@ -250,6 +251,9 @@ async function __wbg_load(module, imports) {
 function __wbg_get_imports() {
     const imports = {};
     imports.wbg = {};
+    imports.wbg.__wbg_log_574bdcdf3868d33a = function(arg0, arg1) {
+        console.log(getStringFromWasm0(arg0, arg1));
+    };
     imports.wbg.__wbg_new_abda76e883ba8a5f = function() {
         const ret = new Error();
         return addHeapObject(ret);
