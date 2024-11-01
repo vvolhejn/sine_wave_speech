@@ -1,9 +1,11 @@
 use ndarray::{Array, Array2};
+use synthesis::synthesize;
 use wasm_bindgen::prelude::*;
 
 mod linear_algebra;
 mod lpc;
 mod signal_processing;
+mod synthesis;
 mod utils;
 
 /// Note that the converter doesn't care about the sample rate,
@@ -14,13 +16,6 @@ pub struct SineWaveSpeechConverter {
 }
 
 #[wasm_bindgen]
-pub struct SineWaveStep {
-    /// Frequency expressed as radians/sample
-    pub normalized_frequency: f32,
-    pub magnitude: f32,
-}
-
-#[wasm_bindgen]
 impl SineWaveSpeechConverter {
     pub fn new(n_waves: usize, hop_size: usize) -> SineWaveSpeechConverter {
         utils::set_panic_hook();
@@ -28,7 +23,7 @@ impl SineWaveSpeechConverter {
         SineWaveSpeechConverter { n_waves, hop_size }
     }
 
-    pub fn convert(&mut self, audio_samples: Vec<f32>) -> Vec<SineWaveStep> {
+    pub fn convert(&mut self, audio_samples: Vec<f32>) -> Vec<f32> {
         if audio_samples.len() < self.hop_size {
             panic!(
                 "Insufficient samples passed to detect_pitch(). \
@@ -44,8 +39,16 @@ impl SineWaveSpeechConverter {
             self.hop_size,
             None,
         );
-        let (frequencies, magnitudes) =
+        let (frequencies, mut magnitudes) =
             lpc::lpc_coefficients_to_frequencies(lpc_coefficients.view(), gain.view());
+
+        // Limit the really extreme values. I'm not sure at what value the should be limited to
+        // but this at least seemed to get rid of the really extreme values.
+        // Note that in synthesize() we normalize the output to [-1, 1] so there is no clipping,
+        // it's just that some values are really extreme.
+        magnitudes.mapv_inplace(|x| x.min(2.0));
+
+        let sws = synthesize(frequencies.view(), magnitudes.view(), None, f32::cos);
 
         // console_log!("lpc_coefficients: {:?}", lpc_coefficients);
         // console_log!("gain: {:?}", gain);
@@ -53,32 +56,6 @@ impl SineWaveSpeechConverter {
         // console_log!("frequencies: {:?}", frequencies);
         // console_log!("magnitudes: {:?}", magnitudes);
 
-        parse_results(frequencies, magnitudes, self.n_waves)
+        sws.to_vec()
     }
-}
-
-/// Return a flat vector of SineWaveStep structs from the 2D arrays of frequencies and magnitudes.
-/// The frequency and magnitude of the j-th sine wave at the i-th time step
-/// will be at index i * n_waves + j in the flat vector.
-/// I didn't figure out how to return a 2D vector to JS, so I'm returning a flat one.
-fn parse_results(
-    frequencies: Array2<f32>,
-    magnitudes: Array2<f32>,
-    n_waves: usize,
-) -> Vec<SineWaveStep> {
-    let mut results = Vec::new();
-
-    for i in 0..frequencies.shape()[0] {
-        for j in 0..n_waves {
-            let normalized_frequency = frequencies[[i, j]];
-            let magnitude = magnitudes[[i, j]];
-
-            results.push(SineWaveStep {
-                normalized_frequency,
-                magnitude,
-            });
-        }
-    }
-
-    results
 }

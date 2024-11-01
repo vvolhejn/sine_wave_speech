@@ -38,15 +38,6 @@ function getStringFromWasm0(ptr, len) {
     return cachedTextDecoder.decode(getUint8ArrayMemory0().subarray(ptr, ptr + len));
 }
 
-function addHeapObject(obj) {
-    if (heap_next === heap.length) heap.push(heap.length + 1);
-    const idx = heap_next;
-    heap_next = heap[idx];
-
-    heap[idx] = obj;
-    return idx;
-}
-
 let cachedFloat32ArrayMemory0 = null;
 
 function getFloat32ArrayMemory0() {
@@ -74,14 +65,18 @@ function getDataViewMemory0() {
     return cachedDataViewMemory0;
 }
 
-function getArrayJsValueFromWasm0(ptr, len) {
+function getArrayF32FromWasm0(ptr, len) {
     ptr = ptr >>> 0;
-    const mem = getDataViewMemory0();
-    const result = [];
-    for (let i = ptr; i < ptr + 4 * len; i += 4) {
-        result.push(takeObject(mem.getUint32(i, true)));
-    }
-    return result;
+    return getFloat32ArrayMemory0().subarray(ptr / 4, ptr / 4 + len);
+}
+
+function addHeapObject(obj) {
+    if (heap_next === heap.length) heap.push(heap.length + 1);
+    const idx = heap_next;
+    heap_next = heap[idx];
+
+    heap[idx] = obj;
+    return idx;
 }
 
 const cachedTextEncoder = (typeof TextEncoder !== 'undefined' ? new TextEncoder('utf-8') : { encode: () => { throw Error('TextEncoder not available') } } );
@@ -202,7 +197,7 @@ export class SineWaveSpeechConverter {
     }
     /**
      * @param {Float32Array} audio_samples
-     * @returns {(SineWaveStep)[]}
+     * @returns {Float32Array}
      */
     convert(audio_samples) {
         try {
@@ -212,67 +207,12 @@ export class SineWaveSpeechConverter {
             wasm.sinewavespeechconverter_convert(retptr, this.__wbg_ptr, ptr0, len0);
             var r0 = getDataViewMemory0().getInt32(retptr + 4 * 0, true);
             var r1 = getDataViewMemory0().getInt32(retptr + 4 * 1, true);
-            var v2 = getArrayJsValueFromWasm0(r0, r1).slice();
+            var v2 = getArrayF32FromWasm0(r0, r1).slice();
             wasm.__wbindgen_free(r0, r1 * 4, 4);
             return v2;
         } finally {
             wasm.__wbindgen_add_to_stack_pointer(16);
         }
-    }
-}
-
-const SineWaveStepFinalization = (typeof FinalizationRegistry === 'undefined')
-    ? { register: () => {}, unregister: () => {} }
-    : new FinalizationRegistry(ptr => wasm.__wbg_sinewavestep_free(ptr >>> 0, 1));
-
-export class SineWaveStep {
-
-    static __wrap(ptr) {
-        ptr = ptr >>> 0;
-        const obj = Object.create(SineWaveStep.prototype);
-        obj.__wbg_ptr = ptr;
-        SineWaveStepFinalization.register(obj, obj.__wbg_ptr, obj);
-        return obj;
-    }
-
-    __destroy_into_raw() {
-        const ptr = this.__wbg_ptr;
-        this.__wbg_ptr = 0;
-        SineWaveStepFinalization.unregister(this);
-        return ptr;
-    }
-
-    free() {
-        const ptr = this.__destroy_into_raw();
-        wasm.__wbg_sinewavestep_free(ptr, 0);
-    }
-    /**
-     * Frequency expressed as radians/sample
-     * @returns {number}
-     */
-    get normalized_frequency() {
-        const ret = wasm.__wbg_get_sinewavestep_normalized_frequency(this.__wbg_ptr);
-        return ret;
-    }
-    /**
-     * Frequency expressed as radians/sample
-     * @param {number} arg0
-     */
-    set normalized_frequency(arg0) {
-        wasm.__wbg_set_sinewavestep_normalized_frequency(this.__wbg_ptr, arg0);
-    }
-    /**
-     * @returns {number}
-     */
-    get magnitude() {
-        const ret = wasm.__wbg_get_sinewavestep_magnitude(this.__wbg_ptr);
-        return ret;
-    }
-    /**
-     * @param {number} arg0
-     */
-    set magnitude(arg0) {
-        wasm.__wbg_set_sinewavestep_magnitude(this.__wbg_ptr, arg0);
     }
 }
 
@@ -310,10 +250,6 @@ async function __wbg_load(module, imports) {
 function __wbg_get_imports() {
     const imports = {};
     imports.wbg = {};
-    imports.wbg.__wbg_sinewavestep_new = function(arg0) {
-        const ret = SineWaveStep.__wrap(arg0);
-        return addHeapObject(ret);
-    };
     imports.wbg.__wbg_new_abda76e883ba8a5f = function() {
         const ret = new Error();
         return addHeapObject(ret);

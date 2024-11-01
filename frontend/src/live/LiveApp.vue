@@ -1,41 +1,55 @@
 <script setup lang="ts">
-import init, {
-  SineWaveSpeechConverter,
-  SineWaveStep,
-} from '../wasm_realtime_sws/wasm_audio.js'
+import sentenceAudio from '../assets/sentence-original.wav'
+import init, { SineWaveSpeechConverter } from '../wasm_realtime_sws/wasm_audio.js'
 
-const sampleRate = 8000
-const frequency = 200
-const fftSize = 2048
 const nWaves = 4
 const hopSize = 256
-const length = fftSize
-const sineWave = new Float32Array(length)
 
-for (let i = 0; i < length; i++) {
-  sineWave[i] = Math.sin((2 * Math.PI * frequency * i) / sampleRate) * 0.5
-}
-
-const unflattenSineWaveSpeechResult = (
-  result: SineWaveStep[],
-  nWaves: number
-): SineWaveStep[][] => {
-  const unflattened: SineWaveStep[][] = []
-  for (let i = 0; i < result.length; i += nWaves) {
-    unflattened.push(result.slice(i, i + nWaves))
-  }
-  return unflattened
-}
+let converter: SineWaveSpeechConverter | null = null
 
 init({ module: '../wasm_realtime_sws/wasm_audio_bg.wasm' }).then(() => {
-  console.log('Wasm initialized')
-  let converter = SineWaveSpeechConverter.new(nWaves, hopSize)
-  const converted = unflattenSineWaveSpeechResult(
-    converter.convert(sineWave),
-    converter.n_waves
-  )
-  console.log(converted)
+  converter = SineWaveSpeechConverter.new(nWaves, hopSize)
 })
+
+const getAudioBuffer = async (audioContext: AudioContext, audioFile: string) => {
+  const response = await fetch(audioFile)
+  const arrayBuffer = await response.arrayBuffer()
+  const audioBuffer = await audioContext.decodeAudioData(arrayBuffer)
+  return audioBuffer
+}
+
+const handleClick = async () => {
+  if (!converter) {
+    console.log('Converter not initialized')
+    return
+  }
+
+  const audioContext = new AudioContext({ sampleRate: 8000 })
+
+  const dryAudioBuffer = await getAudioBuffer(audioContext, sentenceAudio)
+  const converted = converter.convert(dryAudioBuffer.getChannelData(0))
+
+  var wetAudioBuffer = audioContext.createBuffer(
+    1,
+    converted.length,
+    audioContext.sampleRate
+  )
+  wetAudioBuffer.getChannelData(0).set(converted)
+
+  var source = audioContext.createBufferSource()
+  source.buffer = wetAudioBuffer
+
+  // connect the AudioBufferSourceNode to the destination so we can hear the sound
+  source.connect(audioContext.destination)
+  source.start()
+}
 </script>
 
-<template><p>Work in progress, stay tuned.</p></template>
+<template>
+  <div class="grid grid-cols-1 content-center h-screen">
+    <p>Work in progress, stay tuned.</p>
+    <button @click="handleClick" class="button text-center grid-auto text-5xl p-20">
+      Click me!
+    </button>
+  </div>
+</template>
