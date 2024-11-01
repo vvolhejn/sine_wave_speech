@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import sentenceAudio from '../assets/sentence-original.wav'
 import init, { SineWaveSpeechConverter } from '../wasm_realtime_sws/wasm_audio.js'
+import wasmUrl from '../wasm_realtime_sws/wasm_audio_bg.wasm?url'
+import SineWaveSpeechNode from './sineWaveSpeechNode.js'
+import processorUrl from './sineWaveSpeechProcessor.ts?url'
 
 const nWaves = 4
 const hopSize = 256
@@ -18,29 +21,41 @@ const getAudioBuffer = async (audioContext: AudioContext, audioFile: string) => 
   return audioBuffer
 }
 
+async function setupAudio() {
+  const audioContext = new window.AudioContext()
+
+  // Fetch the raw WebAssembly module
+  const response = await window.fetch(wasmUrl)
+  const wasmBytes = await response.arrayBuffer()
+
+  // Add our audio processor worklet to the context.
+  await audioContext.audioWorklet.addModule(processorUrl)
+
+  // Create the AudioWorkletNode which enables the main thread to
+  // communicate with the audio processor (which runs in a Worklet).
+  let sineWaveSpeechNode = new SineWaveSpeechNode(
+    audioContext,
+    'sine-wave-speech-processor',
+    wasmBytes
+  )
+
+  return { audioContext, sineWaveSpeechNode }
+}
+
 const handleClick = async () => {
   if (!converter) {
     console.log('Converter not initialized')
     return
   }
 
-  const audioContext = new AudioContext({ sampleRate: 8000 })
+  const { audioContext, sineWaveSpeechNode } = await setupAudio()
 
   const dryAudioBuffer = await getAudioBuffer(audioContext, sentenceAudio)
-  const converted = converter.convert(dryAudioBuffer.getChannelData(0))
-
-  var wetAudioBuffer = audioContext.createBuffer(
-    1,
-    converted.length,
-    audioContext.sampleRate
-  )
-  wetAudioBuffer.getChannelData(0).set(converted)
 
   var source = audioContext.createBufferSource()
-  source.buffer = wetAudioBuffer
+  source.buffer = dryAudioBuffer
 
-  // connect the AudioBufferSourceNode to the destination so we can hear the sound
-  source.connect(audioContext.destination)
+  source.connect(sineWaveSpeechNode).connect(audioContext.destination)
   source.start()
 }
 </script>

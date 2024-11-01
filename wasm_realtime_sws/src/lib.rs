@@ -24,6 +24,49 @@ impl SineWaveSpeechConverter {
         SineWaveSpeechConverter { n_waves, hop_size }
     }
 
+    pub fn get_frequencies_and_magnitudes(&mut self, audio_samples: Vec<f32>) -> Vec<f32> {
+        let (lpc_coefficients, gain, _residual) = lpc::fit_lpc(
+            &Array::from_vec(audio_samples),
+            self.n_waves * 2,
+            self.hop_size,
+            None,
+        );
+        let (frequencies, mut magnitudes) =
+            lpc::lpc_coefficients_to_frequencies(lpc_coefficients.view(), gain.view());
+
+        // Limit the really extreme values. I'm not sure at what value the should be limited to
+        // but this at least seemed to get rid of the really extreme values.
+        // Note that in synthesize() we normalize the output to [-1, 1] so there is no clipping,
+        // it's just that some values are really extreme.
+        magnitudes.mapv_inplace(|x| x.min(2.0));
+
+        let frequencies = frequencies.flatten();
+        let magnitudes = magnitudes.flatten();
+
+        let mut result = Vec::with_capacity(frequencies.len() + magnitudes.len());
+        result.extend_from_slice(&frequencies.to_vec());
+        result.extend_from_slice(&magnitudes.to_vec());
+
+        result
+    }
+
+    pub fn synthesize(&mut self, frequencies: Vec<f32>, magnitudes: Vec<f32>) -> Vec<f32> {
+        assert_eq!(frequencies.len(), magnitudes.len());
+        let n_steps: usize = frequencies.len() / self.n_waves;
+
+        let frequencies = Array2::from_shape_vec((n_steps, self.n_waves), frequencies).unwrap();
+        let magnitudes = Array2::from_shape_vec((n_steps, self.n_waves), magnitudes).unwrap();
+
+        let sws = synthesize(
+            frequencies.view(),
+            magnitudes.view(),
+            self.hop_size,
+            f32::sin,
+        );
+
+        sws.to_vec()
+    }
+
     pub fn convert(&mut self, audio_samples: Vec<f32>) -> Vec<f32> {
         let (lpc_coefficients, gain, _residual) = lpc::fit_lpc(
             &Array::from_vec(audio_samples),
@@ -53,6 +96,16 @@ impl SineWaveSpeechConverter {
         // console_log!("frequencies: {:?}", frequencies);
         // console_log!("magnitudes: {:?}", magnitudes);
 
-        sws.to_vec()
+        let last_frequencies = frequencies.slice(s![.., -1]).to_vec();
+        let last_magnitudes = magnitudes.slice(s![.., -1]).to_vec();
+
+        // concat all three
+        let mut result =
+            Vec::with_capacity(sws.len() + last_frequencies.len() + last_magnitudes.len());
+        result.extend_from_slice(&last_frequencies);
+        result.extend_from_slice(&last_magnitudes);
+        result.extend_from_slice(&sws.to_vec());
+
+        result
     }
 }
