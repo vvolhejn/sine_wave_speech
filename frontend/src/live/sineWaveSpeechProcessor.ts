@@ -8,17 +8,18 @@ class SineWaveSpeechProcessor extends AudioWorkletProcessor {
   hopSize: number = 128
   lastFrequencies: Float32Array
   lastMagnitudes: Float32Array
+  lastPhases: Float32Array
 
   constructor() {
     super()
     this.lastFrequencies = new Float32Array(this.nWaves)
     this.lastMagnitudes = new Float32Array(this.nWaves)
+    this.lastPhases = new Float32Array(this.nWaves)
 
     this.port.onmessage = (event) => this.onmessage(event.data)
   }
 
   onmessage(event: MessageEvent) {
-    console.log('Received message', event)
     if (event.type === 'initialize') {
       init(WebAssembly.compile((event as any).wasmBytes)).then(() => {
         this.converter = SineWaveSpeechConverter.new(this.nWaves, this.hopSize)
@@ -35,7 +36,9 @@ class SineWaveSpeechProcessor extends AudioWorkletProcessor {
     outputList: Float32Array[][],
     _parameters: Record<string, Float32Array>
   ) {
-    checkProcessArguments(inputList, outputList)
+    if (!canProcess(inputList, outputList)) {
+      return true
+    }
     const inputAudio = inputList[0][0]
     const outputAudio = outputList[0][0]
 
@@ -61,26 +64,26 @@ class SineWaveSpeechProcessor extends AudioWorkletProcessor {
 
       const converted = this.converter.synthesize(
         combinedFrequencies,
-        combinedMagnitudes
+        combinedMagnitudes,
+        // The phase needs to be passed in from the previous frame
+        // so that the sine wave can continue from where it left off
+        this.lastPhases
       )
       const audio = converted.slice(0, this.hopSize + 1)
       const lastPhases = converted.slice(this.hopSize + 1)
-      console.log('Last phases', lastPhases)
 
       outputAudio.set(audio.slice(1))
 
       this.lastFrequencies = frequencies
       this.lastMagnitudes = magnitudes
+      this.lastPhases = lastPhases
     }
 
     return true
   }
 }
 
-const checkProcessArguments = (
-  inputList: Float32Array[][],
-  outputList: Float32Array[][]
-) => {
+const canProcess = (inputList: Float32Array[][], outputList: Float32Array[][]) => {
   if (inputList.length !== 1) {
     throw new Error('Expected exactly 1 input')
   }
@@ -89,12 +92,21 @@ const checkProcessArguments = (
   }
   const inputChannels = inputList[0]
   const outputChannels = outputList[0]
+
+  if (inputChannels.length === 0) {
+    // Silently skip - this happens if we're not getting any input.
+    // That happens when we're processing an audio file and it ends.
+    return false
+  }
+
   if (inputChannels.length !== 1) {
     throw new Error('Expected exactly 1 input channel, got ' + inputChannels.length)
   }
   if (outputChannels.length !== 1) {
     throw new Error('Expected exactly 1 output channel')
   }
+
+  return true
 }
 
 registerProcessor('sine-wave-speech-processor', SineWaveSpeechProcessor)

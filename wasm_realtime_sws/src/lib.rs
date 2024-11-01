@@ -1,7 +1,6 @@
-use ndarray::{s, Array, Array2};
+use ndarray::{Array, Array2};
 use synthesis::synthesize;
 use wasm_bindgen::prelude::*;
-use web_sys::js_sys;
 
 mod linear_algebra;
 mod lpc;
@@ -50,7 +49,12 @@ impl SineWaveSpeechConverter {
         result
     }
 
-    pub fn synthesize(&mut self, frequencies: Vec<f32>, magnitudes: Vec<f32>) -> Vec<f32> {
+    pub fn synthesize(
+        &mut self,
+        frequencies: Vec<f32>,
+        magnitudes: Vec<f32>,
+        first_phases: Vec<f32>,
+    ) -> Vec<f32> {
         assert_eq!(frequencies.len(), magnitudes.len());
         let n_steps: usize = frequencies.len() / self.n_waves;
 
@@ -62,6 +66,7 @@ impl SineWaveSpeechConverter {
             magnitudes.view(),
             self.hop_size,
             f32::sin,
+            Some(Array::from_vec(first_phases)),
         );
 
         let mut result = sws.to_vec();

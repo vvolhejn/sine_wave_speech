@@ -22,7 +22,8 @@ const getAudioBuffer = async (audioContext: AudioContext, audioFile: string) => 
 }
 
 async function setupAudio() {
-  const audioContext = new window.AudioContext()
+  // The sample rate heavily affects the sine wave speech effect, 8000 is the tested one.
+  const audioContext = new window.AudioContext({ sampleRate: 8000 })
 
   // Fetch the raw WebAssembly module
   const response = await window.fetch(wasmUrl)

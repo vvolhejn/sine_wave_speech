@@ -1,9 +1,4 @@
-use ndarray::{s, Array1, Array2, ArrayView2, Axis};
-use std::f32::consts::PI;
-
-use crate::lpc::{fit_lpc, lpc_coefficients_to_frequencies};
-
-const DEFAULT_HOP_SIZE: usize = 256;
+use ndarray::{s, Array1, ArrayView2};
 
 /// Synthesizes a signal from sine wave frequencies and magnitudes.
 ///
@@ -13,9 +8,13 @@ pub fn synthesize(
     magnitudes: ArrayView2<f32>,
     hop_size: usize,
     wave_fn: impl Fn(f32) -> f32,
+    first_phases: Option<Array1<f32>>,
 ) -> (Array1<f32>, Array1<f32>) {
     assert_eq!(normalized_frequencies.shape(), magnitudes.shape());
     assert_eq!(normalized_frequencies.ndim(), 2);
+
+    let first_phases =
+        first_phases.unwrap_or_else(|| Array1::zeros(normalized_frequencies.dim().1));
 
     let (n_frames, n_waves) = normalized_frequencies.dim();
     let output_samples = 1 + (n_frames - 1) * hop_size;
@@ -31,6 +30,7 @@ pub fn synthesize(
             &mag_slice.to_owned(),
             hop_size,
             &wave_fn,
+            first_phases[i],
         );
         output += &cur.0;
         last_phases[i] = cur.1;
@@ -51,6 +51,7 @@ pub fn synthesize_one(
     magnitudes: &Array1<f32>,
     hop_size: usize,
     wave_fn: impl Fn(f32) -> f32,
+    first_phase: f32,
 ) -> (Array1<f32>, f32) {
     assert_eq!(normalized_frequencies.shape(), magnitudes.shape());
     assert_eq!(normalized_frequencies.ndim(), 1);
@@ -60,7 +61,7 @@ pub fn synthesize_one(
 
     // Calculate cumulative sum for phase
     let mut phase = Array1::zeros(frequencies_upsampled.len());
-    let mut sum = 0.0f32;
+    let mut sum = first_phase;
     for (i, &freq) in frequencies_upsampled.iter().enumerate() {
         sum += freq;
         phase[i] = sum;
@@ -69,7 +70,7 @@ pub fn synthesize_one(
     // Apply wave function and magnitudes
     (
         phase.mapv(|x| wave_fn(x)) * &magnitudes_upsampled,
-        phase[phase.len() - 1],
+        phase[phase.len() - 1] % (2.0 * std::f32::consts::PI),
     )
 }
 
