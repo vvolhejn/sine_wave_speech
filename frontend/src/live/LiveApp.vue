@@ -55,8 +55,6 @@ const setupAudio = async () => {
   // The sample rate heavily affects the sine wave speech effect, 8000 is the tested one.
   const audioContext = new window.AudioContext({ sampleRate: 8000 })
 
-  const mediaStream = await getWebAudioMediaStream()
-
   // Fetch the raw WebAssembly module
   const response = await window.fetch(wasmUrl)
   const wasmBytes = await response.arrayBuffer()
@@ -71,8 +69,7 @@ const setupAudio = async () => {
     'sine-wave-speech-processor',
     wasmBytes
   )
-
-  return { audioContext, sineWaveSpeechNode, mediaStream }
+  return { audioContext, sineWaveSpeechNode }
 }
 
 const startPlayingAudio = async (fromMicrophone: boolean) => {
@@ -81,11 +78,12 @@ const startPlayingAudio = async (fromMicrophone: boolean) => {
     return
   }
 
-  const { audioContext, sineWaveSpeechNode, mediaStream } = await setupAudio()
+  const { audioContext, sineWaveSpeechNode } = await setupAudio()
 
   let source: AudioNode
 
   if (fromMicrophone) {
+    const mediaStream = await getWebAudioMediaStream()
     source = audioContext.createMediaStreamSource(mediaStream)
   } else {
     const dryAudioBuffer = await getAudioBuffer(audioContext, sentenceAudio)
