@@ -11,6 +11,6 @@ export default defineConfig({
         live: './live/index.html',
       },
     },
-    minify: false,
+    minify: true,
   },
 })

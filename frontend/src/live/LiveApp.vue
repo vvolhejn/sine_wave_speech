@@ -1,18 +1,10 @@
 <script setup lang="ts">
 import sentenceAudio from '../assets/sentence-original.wav'
-import init, { SineWaveSpeechConverter } from '../wasm_realtime_sws/wasm_audio.js'
 import wasmUrl from '../wasm_realtime_sws/wasm_audio_bg.wasm?url'
 import SineWaveSpeechNode from './sineWaveSpeechNode.js'
-import processorUrl from './sineWaveSpeechProcessor.ts?url'
-
-const nWaves = 4
-const hopSize = 256
-
-let converter: SineWaveSpeechConverter | null = null
-
-init({ module: '../wasm_realtime_sws/wasm_audio_bg.wasm' }).then(() => {
-  converter = SineWaveSpeechConverter.new(nWaves, hopSize)
-})
+// Importing with "?worker&url" and not "?url" is necessary:
+// https://github.com/vitejs/vite/issues/6979#issuecomment-1320394505
+import processorUrl from './sineWaveSpeechProcessor.ts?worker&url'
 
 const getAudioBuffer = async (audioContext: AudioContext, audioFile: string) => {
   const response = await fetch(audioFile)
@@ -73,11 +65,6 @@ const setupAudio = async () => {
 }
 
 const startPlayingAudio = async (fromMicrophone: boolean) => {
-  if (!converter) {
-    console.log('Converter not initialized')
-    return
-  }
-
   const { audioContext, sineWaveSpeechNode } = await setupAudio()
 
   let source: AudioNode
