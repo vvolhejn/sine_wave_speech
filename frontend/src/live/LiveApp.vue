@@ -1,10 +1,14 @@
 <script setup lang="ts">
+import { ref } from 'vue'
+
 import sentenceAudio from '../assets/sentence-original.wav'
 import wasmUrl from '../wasm_realtime_sws/wasm_audio_bg.wasm?url'
-import SineWaveSpeechNode from './sineWaveSpeechNode.js'
+import LiveVisualization from './LiveVisualization.vue'
+import SineWaveSpeechNode from './sineWaveSpeechNode.ts'
 // Importing with "?worker&url" and not "?url" is necessary:
 // https://github.com/vitejs/vite/issues/6979#issuecomment-1320394505
 import processorUrl from './sineWaveSpeechProcessor.ts?worker&url'
+import { Hop } from './types.ts'
 
 const getAudioBuffer = async (audioContext: AudioContext, audioFile: string) => {
   const response = await fetch(audioFile)
@@ -42,6 +46,8 @@ const getWebAudioMediaStream = async () => {
     }
   }
 }
+
+const hopsRef = ref<Hop[]>([])
 
 const setupAudio = async () => {
   // The sample rate heavily affects the sine wave speech effect, 8000 is the tested one.
@@ -81,6 +87,8 @@ const startPlayingAudio = async (fromMicrophone: boolean) => {
   }
 
   source.connect(sineWaveSpeechNode).connect(audioContext.destination)
+  hopsRef.value = []
+  sineWaveSpeechNode.hops = hopsRef
 }
 </script>
 
@@ -99,5 +107,8 @@ const startPlayingAudio = async (fromMicrophone: boolean) => {
     >
       From file
     </button>
+    <div class="bg-white">
+      <LiveVisualization :hops="hopsRef" />
+    </div>
   </div>
 </template>

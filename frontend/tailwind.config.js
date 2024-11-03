@@ -10,6 +10,7 @@ export default {
       accent2: '#AE7C7C',
       accent3: '#6CBBB3',
       accent4: '#EFE784',
+      white: '#FFFFFF',
     },
     fontFamily: {
       header: ['"Playfair"'],

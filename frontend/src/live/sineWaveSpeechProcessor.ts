@@ -1,4 +1,5 @@
 import init, { SineWaveSpeechConverter } from '../wasm_realtime_sws/wasm_audio.js'
+import { ProcessorMessage } from './types.js'
 
 // https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API/Using_AudioWorklet
 // "By specification, each block of audio your process() function receives
@@ -40,8 +41,6 @@ class SineWaveSpeechProcessor extends AudioWorkletProcessor {
     if (event.type === 'initialize') {
       init(WebAssembly.compile((event as any).wasmBytes)).then(() => {
         this.converter = SineWaveSpeechConverter.new(this.nWaves, this.hopSize)
-        console.log('Initialized')
-        this.port.postMessage({ type: 'initialized' })
       })
     } else {
       throw new Error('Unknown message type: ' + event.type)
@@ -113,6 +112,14 @@ class SineWaveSpeechProcessor extends AudioWorkletProcessor {
       this.lastMagnitudes = magnitudes
       this.lastPhases = lastPhases
       this.bufferToProcess = new Float32Array()
+
+      this.postMessage({
+        type: 'hop',
+        data: {
+          frequencies: frequencies,
+          magnitudes: magnitudes,
+        },
+      })
     }
 
     if (this.bufferToPlay.length >= BLOCK_SIZE) {
@@ -123,6 +130,11 @@ class SineWaveSpeechProcessor extends AudioWorkletProcessor {
     }
 
     return true
+  }
+
+  /** A typed version of this.port.postMessage() */
+  private postMessage(message: ProcessorMessage) {
+    this.port.postMessage(message)
   }
 }
 
