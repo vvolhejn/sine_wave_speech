@@ -73,20 +73,22 @@ const setupAudio = async () => {
 const startPlayingAudio = async (fromMicrophone: boolean) => {
   const { audioContext, sineWaveSpeechNode } = await setupAudio()
 
-  let source: AudioNode
+  sineWaveSpeechNode.connect(audioContext.destination)
 
   if (fromMicrophone) {
     const mediaStream = await getWebAudioMediaStream()
-    source = audioContext.createMediaStreamSource(mediaStream)
+    const source = audioContext.createMediaStreamSource(mediaStream)
+
+    source.connect(sineWaveSpeechNode)
   } else {
     const dryAudioBuffer = await getAudioBuffer(audioContext, sentenceAudio)
     let bufferSource = audioContext.createBufferSource()
     bufferSource.buffer = dryAudioBuffer
-    source = bufferSource
+
+    bufferSource.connect(sineWaveSpeechNode)
     bufferSource.start()
   }
 
-  source.connect(sineWaveSpeechNode).connect(audioContext.destination)
   hopsRef.value = []
   sineWaveSpeechNode.hops = hopsRef
 }
