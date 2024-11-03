@@ -8,6 +8,7 @@ import {
   LinearScale,
   PointElement,
   LineElement,
+  Colors,
 } from 'chart.js'
 import { computed, ref } from 'vue'
 import { Line } from 'vue-chartjs'
@@ -21,7 +22,8 @@ ChartJS.register(
   CategoryScale,
   LinearScale,
   PointElement,
-  LineElement
+  LineElement,
+  Colors // Automatically colors the lines
 )
 
 const props = defineProps<{
@@ -38,10 +40,15 @@ const chartData = computed(() => {
   const nWaves = hops[0].frequencies.length
 
   const datasets = [...Array(nWaves).keys()].map((i) => {
-    const curFrequencies = hops.map((hop) => hop.frequencies[i])
+    const curFrequencies = hops.map((hop) =>
+      hop.frequencies[i] > 0 ? hop.frequencies[i] : null
+    )
     // const curMagnitudes = hops.map((hop) => hop.magnitudes[i])
 
-    return { data: curFrequencies }
+    return {
+      data: curFrequencies,
+      label: `${i + 1}`,
+    }
   })
 
   return {

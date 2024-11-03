@@ -109,7 +109,7 @@ const startPlayingAudio = async (fromMicrophone: boolean) => {
     >
       From file
     </button>
-    <div class="bg-white">
+    <div class="bg-white max-w-3xl">
       <LiveVisualization :hops="hopsRef" />
     </div>
   </div>
