@@ -13,7 +13,7 @@ import {
 import { computed, ref } from 'vue'
 import { Line } from 'vue-chartjs'
 
-import { Hop } from './types.ts'
+import { Hop } from '../types'
 
 ChartJS.register(
   Title,
