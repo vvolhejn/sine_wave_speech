@@ -48,6 +48,7 @@ const getWebAudioMediaStream = async () => {
 }
 
 const hopsRef = ref<Hop[]>([])
+const recordedAudioBuffer = ref<AudioBuffer | null>(null)
 
 const setupAudio = async () => {
   // The sample rate heavily affects the sine wave speech effect, 8000 is the tested one.
@@ -72,25 +73,43 @@ const setupAudio = async () => {
 
 const startPlayingAudio = async (fromMicrophone: boolean) => {
   const { audioContext, sineWaveSpeechNode } = await setupAudio()
-
   sineWaveSpeechNode.connect(audioContext.destination)
 
   if (fromMicrophone) {
     const mediaStream = await getWebAudioMediaStream()
     const source = audioContext.createMediaStreamSource(mediaStream)
-
     source.connect(sineWaveSpeechNode)
   } else {
-    const dryAudioBuffer = await getAudioBuffer(audioContext, sentenceAudio)
+    const dryAudioBuffer =
+      recordedAudioBuffer.value || (await getAudioBuffer(audioContext, sentenceAudio))
     let bufferSource = audioContext.createBufferSource()
     bufferSource.buffer = dryAudioBuffer
-
     bufferSource.connect(sineWaveSpeechNode)
     bufferSource.start()
   }
 
   hopsRef.value = []
   sineWaveSpeechNode.hops = hopsRef
+}
+
+const startRecordingAudio = async () => {
+  const audioContext = new window.AudioContext({ sampleRate: 8000 })
+  const mediaStream = await getWebAudioMediaStream()
+  const mediaRecorder = new MediaRecorder(mediaStream)
+  const audioChunks: BlobPart[] = []
+
+  mediaRecorder.ondataavailable = (event) => {
+    audioChunks.push(event.data)
+  }
+
+  mediaRecorder.onstop = async () => {
+    const audioBlob = new Blob(audioChunks)
+    const arrayBuffer = await audioBlob.arrayBuffer()
+    recordedAudioBuffer.value = await audioContext.decodeAudioData(arrayBuffer)
+  }
+
+  mediaRecorder.start()
+  setTimeout(() => mediaRecorder.stop(), 5000) // Record for 5 seconds
 }
 </script>
 
@@ -101,7 +120,13 @@ const startPlayingAudio = async (fromMicrophone: boolean) => {
       @click="() => startPlayingAudio(true)"
       class="button text-center grid-auto text-5xl p-20"
     >
-      From microphone
+      Real-time
+    </button>
+    <button
+      @click="() => startRecordingAudio()"
+      class="button text-center grid-auto text-5xl p-20"
+    >
+      Record
     </button>
     <button
       @click="() => startPlayingAudio(false)"
