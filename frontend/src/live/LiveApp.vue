@@ -119,28 +119,25 @@ const startRecordingAudio = async () => {
 </script>
 
 <template>
-  <div class="grid grid-cols-1 content-center h-screen">
+  <div class="grid grid-cols-1 content-center justify-items-center h-screen">
     <p>Work in progress, stay tuned.</p>
     <button
       @click="() => startPlayingAudio(true)"
-      class="button text-center grid-auto text-3xl p-10"
+      class="button grid-auto text-3xl p-10"
     >
       Real-time
     </button>
-    <button
-      @click="() => startRecordingAudio()"
-      class="button text-center grid-auto text-3xl p-10"
-    >
+    <button @click="() => startRecordingAudio()" class="button grid-auto text-3xl p-10">
       Record
     </button>
     <button
       @click="() => startPlayingAudio(false)"
-      class="button text-center grid-auto text-3xl p-10"
+      class="button grid-auto text-3xl p-10"
     >
-      From file
+      Play
     </button>
     <div
-      class="mt-2 h-2 bg-white overflow-hidden rounded-sm"
+      class="mt-2 h-2 bg-white overflow-hidden rounded-sm w-full"
       :style="{ '--recording-duration': `${RECORDING_DURATION_SEC}s` }"
     >
       <div

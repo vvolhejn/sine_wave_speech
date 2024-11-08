@@ -101,6 +101,10 @@ onMounted(() => {
     .select(svgRef.value)
     .attr('width', width + margin.left + margin.right)
     .attr('height', height + margin.top + margin.bottom)
+    .attr(
+      'viewBox',
+      `0 0 ${width + margin.left + margin.right} ${height + margin.top + margin.bottom}`
+    )
 
   svg.append('g').attr('transform', `translate(${margin.left},${margin.top})`)
 
@@ -117,6 +121,6 @@ watch(
 
 <template>
   <div class="w-full h-full">
-    <svg ref="svgRef"></svg>
+    <svg ref="svgRef" class="w-full"></svg>
   </div>
 </template>
