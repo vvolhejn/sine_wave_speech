@@ -1,7 +1,7 @@
 /* tslint:disable */
 /* eslint-disable */
 export const memory: WebAssembly.Memory;
-export function __wbg_sinewavespeechconverter_free(a: number, b: number): void;
+export function __wbg_sinewavespeechconverter_free(a: number): void;
 export function __wbg_get_sinewavespeechconverter_n_waves(a: number): number;
 export function __wbg_set_sinewavespeechconverter_n_waves(a: number, b: number): void;
 export function __wbg_get_sinewavespeechconverter_hop_size(a: number): number;

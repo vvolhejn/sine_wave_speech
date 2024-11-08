@@ -11,7 +11,7 @@ pub fn synthesize(
     first_phases: Option<Array1<f32>>,
 ) -> (Array1<f32>, Array1<f32>) {
     assert_eq!(normalized_frequencies.shape(), magnitudes.shape());
-    if (normalized_frequencies.len_of(Axis(0)) < 2) {
+    if normalized_frequencies.len_of(Axis(0)) < 2 {
         panic!(
             "At least two frames are required, but normalized_frequencies has length {}",
             normalized_frequencies.len_of(Axis(0))
