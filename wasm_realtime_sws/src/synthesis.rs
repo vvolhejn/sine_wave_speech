@@ -58,8 +58,13 @@ pub fn synthesize_one(
     assert_eq!(normalized_frequencies.shape(), magnitudes.shape());
     assert_eq!(normalized_frequencies.ndim(), 1);
 
-    let frequencies_upsampled = upsample(normalized_frequencies, hop_size, false);
-    let magnitudes_upsampled = upsample(magnitudes, hop_size, false);
+    let frequencies_upsampled = upsample(
+        normalized_frequencies,
+        hop_size,
+        false,
+        UpsamplingMethod::Nearest,
+    );
+    let magnitudes_upsampled = upsample(magnitudes, hop_size, false, UpsamplingMethod::Linear);
 
     // Calculate cumulative sum for phase
     let mut phase = Array1::zeros(frequencies_upsampled.len());
@@ -76,6 +81,11 @@ pub fn synthesize_one(
     )
 }
 
+pub enum UpsamplingMethod {
+    Linear,
+    Nearest,
+}
+
 /// Upsamples a signal, stretching it by an integer factor.
 /// Linearly interpolates between the original samples.
 /// Returns an array of size (x.len() - 1) * factor,
@@ -83,7 +93,12 @@ pub fn synthesize_one(
 /// For example, if you have [a, b, c] and factor = 3, you end
 /// up with axxbxxc, where x represent interpolated values.
 /// If include_last is false, you get axxbxx.
-pub fn upsample(x: &Array1<f32>, factor: usize, include_last: bool) -> Array1<f32> {
+pub fn upsample(
+    x: &Array1<f32>,
+    factor: usize,
+    include_last: bool,
+    method: UpsamplingMethod,
+) -> Array1<f32> {
     // Replace NaN values with 0.0
     let x = x.mapv(|v| if v.is_nan() { 0.0 } else { v });
 
@@ -96,7 +111,12 @@ pub fn upsample(x: &Array1<f32>, factor: usize, include_last: bool) -> Array1<f3
         let i_high = (i_low + 1).min(x.len() - 1);
         let local_fraction = global_fraction - i_low as f32;
 
-        output[i] = x[i_low].mul_add(1.0 - local_fraction, x[i_high] * local_fraction);
+        output[i] = match method {
+            UpsamplingMethod::Linear => {
+                x[i_low].mul_add(1.0 - local_fraction, x[i_high] * local_fraction)
+            }
+            UpsamplingMethod::Nearest => x[i_low],
+        };
     }
 
     output
@@ -111,12 +131,16 @@ mod tests {
     #[test]
     fn test_upsample() {
         let input = Array1::from_vec(vec![0.0, 1.0, 2.0]);
-        let upsampled = upsample(&input, 2, true);
+        let upsampled = upsample(&input, 2, true, UpsamplingMethod::Linear);
         let expected = Array1::from_vec(vec![0.0, 0.5, 1.0, 1.5, 2.0]);
         assert_array1_eq(&upsampled, &expected, 1e-6);
 
-        let upsampled = upsample(&input, 2, false);
+        let upsampled = upsample(&input, 2, false, UpsamplingMethod::Linear);
         let expected = Array1::from_vec(vec![0.0, 0.5, 1.0, 1.5]);
+        assert_array1_eq(&upsampled, &expected, 1e-6);
+
+        let upsampled = upsample(&input, 2, true, UpsamplingMethod::Nearest);
+        let expected = Array1::from_vec(vec![0.0, 0.0, 1.0, 1.0, 2.0]);
         assert_array1_eq(&upsampled, &expected, 1e-6);
     }
 }
