@@ -62,7 +62,12 @@ const recordedAudioBuffer = ref<AudioBuffer | null>(null)
 const isRecording = ref(false)
 const totalNumHops = ref<number | null>(null)
 
-const setupAudio = async () => {
+type AudioSetup = {
+  audioContext: AudioContext
+  sineWaveSpeechNode: SineWaveSpeechNode
+}
+
+const setupAudio = async (): Promise<AudioSetup> => {
   const audioContext = new window.AudioContext({ sampleRate: SAMPLE_RATE })
 
   // Fetch the raw WebAssembly module
@@ -82,13 +87,28 @@ const setupAudio = async () => {
       processorOptions: {
         hopSize: HOP_SIZE,
       },
+      onHop: (hop: Hop) => {
+        hops.value.push(hop)
+        if (hops.value.length > 200) {
+          hops.value.shift()
+        }
+      },
     }
   )
   return { audioContext, sineWaveSpeechNode }
 }
 
+const audioSetup = ref<AudioSetup | null>(null)
+
+const getAudioSetup = async () => {
+  if (!audioSetup.value) {
+    audioSetup.value = await setupAudio()
+  }
+  return audioSetup.value
+}
+
 const startPlayingAudio = async (fromMicrophone: boolean) => {
-  const { audioContext, sineWaveSpeechNode } = await setupAudio()
+  const { audioContext, sineWaveSpeechNode } = await getAudioSetup()
   sineWaveSpeechNode.connect(audioContext.destination)
 
   if (fromMicrophone) {
@@ -106,11 +126,10 @@ const startPlayingAudio = async (fromMicrophone: boolean) => {
   }
 
   hops.value = []
-  sineWaveSpeechNode.hops = hops
 }
 
 const startRecordingAudio = async () => {
-  const { audioContext } = await setupAudio()
+  const { audioContext } = await getAudioSetup()
   const mediaStream = await getWebAudioMediaStream()
   const mediaRecorder = new MediaRecorder(mediaStream)
   const audioChunks: BlobPart[] = []

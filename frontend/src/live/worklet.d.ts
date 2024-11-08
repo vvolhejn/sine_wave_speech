@@ -19,14 +19,20 @@ interface AudioParamDescriptor {
 
 declare var AudioWorkletProcessor: {
   prototype: AudioWorkletProcessor
-  new (options?: AudioWorkletNodeOptions): AudioWorkletProcessor
+  // The generic parameter is needed so that registerProcessor
+  // can infer the type of the processor
+  new <T extends AudioWorkletNodeOptions = AudioWorkletNodeOptions>(
+    options?: T
+  ): AudioWorkletProcessor
 
   parameterDescriptors?: AudioParamDescriptor[]
 }
 
-declare function registerProcessor(
+declare function registerProcessor<
+  T extends AudioWorkletNodeOptions = AudioWorkletNodeOptions
+>(
   name: string,
-  processorCtor: (new (options?: AudioWorkletNodeOptions) => AudioWorkletProcessor) & {
+  processorCtor: (new (options?: T) => AudioWorkletProcessor) & {
     parameterDescriptors?: AudioParamDescriptor[]
   }
 ): void

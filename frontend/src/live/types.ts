@@ -25,4 +25,5 @@ export interface SineWaveSpeechNodeOptions extends AudioWorkletNodeOptions {
   // processorOptions is required but we can't enforce that with TypeScript
   // because we're extending AudioWorkletNodeOptions
   processorOptions?: SineWaveSpeechProcessorOptions
+  onHop: (hop: Hop) => void
 }

@@ -1,9 +1,7 @@
-import { ref } from 'vue'
-
 import { Hop, NodeMessage, ProcessorMessage, SineWaveSpeechNodeOptions } from './types'
 
 export default class SineWaveSpeechNode extends AudioWorkletNode {
-  hops = ref<Hop[]>([])
+  onHop: (hop: Hop) => void
 
   /**
    * Initialize the Audio processor by sending the fetched WebAssembly module to
@@ -22,6 +20,7 @@ export default class SineWaveSpeechNode extends AudioWorkletNode {
       wasmBytes,
     })
     this.port.onmessage = (event) => this.onmessage(event.data)
+    this.onHop = options.onHop
   }
 
   // Handle an uncaught exception thrown in the PitchProcessor.
@@ -31,11 +30,7 @@ export default class SineWaveSpeechNode extends AudioWorkletNode {
 
   onmessage(event: ProcessorMessage) {
     if (event.type === 'hop') {
-      this.hops.value.push(event.data)
-      // TODO: is this the best place to manage the max length?
-      if (this.hops.value.length > 200) {
-        this.hops.value.shift()
-      }
+      this.onHop(event.data)
     } else {
       throw new Error('Unknown message type: ' + event.type)
     }
