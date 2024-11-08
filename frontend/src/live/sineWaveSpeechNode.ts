@@ -1,6 +1,6 @@
 import { ref } from 'vue'
 
-import { Hop, NodeMessage, ProcessorMessage } from './types'
+import { Hop, NodeMessage, ProcessorMessage, SineWaveSpeechNodeOptions } from './types'
 
 export default class SineWaveSpeechNode extends AudioWorkletNode {
   hops = ref<Hop[]>([])
@@ -13,7 +13,7 @@ export default class SineWaveSpeechNode extends AudioWorkletNode {
     context: BaseAudioContext,
     name: string,
     wasmBytes: ArrayBuffer,
-    options?: AudioWorkletNodeOptions
+    options: SineWaveSpeechNodeOptions
   ) {
     super(context, name, options)
 

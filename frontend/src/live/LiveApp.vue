@@ -13,6 +13,9 @@ import { Hop } from './types.ts'
 // Single source of truth for the recording duration (in seconds)
 const RECORDING_DURATION_SEC = 3
 
+// Must be a multiple of 128, the WebAudio block size
+const HOP_SIZE = 256
+
 const getAudioBuffer = async (audioContext: AudioContext, audioFile: string) => {
   const response = await fetch(audioFile)
   const arrayBuffer = await response.arrayBuffer()
@@ -53,6 +56,7 @@ const getWebAudioMediaStream = async () => {
 const hops = ref<Hop[]>([])
 const recordedAudioBuffer = ref<AudioBuffer | null>(null)
 const isRecording = ref(false)
+const totalNumHops = ref<number | null>(null)
 
 const setupAudio = async () => {
   // The sample rate heavily affects the sine wave speech effect, 8000 is the tested one.
@@ -70,7 +74,12 @@ const setupAudio = async () => {
   let sineWaveSpeechNode = new SineWaveSpeechNode(
     audioContext,
     'sine-wave-speech-processor',
-    wasmBytes
+    wasmBytes,
+    {
+      processorOptions: {
+        hopSize: HOP_SIZE,
+      },
+    }
   )
   return { audioContext, sineWaveSpeechNode }
 }
@@ -90,6 +99,7 @@ const startPlayingAudio = async (fromMicrophone: boolean) => {
     bufferSource.buffer = dryAudioBuffer
     bufferSource.connect(sineWaveSpeechNode)
     bufferSource.start()
+    totalNumHops.value = Math.ceil(dryAudioBuffer.length / HOP_SIZE)
   }
 
   hops.value = []
@@ -97,7 +107,7 @@ const startPlayingAudio = async (fromMicrophone: boolean) => {
 }
 
 const startRecordingAudio = async () => {
-  const audioContext = new window.AudioContext({ sampleRate: 8000 })
+  const { audioContext } = await setupAudio()
   const mediaStream = await getWebAudioMediaStream()
   const mediaRecorder = new MediaRecorder(mediaStream)
   const audioChunks: BlobPart[] = []
@@ -153,7 +163,7 @@ const startRecordingAudio = async () => {
       ></div>
     </div>
     <div class="bg-white max-w-3xl">
-      <LiveVisualization :hops="hops" />
+      <LiveVisualization :hops="hops" :totalNumHops="totalNumHops" />
     </div>
   </div>
 </template>

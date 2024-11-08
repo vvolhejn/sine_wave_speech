@@ -28,6 +28,7 @@ ChartJS.register(
 
 const props = defineProps<{
   hops: Hop[]
+  totalNumHops: number | null
 }>()
 
 const chartData = computed(() => {
@@ -38,6 +39,10 @@ const chartData = computed(() => {
   }
 
   const nWaves = hops[0].frequencies.length
+
+  if (props.totalNumHops && hops.length > props.totalNumHops) {
+    throw new Error('hops.length > totalNumHops')
+  }
 
   const datasets = [...Array(nWaves).keys()].map((i) => {
     const curFrequencies = hops.map((hop) =>
@@ -52,7 +57,7 @@ const chartData = computed(() => {
   })
 
   return {
-    labels: [...Array(hops.length).keys()],
+    labels: [...Array(props.totalNumHops || hops.length).keys()],
     datasets: datasets,
   }
 })

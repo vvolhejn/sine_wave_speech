@@ -16,3 +16,13 @@ export type InitializeMessage = {
 }
 
 export type NodeMessage = InitializeMessage
+
+export interface SineWaveSpeechProcessorOptions {
+  hopSize: number
+}
+
+export interface SineWaveSpeechNodeOptions extends AudioWorkletNodeOptions {
+  // processorOptions is required but we can't enforce that with TypeScript
+  // because we're extending AudioWorkletNodeOptions
+  processorOptions?: SineWaveSpeechProcessorOptions
+}

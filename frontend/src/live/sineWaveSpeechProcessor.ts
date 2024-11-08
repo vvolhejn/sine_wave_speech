@@ -1,5 +1,5 @@
 import init, { SineWaveSpeechConverter } from '../wasm_realtime_sws/wasm_audio.js'
-import { ProcessorMessage } from './types.js'
+import { ProcessorMessage, SineWaveSpeechNodeOptions } from './types.js'
 
 // https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API/Using_AudioWorklet
 // "By specification, each block of audio your process() function receives
@@ -8,13 +8,13 @@ import { ProcessorMessage } from './types.js'
 // depending on circumstances, so you should always check the array's length
 // rather than assuming a particular size."
 // Here we do make the assumption but fail loudly if it's not true
-const BLOCK_SIZE = 128
+export const BLOCK_SIZE = 128
 
 class SineWaveSpeechProcessor extends AudioWorkletProcessor {
   converter: SineWaveSpeechConverter | null = null
   nWaves: number = 4
 
-  hopSize: number = BLOCK_SIZE * 2
+  hopSize: number
   lastFrequencies: Float32Array
   lastMagnitudes: Float32Array
   lastPhases: Float32Array
@@ -22,11 +22,17 @@ class SineWaveSpeechProcessor extends AudioWorkletProcessor {
   bufferToPlay: Float32Array
   bufferToProcess: Float32Array
 
-  constructor() {
-    super()
+  constructor(options?: SineWaveSpeechNodeOptions) {
+    super(options)
     this.lastFrequencies = new Float32Array(this.nWaves)
     this.lastMagnitudes = new Float32Array(this.nWaves)
     this.lastPhases = new Float32Array(this.nWaves)
+
+    if (!options || !options.processorOptions) {
+      throw new Error('Expected options.processorOptions to be defined')
+    }
+
+    this.hopSize = options.processorOptions.hopSize
 
     // Since the hop size might be larger than the block size, we need to buffer the audio
     // until we have enough to process. After processing, we make a buffer and then play it,
