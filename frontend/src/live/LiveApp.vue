@@ -16,6 +16,10 @@ const RECORDING_DURATION_SEC = 3
 // Must be a multiple of 128, the WebAudio block size
 const HOP_SIZE = 256
 
+// The sample rate significantly affects how sine wave speech effect sounds.
+// 8000 is the tested one.
+const SAMPLE_RATE = 8000
+
 const getAudioBuffer = async (audioContext: AudioContext, audioFile: string) => {
   const response = await fetch(audioFile)
   const arrayBuffer = await response.arrayBuffer()
@@ -59,8 +63,7 @@ const isRecording = ref(false)
 const totalNumHops = ref<number | null>(null)
 
 const setupAudio = async () => {
-  // The sample rate heavily affects the sine wave speech effect, 8000 is the tested one.
-  const audioContext = new window.AudioContext({ sampleRate: 8000 })
+  const audioContext = new window.AudioContext({ sampleRate: SAMPLE_RATE })
 
   // Fetch the raw WebAssembly module
   const response = await window.fetch(wasmUrl)
@@ -163,7 +166,11 @@ const startRecordingAudio = async () => {
       ></div>
     </div>
     <div class="bg-white max-w-3xl">
-      <LiveVisualization :hops="hops" :totalNumHops="totalNumHops" />
+      <LiveVisualization
+        :hops="hops"
+        :totalNumHops="totalNumHops"
+        :sampleRate="SAMPLE_RATE"
+      />
     </div>
   </div>
 </template>
