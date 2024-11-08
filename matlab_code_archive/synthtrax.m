@@ -1,9 +1,9 @@
 function X = synthtrax(F, M, SR, SUBF, DUR)
 % X = synthtrax(F, M, SR, SUBF, DUR)      Reconstruct a sound from track rep'n.
-%	Each row of F and M contains a series of frequency and magnitude 
-%	samples for a particular track.  These will be remodulated and 
-%	overlaid into the output sound X which will run at sample rate SR, 
-%	although the columns in F and M are subsampled from that rate by 
+%	Each row of F and M contains a series of frequency and magnitude
+%	samples for a particular track.  These will be remodulated and
+%	overlaid into the output sound X which will run at sample rate SR,
+%	although the columns in F and M are subsampled from that rate by
 %	a factor SUBF (default 128).  If DUR is nonzero, X will be padded or
 %	truncated to correspond to just this much time.
 % dpwe@icsi.berkeley.edu 1994aug20, 1996aug22
@@ -30,7 +30,7 @@ for row = 1:rows
 %  fprintf(1, 'row %d.. \n', row);
   mm = M(row,:);
   ff = F(row,:);
-  % Where mm = 0, ff is undefined.  But interp will care, so find points 
+  % Where mm = 0, ff is undefined.  But interp will care, so find points
   % and set.
   % First, find onsets - points where mm goes from zero (or NaN) to nzero
   % Before that, even, set all nan values of mm to zero
@@ -39,8 +39,8 @@ for row = 1:rows
   nzv = find(mm);
   firstcol = min(nzv);
   lastcol = max(nzv);
-  % for speed, chop off regions of initial and final zero magnitude - 
-  % but want to include one zero from each end if they are there 
+  % for speed, chop off regions of initial and final zero magnitude -
+  % but want to include one zero from each end if they are there
   zz = [max(1, firstcol-1):min(cols,lastcol+1)];
   mm = mm(zz);
   ff = ff(zz);

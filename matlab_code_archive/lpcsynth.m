@@ -1,11 +1,11 @@
 function d = lpcsynth(a,g,e,h,ov)
 % d = lpcsynth(a,g,e,h,ov)   Resynthesize from LPC representation
-%    Each row of a is an LPC fit to a h-point (non-overlapping) 
-%    frame of data.  g gives the overall gains for each frame and 
-%    e is an excitation signal (if e is empty, white noise is used; 
+%    Each row of a is an LPC fit to a h-point (non-overlapping)
+%    frame of data.  g gives the overall gains for each frame and
+%    e is an excitation signal (if e is empty, white noise is used;
 %    if e is a scalar, a pulse train is used with that period).
-%    ov nonzero selects overlap-add of reconstructed 
-%    windows, else e is assumed to consist of independent hop-sized 
+%    ov nonzero selects overlap-add of reconstructed
+%    windows, else e is assumed to consist of independent hop-sized
 %    segments that will line up correctly without cross-fading
 %    (matching the ov option to lpcfit; default is ov = 1).
 %    Return d as the resulting LPC resynthesis.
@@ -45,13 +45,13 @@ e = [e, zeros(1, w)];
 d = zeros(1,npts);
 
 for hop = 1:nhops
-  
+
   hbase = (hop-1)*h;
-  
+
   oldbit = d(hbase + [1:h]);
   aa = a(hop,:);
   G = g(hop);
-  if ov == 0 
+  if ov == 0
     newbit = G*filter(1, aa, e(hbase + [1:h]));
   else
     newbit = G*filter(1, aa, e(hbase + [1:w]));
@@ -59,9 +59,9 @@ for hop = 1:nhops
   if ov == 0
     d(hbase + [1:h]) = newbit;
   else
-    d(hbase + [1:w]) = [oldbit, zeros(1,(w-h))] + (hanning(w)'.*newbit); 
+    d(hbase + [1:w]) = [oldbit, zeros(1,(w-h))] + (hanning(w)'.*newbit);
   end
-  
+
 end
 
 % De-emphasis (must match pre-emphasis in lpcfit)

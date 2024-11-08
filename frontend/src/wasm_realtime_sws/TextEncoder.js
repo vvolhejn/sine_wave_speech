@@ -48,7 +48,7 @@
     };
     globalThis.TextEncoder = TextEncoder;
     if (!window["TextEncoder"]) window["TextEncoder"] = TextEncoder;
-  
+
     function TextDecoder() {}
     TextDecoder.prototype.decode = function (octets) {
       if (!octets) return "";

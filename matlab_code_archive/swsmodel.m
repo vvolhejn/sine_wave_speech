@@ -2,12 +2,12 @@ function [F,M] = swsmodel(D,R,H)
 % [F,M] = swsmodel(D,R,H)  Sine wave speech analysis
 %       D is a speech example sampled at R samples per second.
 %       Return a sinusoid model of up to 4 components with each sinusoid
-%       defined by a row of F (frequencies in Hz) and M (linear magnitude). 
+%       defined by a row of F (frequencies in Hz) and M (linear magnitude).
 %       Each column of F and M corresponds to H samples at R.
-%       Rows of F are sorted with lowest frequency first; 
+%       Rows of F are sorted with lowest frequency first;
 %       sinusoids cannot cross.
 %
-%       Relies on lpcfit.m and lpca2frq.m to form LPC model and convert it 
+%       Relies on lpcfit.m and lpca2frq.m to form LPC model and convert it
 %       into frequencies.
 % 2001-03-12 dpwe@ee.columbia.edu $Header: $
 

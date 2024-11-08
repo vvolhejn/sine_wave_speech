@@ -1,8 +1,8 @@
 function [a,g,e] = lpcfit(x,p,h,w,ov)
 % [a,g,e] = lpcfit(x,p,h,w,ov)  Fit LPC to short-time segments
-%    x is a stretch of signal.  Using w point (2*h) windows every 
-%    h points (128), fit order p LPC models.  Return the successive 
-%    all-pole coefficients as rows of a, the per-frame gains in g 
+%    x is a stretch of signal.  Using w point (2*h) windows every
+%    h points (128), fit order p LPC models.  Return the successive
+%    all-pole coefficients as rows of a, the per-frame gains in g
 %    and the residual excitation in e.
 %    ov nonzero selects overlap-add of window-length
 %    residuals, otherwise successive hop-sized residuals are concatenated
