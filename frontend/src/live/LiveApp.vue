@@ -3,13 +3,13 @@ import { ref } from 'vue'
 
 import sentenceAudio from '../assets/sentence-original.wav'
 import wasmUrl from '../wasm_realtime_sws/wasm_audio_bg.wasm?url'
+import { getAudioBuffer, getWebAudioMediaStream } from './audioUtils.ts'
 import LiveVisualization from './components/LiveVisualization.vue'
 import SineWaveSpeechNode from './sineWaveSpeechNode.ts'
 // Importing with "?worker&url" and not "?url" is necessary:
 // https://github.com/vitejs/vite/issues/6979#issuecomment-1320394505
 import processorUrl from './sineWaveSpeechProcessor.ts?worker&url'
 import { Hop } from './types.ts'
-import { getAudioBuffer, getWebAudioMediaStream } from './webaudioUtils.ts'
 
 // Single source of truth for the recording duration (in seconds)
 const RECORDING_DURATION_SEC = 3
@@ -148,7 +148,7 @@ const startRecordingAudio = async () => {
         v-if="isRecording"
       ></div>
     </div>
-    <div class="bg-white max-w-3xl">
+    <div class="max-w-3xl">
       <LiveVisualization
         :hops="hops"
         :totalNumHops="totalNumHops"

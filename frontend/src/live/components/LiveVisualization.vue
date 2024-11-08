@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import * as d3 from 'd3'
-import { onMounted, watch, ref } from 'vue'
+import { onMounted, ref, watch } from 'vue'
 
-import type { Hop } from '../types'
+import { magnitudeToDbfs } from '../audioUtils'
+import type { Hop } from '@/live/types'
+import { accentColors } from '@/tailwindColors'
 
 const props = defineProps<{
   hops: Hop[]
@@ -41,21 +43,29 @@ const updateVisualization = () => {
     .domain([0, normalizedFrequencyToHz(Math.PI)])
     .range([height, 0])
 
-  const magnitudeScale = d3.scaleLinear().domain([0, 1]).range([0.1, 1])
+  const magnitudeScale = d3.scaleLinear().domain([-60, 0]).range([0.1, 1])
 
   const linesToDraw = [...Array(nWaves).keys()].map((i) => {
     const frequencies = hops.map((hop) =>
       hop.frequencies[i] > 0 ? normalizedFrequencyToHz(hop.frequencies[i]) : null
     )
-    const magnitudes = hops.map((hop) => hop.magnitudes[i])
+    // TODO: fix Rust code to ensure the magnitudes are always in [0, 1]
+    const magnitudesDbfs = hops.map((hop) =>
+      magnitudeToDbfs(Math.min(hop.magnitudes[i], 1))
+    )
 
-    return { frequencies, magnitudes }
+    return { frequencies, magnitudesDbfs }
   })
+
+  const withOpacity = (color: d3.RGBColor, opacity: number) =>
+    `rgba(${color.r}, ${color.g}, ${color.b}, ${opacity})`
 
   // Update visualization for each line
   linesToDraw.forEach((dataset, datasetIndex) => {
     // Remove existing line segments
     svg.selectAll(`.line-${datasetIndex}`).remove()
+
+    const baseColor = d3.color(accentColors[datasetIndex])!.rgb()
 
     // Draw line segments
     for (let i = 0; i < dataset.frequencies.length - 1; i++) {
@@ -74,9 +84,9 @@ const updateVisualization = () => {
           )
           .attr(
             'stroke',
-            `rgba(54, 162, 235, ${magnitudeScale(dataset.magnitudes[i])})`
+            withOpacity(baseColor, magnitudeScale(dataset.magnitudesDbfs[i]))
           )
-          .attr('stroke-width', 1 + 5 * magnitudeScale(dataset.magnitudes[i]))
+          .attr('stroke-width', 1 + 5 * magnitudeScale(dataset.magnitudesDbfs[i]))
           .attr('fill', 'none')
       }
     }

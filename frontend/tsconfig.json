@@ -20,7 +20,14 @@
     "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    "noFallthroughCasesInSwitch": true
+    "noFallthroughCasesInSwitch": true,
+    "paths": {
+      // This is an alias that refers to the source root, allowing us to import
+      // files from the src directory using "@/foo/bar" instead of "../../foo/bar"
+      "@/*": [
+        "./src/*"
+      ]
+    },
   },
   "include": [
     "src/**/*.ts",

@@ -34,3 +34,19 @@ export const getWebAudioMediaStream = async () => {
     }
   }
 }
+
+/**
+ * Calculates decibels relative to full scale (dBFS) from a linear magnitude value
+ * @param magnitude - Linear magnitude (amplitude) value between 0 and 1
+ * @returns dBFS value (always <= 0). Will be -Infinity if magnitude is 0.
+ * @throws Error if magnitude is negative or greater than 1
+ */
+export const magnitudeToDbfs = (magnitude: number): number => {
+  // Validate input
+  if (magnitude < 0 || magnitude > 1) {
+    throw new Error('magnitude must be between 0 and 1')
+  }
+
+  // Calculate dBFS: 20 * log10(magnitude).
+  return 20 * Math.log10(magnitude)
+}

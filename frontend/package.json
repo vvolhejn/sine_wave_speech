@@ -38,7 +38,7 @@
     "singleQuote": true,
     "printWidth": 88,
     "importOrder": [
-      "^[./]"
+      "^[./@]"
     ],
     "importOrderSeparation": true
   }

@@ -1,13 +1,8 @@
 <script setup lang="ts">
-import resolveConfig from 'tailwindcss/resolveConfig'
-
-// @ts-ignore
-import partialTailwindConfig from '../../tailwind.config.js'
 import { usePlaybackStore } from '../stores/playbackStore'
+import { accentColors } from '../tailwindColors'
 import { WaveConfig } from '../types'
 import SineWave from './SineWave.vue'
-
-const tailwindConfig = resolveConfig(partialTailwindConfig)
 
 const playbackStore = usePlaybackStore()
 
@@ -21,13 +16,6 @@ const step = () => {
 window.requestAnimationFrame(step)
 
 const X_SPEED_COEF = 1.2
-
-const accentColors = [
-  tailwindConfig.theme.colors.accent4,
-  tailwindConfig.theme.colors.accent3,
-  tailwindConfig.theme.colors.accent2,
-  tailwindConfig.theme.colors.accent1,
-]
 
 const wavesConfig: WaveConfig[] = [0, 1, 2, 3].map((i) => {
   return {
