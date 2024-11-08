@@ -4,6 +4,7 @@ use wasm_bindgen::prelude::*;
 
 mod linear_algebra;
 mod lpc;
+mod music;
 mod signal_processing;
 mod synthesis;
 mod utils;
