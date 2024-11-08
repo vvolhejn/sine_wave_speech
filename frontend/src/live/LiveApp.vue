@@ -10,6 +10,9 @@ import SineWaveSpeechNode from './sineWaveSpeechNode.ts'
 import processorUrl from './sineWaveSpeechProcessor.ts?worker&url'
 import { Hop } from './types.ts'
 
+// Single source of truth for the recording duration (in seconds)
+const RECORDING_DURATION_SEC = 3
+
 const getAudioBuffer = async (audioContext: AudioContext, audioFile: string) => {
   const response = await fetch(audioFile)
   const arrayBuffer = await response.arrayBuffer()
@@ -47,8 +50,9 @@ const getWebAudioMediaStream = async () => {
   }
 }
 
-const hopsRef = ref<Hop[]>([])
+const hops = ref<Hop[]>([])
 const recordedAudioBuffer = ref<AudioBuffer | null>(null)
+const isRecording = ref(false)
 
 const setupAudio = async () => {
   // The sample rate heavily affects the sine wave speech effect, 8000 is the tested one.
@@ -88,8 +92,8 @@ const startPlayingAudio = async (fromMicrophone: boolean) => {
     bufferSource.start()
   }
 
-  hopsRef.value = []
-  sineWaveSpeechNode.hops = hopsRef
+  hops.value = []
+  sineWaveSpeechNode.hops = hops
 }
 
 const startRecordingAudio = async () => {
@@ -109,7 +113,12 @@ const startRecordingAudio = async () => {
   }
 
   mediaRecorder.start()
-  setTimeout(() => mediaRecorder.stop(), 5000) // Record for 5 seconds
+  isRecording.value = true
+
+  setTimeout(() => {
+    isRecording.value = false
+    mediaRecorder.stop()
+  }, RECORDING_DURATION_SEC * 1000)
 }
 </script>
 
@@ -118,24 +127,48 @@ const startRecordingAudio = async () => {
     <p>Work in progress, stay tuned.</p>
     <button
       @click="() => startPlayingAudio(true)"
-      class="button text-center grid-auto text-5xl p-20"
+      class="button text-center grid-auto text-3xl p-10"
     >
       Real-time
     </button>
     <button
       @click="() => startRecordingAudio()"
-      class="button text-center grid-auto text-5xl p-20"
+      class="button text-center grid-auto text-3xl p-10"
     >
       Record
     </button>
     <button
       @click="() => startPlayingAudio(false)"
-      class="button text-center grid-auto text-5xl p-20"
+      class="button text-center grid-auto text-3xl p-10"
     >
       From file
     </button>
+    <div
+      class="mt-2 h-2 bg-white overflow-hidden rounded-sm"
+      :style="{ '--recording-duration': `${RECORDING_DURATION_SEC}s` }"
+    >
+      <div
+        class="progress-bar-animation bg-accent1 w-full h-full"
+        v-if="isRecording"
+      ></div>
+    </div>
     <div class="bg-white max-w-3xl">
-      <LiveVisualization :hops="hopsRef" />
+      <LiveVisualization :hops="hops" />
     </div>
   </div>
 </template>
+<style lang="css" scoped>
+.progress-bar-animation {
+  animation: progress var(--recording-duration) linear;
+  transform-origin: left;
+}
+
+@keyframes progress {
+  0% {
+    transform: scaleX(0);
+  }
+  100% {
+    transform: scaleX(1);
+  }
+}
+</style>
