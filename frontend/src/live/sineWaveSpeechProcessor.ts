@@ -43,6 +43,17 @@ class SineWaveSpeechProcessor extends AudioWorkletProcessor {
     this.port.onmessage = (event) => this.onmessage(event.data)
   }
 
+  static get parameterDescriptors(): AudioParamDescriptor[] {
+    return [
+      {
+        name: 'quantizeNotes',
+        defaultValue: 0.0,
+        minValue: 0,
+        maxValue: 1,
+      },
+    ]
+  }
+
   onmessage(event: MessageEvent) {
     if (event.type === 'initialize') {
       init(WebAssembly.compile((event as any).wasmBytes)).then(() => {
@@ -56,11 +67,13 @@ class SineWaveSpeechProcessor extends AudioWorkletProcessor {
   process(
     inputList: Float32Array[][],
     outputList: Float32Array[][],
-    _parameters: Record<string, Float32Array>
+    parameters: Record<string, Float32Array>
   ) {
     if (!canProcess(inputList, outputList)) {
       return true
     }
+    const shouldQuantizeNotes = getShouldQuantizeNotes(parameters)
+
     // It seems that even if there are two channels, we get stereo output even
     // though we're only writing one channel - why?
     const inputAudio = inputList[0][0]
@@ -104,7 +117,8 @@ class SineWaveSpeechProcessor extends AudioWorkletProcessor {
         combinedMagnitudes,
         // The phase needs to be passed in from the previous frame
         // so that the sine wave can continue from where it left off
-        this.lastPhases
+        this.lastPhases,
+        shouldQuantizeNotes
       )
       const audio = converted.slice(0, this.hopSize)
       const lastPhases = converted.slice(this.hopSize)
@@ -175,6 +189,14 @@ const canProcess = (inputList: Float32Array[][], outputList: Float32Array[][]) =
   }
 
   return true
+}
+
+const getShouldQuantizeNotes = (parameters: Record<string, Float32Array>) => {
+  const value = parameters.quantizeNotes[0]
+  if (value !== 0 && value !== 1) {
+    throw new Error(`Expected quantizeNotes to be 0 or 1, got ${value}`)
+  }
+  return value === 1
 }
 
 registerProcessor('sine-wave-speech-processor', SineWaveSpeechProcessor)

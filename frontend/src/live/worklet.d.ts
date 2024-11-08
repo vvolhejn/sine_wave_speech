@@ -10,9 +10,18 @@ interface AudioWorkletProcessor {
   ): boolean
 }
 
+interface AudioParamDescriptor {
+  name: string
+  defaultValue: number
+  minValue: number
+  maxValue: number
+}
+
 declare var AudioWorkletProcessor: {
   prototype: AudioWorkletProcessor
   new (options?: AudioWorkletNodeOptions): AudioWorkletProcessor
+
+  parameterDescriptors?: AudioParamDescriptor[]
 }
 
 declare function registerProcessor(

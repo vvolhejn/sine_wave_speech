@@ -8,6 +8,6 @@ Run tests: `cargo test`
 
 ## Useful resources
 
-https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API/Using_AudioWorklet
+[Background audio processing using AudioWorklet](https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API/Using_AudioWorklet)
 
 https://github.com/kgullion/vite-typescript-audio-worklet-example

@@ -55,6 +55,8 @@ impl SineWaveSpeechConverter {
         frequencies: Vec<f32>,
         magnitudes: Vec<f32>,
         first_phases: Vec<f32>,
+        // TODO: support multiple scales
+        quantize: bool,
     ) -> Vec<f32> {
         assert_eq!(frequencies.len(), magnitudes.len());
         let n_steps: usize = frequencies.len() / self.n_waves;
@@ -62,15 +64,16 @@ impl SineWaveSpeechConverter {
         let frequencies = Array2::from_shape_vec((n_steps, self.n_waves), frequencies).unwrap();
         let magnitudes = Array2::from_shape_vec((n_steps, self.n_waves), magnitudes).unwrap();
 
+        let scale = music::C_MAJOR_PENTATONIC.to_vec();
+        let allowed_notes = if quantize { Some(&scale) } else { None };
+
         let (sws, last_phases) = synthesize(
             frequencies.view(),
             magnitudes.view(),
             self.hop_size,
             f32::sin,
             Some(Array::from_vec(first_phases)),
-            // TODO: un-hardcode
-            Some(&music::C_MAJOR.to_vec()),
-            // None,
+            allowed_notes,
         );
 
         let mut result = sws.to_vec();

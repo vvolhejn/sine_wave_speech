@@ -219,9 +219,10 @@ export class SineWaveSpeechConverter {
     * @param {Float32Array} frequencies
     * @param {Float32Array} magnitudes
     * @param {Float32Array} first_phases
+    * @param {boolean} quantize
     * @returns {Float32Array}
     */
-    synthesize(frequencies, magnitudes, first_phases) {
+    synthesize(frequencies, magnitudes, first_phases, quantize) {
         try {
             const retptr = wasm.__wbindgen_add_to_stack_pointer(-16);
             const ptr0 = passArrayF32ToWasm0(frequencies, wasm.__wbindgen_malloc);
@@ -230,7 +231,7 @@ export class SineWaveSpeechConverter {
             const len1 = WASM_VECTOR_LEN;
             const ptr2 = passArrayF32ToWasm0(first_phases, wasm.__wbindgen_malloc);
             const len2 = WASM_VECTOR_LEN;
-            wasm.sinewavespeechconverter_synthesize(retptr, this.__wbg_ptr, ptr0, len0, ptr1, len1, ptr2, len2);
+            wasm.sinewavespeechconverter_synthesize(retptr, this.__wbg_ptr, ptr0, len0, ptr1, len1, ptr2, len2, quantize);
             var r0 = getInt32Memory0()[retptr / 4 + 0];
             var r1 = getInt32Memory0()[retptr / 4 + 1];
             var v4 = getArrayF32FromWasm0(r0, r1).slice();

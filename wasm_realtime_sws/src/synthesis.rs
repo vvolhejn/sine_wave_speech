@@ -32,8 +32,9 @@ pub fn synthesize(
     const MIN_OCTAVE: i32 = 0;
     const MAX_OCTAVE: i32 = 8;
     const FREQUENCY_MULTIPLIER: f32 = (2. * std::f32::consts::PI) / 8000.0;
-    let allowed_frequencies = allowed_notes
-        .map(|notes| music::generate_scale(notes, MIN_OCTAVE, MAX_OCTAVE, FREQUENCY_MULTIPLIER));
+    let allowed_frequencies = allowed_notes.map(|notes| {
+        music::generate_scale(notes, MIN_OCTAVE, MAX_OCTAVE, Some(FREQUENCY_MULTIPLIER))
+    });
 
     for i in 0..n_waves {
         let freq_slice = normalized_frequencies.slice(s![.., i]);

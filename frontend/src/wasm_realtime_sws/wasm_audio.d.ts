@@ -20,9 +20,10 @@ export class SineWaveSpeechConverter {
 * @param {Float32Array} frequencies
 * @param {Float32Array} magnitudes
 * @param {Float32Array} first_phases
+* @param {boolean} quantize
 * @returns {Float32Array}
 */
-  synthesize(frequencies: Float32Array, magnitudes: Float32Array, first_phases: Float32Array): Float32Array;
+  synthesize(frequencies: Float32Array, magnitudes: Float32Array, first_phases: Float32Array, quantize: boolean): Float32Array;
 /**
 */
   hop_size: number;
@@ -42,7 +43,7 @@ export interface InitOutput {
   readonly __wbg_set_sinewavespeechconverter_hop_size: (a: number, b: number) => void;
   readonly sinewavespeechconverter_new: (a: number, b: number) => number;
   readonly sinewavespeechconverter_get_frequencies_and_magnitudes: (a: number, b: number, c: number, d: number) => void;
-  readonly sinewavespeechconverter_synthesize: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number) => void;
+  readonly sinewavespeechconverter_synthesize: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number, i: number) => void;
   readonly __wbindgen_add_to_stack_pointer: (a: number) => number;
   readonly __wbindgen_malloc: (a: number, b: number) => number;
   readonly __wbindgen_free: (a: number, b: number, c: number) => void;
