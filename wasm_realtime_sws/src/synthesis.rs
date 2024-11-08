@@ -1,5 +1,7 @@
 use ndarray::{s, Array1, ArrayView2, Axis};
 
+use crate::music;
+
 /// Synthesizes a signal from sine wave frequencies and magnitudes.
 ///
 /// We don't need to know the sample rate because the frequencies are in radians/sample.
@@ -9,6 +11,7 @@ pub fn synthesize(
     hop_size: usize,
     wave_fn: impl Fn(f32) -> f32,
     first_phases: Option<Array1<f32>>,
+    allowed_notes: Option<&Vec<music::NoteName>>,
 ) -> (Array1<f32>, Array1<f32>) {
     assert_eq!(normalized_frequencies.shape(), magnitudes.shape());
     if normalized_frequencies.len_of(Axis(0)) < 2 {
@@ -26,6 +29,12 @@ pub fn synthesize(
     let mut output = Array1::zeros(output_samples);
     let mut last_phases = Array1::zeros(n_waves);
 
+    const MIN_OCTAVE: i32 = 0;
+    const MAX_OCTAVE: i32 = 8;
+    const FREQUENCY_MULTIPLIER: f32 = (2. * std::f32::consts::PI) / 8000.0;
+    let allowed_frequencies = allowed_notes
+        .map(|notes| music::generate_scale(notes, MIN_OCTAVE, MAX_OCTAVE, FREQUENCY_MULTIPLIER));
+
     for i in 0..n_waves {
         let freq_slice = normalized_frequencies.slice(s![.., i]);
         let mag_slice = magnitudes.slice(s![.., i]);
@@ -36,6 +45,7 @@ pub fn synthesize(
             hop_size,
             &wave_fn,
             first_phases[i],
+            allowed_frequencies.as_ref(),
         );
         output += &cur.0;
         last_phases[i] = cur.1;
@@ -54,6 +64,7 @@ pub fn synthesize_one(
     hop_size: usize,
     wave_fn: impl Fn(f32) -> f32,
     first_phase: f32,
+    allowed_frequencies: Option<&Vec<f32>>,
 ) -> (Array1<f32>, f32) {
     assert_eq!(normalized_frequencies.shape(), magnitudes.shape());
     assert_eq!(normalized_frequencies.ndim(), 1);
@@ -65,6 +76,13 @@ pub fn synthesize_one(
         UpsamplingMethod::Nearest,
     );
     let magnitudes_upsampled = upsample(magnitudes, hop_size, false, UpsamplingMethod::Linear);
+
+    let frequencies_upsampled = match allowed_frequencies {
+        Some(allowed_frequencies) => frequencies_upsampled
+            .mapv(|x| music::snap_frequency(x, allowed_frequencies))
+            .to_owned(),
+        None => frequencies_upsampled.to_owned(),
+    };
 
     // Calculate cumulative sum for phase
     let mut phase = Array1::zeros(frequencies_upsampled.len());

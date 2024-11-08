@@ -68,6 +68,9 @@ impl SineWaveSpeechConverter {
             self.hop_size,
             f32::sin,
             Some(Array::from_vec(first_phases)),
+            // TODO: un-hardcode
+            Some(&music::C_MAJOR.to_vec()),
+            // None,
         );
 
         let mut result = sws.to_vec();

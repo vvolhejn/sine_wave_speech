@@ -1,7 +1,7 @@
 const A4_FREQ: f32 = 440.0;
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
-enum NoteName {
+pub enum NoteName {
     C,
     CSharp,
     D,
@@ -15,6 +15,39 @@ enum NoteName {
     ASharp,
     B,
 }
+
+pub const C_MAJOR: &[NoteName] = &[
+    NoteName::C,
+    NoteName::D,
+    NoteName::E,
+    NoteName::F,
+    NoteName::G,
+    NoteName::A,
+    NoteName::B,
+];
+
+pub const CHROMATIC: &[NoteName] = &[
+    NoteName::C,
+    NoteName::CSharp,
+    NoteName::D,
+    NoteName::DSharp,
+    NoteName::E,
+    NoteName::F,
+    NoteName::FSharp,
+    NoteName::G,
+    NoteName::GSharp,
+    NoteName::A,
+    NoteName::ASharp,
+    NoteName::B,
+];
+
+pub const C_MAJOR_PENTATONIC: &[NoteName] = &[
+    NoteName::C,
+    NoteName::D,
+    NoteName::E,
+    NoteName::G,
+    NoteName::A,
+];
 
 impl NoteName {
     fn octave_4_frequency(&self) -> f32 {
@@ -54,11 +87,19 @@ impl NoteName {
     }
 }
 
-pub fn generate_scale(note_names: &[NoteName], start_octave: i32, end_octave: i32) -> Vec<f32> {
+pub fn generate_scale(
+    note_names: &Vec<NoteName>,
+    start_octave: i32,
+    end_octave: i32,
+    // Useful if you are working with normalized frequencies (radian/sample)
+    // rather than Hz
+    frequency_multiplier: Option<f32>,
+) -> Vec<f32> {
+    let frequency_multiplier = frequency_multiplier.unwrap_or(1.0);
     let mut scale = Vec::new();
     for octave in start_octave..=end_octave {
         for note in note_names {
-            scale.push(note.octave_4_frequency() * 2.0f32.powi(octave - 4));
+            scale.push(note.octave_4_frequency() * 2.0f32.powi(octave - 4) * frequency_multiplier);
         }
     }
     scale.sort_by(|a, b| a.partial_cmp(b).unwrap());
@@ -66,7 +107,7 @@ pub fn generate_scale(note_names: &[NoteName], start_octave: i32, end_octave: i3
 }
 
 /// Snaps a frequency to the closest note in the allowed frequencies.
-fn snap_frequency(to_snap: f32, allowed_frequencies: &Vec<f32>) -> f32 {
+pub fn snap_frequency(to_snap: f32, allowed_frequencies: &Vec<f32>) -> f32 {
     let mut min_diff_cents = std::f32::MAX;
     let mut closest_note = 0.0;
     for note in allowed_frequencies {
@@ -84,10 +125,11 @@ mod tests {
     use super::*;
     #[test]
     fn test_generate_scale() {
-        let scale: Vec<f32> = generate_scale(&[NoteName::C, NoteName::E, NoteName::G], 2, 3)
-            .iter()
-            .map(|x| (x * 100.).round() / 100.)
-            .collect();
+        let scale: Vec<f32> =
+            generate_scale(&vec![NoteName::C, NoteName::E, NoteName::G], 2, 3, None)
+                .iter()
+                .map(|x| (x * 100.).round() / 100.)
+                .collect();
 
         assert_eq!(scale.len(), 6);
         assert_eq!(scale[0], 65.41);
