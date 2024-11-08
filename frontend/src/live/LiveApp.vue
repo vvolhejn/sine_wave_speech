@@ -9,6 +9,7 @@ import SineWaveSpeechNode from './sineWaveSpeechNode.ts'
 // https://github.com/vitejs/vite/issues/6979#issuecomment-1320394505
 import processorUrl from './sineWaveSpeechProcessor.ts?worker&url'
 import { Hop } from './types.ts'
+import { getAudioBuffer, getWebAudioMediaStream } from './webaudioUtils.ts'
 
 // Single source of truth for the recording duration (in seconds)
 const RECORDING_DURATION_SEC = 3
@@ -19,43 +20,6 @@ const HOP_SIZE = 256
 // The sample rate significantly affects how sine wave speech effect sounds.
 // 8000 is the tested one.
 const SAMPLE_RATE = 8000
-
-const getAudioBuffer = async (audioContext: AudioContext, audioFile: string) => {
-  const response = await fetch(audioFile)
-  const arrayBuffer = await response.arrayBuffer()
-  const audioBuffer = await audioContext.decodeAudioData(arrayBuffer)
-  return audioBuffer
-}
-
-const getWebAudioMediaStream = async () => {
-  if (!window.navigator.mediaDevices) {
-    throw new Error('This browser does not support web audio or it is not enabled.')
-  }
-
-  try {
-    const result = await window.navigator.mediaDevices.getUserMedia({
-      audio: true,
-      video: false,
-    })
-
-    return result
-  } catch (e: any) {
-    switch (e.name) {
-      case 'NotAllowedError':
-        throw new Error(
-          'A recording device was found but has been disallowed for this application. Enable the device in the browser settings.'
-        )
-
-      case 'NotFoundError':
-        throw new Error(
-          'No recording device was found. Please attach a microphone and click Retry.'
-        )
-
-      default:
-        throw e
-    }
-  }
-}
 
 const hops = ref<Hop[]>([])
 const recordedAudioBuffer = ref<AudioBuffer | null>(null)
