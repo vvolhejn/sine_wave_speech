@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 
 import sentenceAudio from '../assets/sentence-original.wav'
 import wasmUrl from '../wasm_realtime_sws/wasm_audio_bg.wasm?url'
 import { getAudioBuffer, getWebAudioMediaStream } from './audioUtils.ts'
 import LiveVisualization from './components/LiveVisualization.vue'
+import Toggle from './components/Toggle.vue'
 import SineWaveSpeechNode from './sineWaveSpeechNode.ts'
 // Importing with "?worker&url" and not "?url" is necessary:
 // https://github.com/vitejs/vite/issues/6979#issuecomment-1320394505
@@ -25,6 +26,7 @@ const hops = ref<Hop[]>([])
 const recordedAudioBuffer = ref<AudioBuffer | null>(null)
 const isRecording = ref(false)
 const totalNumHops = ref<number | null>(null)
+const quantizeFrequencies = ref(false)
 
 type AudioSetup = {
   audioContext: AudioContext
@@ -70,6 +72,14 @@ const getAudioSetup = async () => {
   }
   return audioSetup.value
 }
+
+watch(quantizeFrequencies, async (newQuantizeFrequencies: boolean) => {
+  const { audioContext, sineWaveSpeechNode } = await getAudioSetup()
+  const param = sineWaveSpeechNode.parameters.get('quantizeFrequencies')
+  if (param === undefined) throw new Error('Parameter not found')
+
+  param.setValueAtTime(newQuantizeFrequencies ? 1.0 : 0.0, audioContext.currentTime)
+})
 
 const startPlayingAudio = async (fromMicrophone: boolean) => {
   const { audioContext, sineWaveSpeechNode } = await getAudioSetup()
@@ -136,6 +146,9 @@ const startRecordingAudio = async () => {
     >
       Play
     </button>
+    <div>
+      <Toggle v-model="quantizeFrequencies" label="Quantize" />
+    </div>
     <div
       class="mt-2 h-2 bg-white overflow-hidden rounded-sm w-full"
       :style="{ '--recording-duration': `${RECORDING_DURATION_SEC}s` }"
