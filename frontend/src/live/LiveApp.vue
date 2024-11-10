@@ -143,7 +143,7 @@ watch(gainDb, setGainDb)
 const frequencyQuantizationName = computed(() => {
   const strength = frequencyQuantizationStrength.value
   const breakpoints = [
-    { upTo: 0.5, name: 'No quantization' },
+    { upTo: 0.5, name: 'Microtonal' },
     { upTo: 1.5, name: 'Chromatic' },
     { upTo: 2.5, name: 'Diatonic' },
     { upTo: 3.0, name: 'Pentatonic' },
@@ -321,7 +321,7 @@ const startRecordingAudio = async () => {
       />
       <Slider
         v-model="frequencyQuantizationStrength"
-        :label="frequencyQuantizationName"
+        :label="`Scale: ${frequencyQuantizationName}`"
         :min="0"
         :max="3"
         :step="0.1"
