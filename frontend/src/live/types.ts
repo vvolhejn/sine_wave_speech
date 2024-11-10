@@ -18,7 +18,7 @@ export type InitializeMessage = {
 export type NodeMessage = InitializeMessage
 
 export interface SineWaveSpeechProcessorOptions {
-  hopSize: number
+  // do we still need this? used to have hopSize here
 }
 
 export interface SineWaveSpeechNodeOptions extends AudioWorkletNodeOptions {

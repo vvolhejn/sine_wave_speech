@@ -14,7 +14,7 @@ class SineWaveSpeechProcessor extends AudioWorkletProcessor {
   converter: SineWaveSpeechConverter | null = null
   nWaves: number = 4
 
-  hopSize: number
+  lastHopSize: number = 0
   lastFrequencies: Float32Array
   lastMagnitudes: Float32Array
   lastPhases: Float32Array
@@ -31,8 +31,6 @@ class SineWaveSpeechProcessor extends AudioWorkletProcessor {
     if (!options || !options.processorOptions) {
       throw new Error('Expected options.processorOptions to be defined')
     }
-
-    this.hopSize = options.processorOptions.hopSize
 
     // Since the hop size might be larger than the block size, we need to buffer the audio
     // until we have enough to process. After processing, we make a buffer and then play it,
@@ -51,13 +49,19 @@ class SineWaveSpeechProcessor extends AudioWorkletProcessor {
         minValue: 0,
         maxValue: 1,
       },
+      {
+        name: 'hopSizeMultiplier',
+        defaultValue: 2,
+        minValue: 1,
+        maxValue: 16,
+      },
     ]
   }
 
   onmessage(event: MessageEvent) {
     if (event.type === 'initialize') {
       init(WebAssembly.compile((event as any).wasmBytes)).then(() => {
-        this.converter = SineWaveSpeechConverter.new(this.nWaves, this.hopSize)
+        this.converter = SineWaveSpeechConverter.new(this.nWaves, BLOCK_SIZE)
       })
     } else {
       throw new Error('Unknown message type: ' + event.type)
@@ -72,7 +76,6 @@ class SineWaveSpeechProcessor extends AudioWorkletProcessor {
     if (!canProcess(inputList, outputList)) {
       return true
     }
-    const shouldQuantizeFrequencies = getShouldQuantizeFrequencies(parameters)
 
     // It seems that even if there are two channels, we get stereo output even
     // though we're only writing one channel - why?
@@ -85,11 +88,23 @@ class SineWaveSpeechProcessor extends AudioWorkletProcessor {
       return true
     }
 
+    const shouldQuantizeFrequencies = getShouldQuantizeFrequencies(parameters)
+    const hopSize = BLOCK_SIZE * parameters.hopSizeMultiplier[0]
+    const hopSizeChanged = hopSize !== this.lastHopSize
+
+    if (hopSizeChanged) {
+      this.lastHopSize = hopSize
+      this.converter.hop_size = hopSize
+      // Keeping the buffers from the previous hop size would lead to weird edge cases
+      this.bufferToProcess = new Float32Array()
+      this.bufferToPlay = new Float32Array()
+    }
+
     // Not very efficient because we're creating a new array, but it's fine for now
     this.bufferToProcess = concatFloat32Arrays([this.bufferToProcess, inputAudio])
 
-    if (this.bufferToProcess.length >= this.hopSize) {
-      if (this.bufferToProcess.length > this.hopSize) {
+    if (this.bufferToProcess.length >= hopSize) {
+      if (this.bufferToProcess.length > hopSize) {
         throw new Error(
           'Buffer to process is too long. ' +
             "This means the algorithm's hop size isn't a multiple of the block size"
@@ -120,8 +135,8 @@ class SineWaveSpeechProcessor extends AudioWorkletProcessor {
         this.lastPhases,
         shouldQuantizeFrequencies
       )
-      const audio = converted.slice(0, this.hopSize)
-      const lastPhases = converted.slice(this.hopSize)
+      const audio = converted.slice(0, hopSize)
+      const lastPhases = converted.slice(hopSize)
 
       if (this.bufferToPlay.length > 0) {
         throw new Error('Buffer to play is not empty')

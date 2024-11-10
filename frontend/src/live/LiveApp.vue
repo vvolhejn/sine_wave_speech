@@ -5,6 +5,7 @@ import sentenceAudio from '../assets/sentence-original.wav'
 import wasmUrl from '../wasm_realtime_sws/wasm_audio_bg.wasm?url'
 import { getAudioBuffer, getWebAudioMediaStream } from './audioUtils.ts'
 import LiveVisualization from './components/LiveVisualization.vue'
+import Slider from './components/Slider.vue'
 import Toggle from './components/Toggle.vue'
 import SineWaveSpeechNode from './sineWaveSpeechNode.ts'
 // Importing with "?worker&url" and not "?url" is necessary:
@@ -27,6 +28,7 @@ const recordedAudioBuffer = ref<AudioBuffer | null>(null)
 const isRecording = ref(false)
 const totalNumHops = ref<number | null>(null)
 const quantizeFrequencies = ref(false)
+const hopSizeMultiplier = ref(2)
 
 type AudioSetup = {
   audioContext: AudioContext
@@ -50,9 +52,7 @@ const setupAudio = async (): Promise<AudioSetup> => {
     'sine-wave-speech-processor',
     wasmBytes,
     {
-      processorOptions: {
-        hopSize: HOP_SIZE,
-      },
+      processorOptions: {},
       onHop: (hop: Hop) => {
         hops.value.push(hop)
         if (hops.value.length > 200) {
@@ -73,17 +73,33 @@ const getAudioSetup = async () => {
   return audioSetup.value
 }
 
-watch(quantizeFrequencies, async (newQuantizeFrequencies: boolean) => {
+const setQuantizeFrequencies = async (newQuantizeFrequencies: boolean) => {
   const { audioContext, sineWaveSpeechNode } = await getAudioSetup()
   const param = sineWaveSpeechNode.parameters.get('quantizeFrequencies')
   if (param === undefined) throw new Error('Parameter not found')
 
   param.setValueAtTime(newQuantizeFrequencies ? 1.0 : 0.0, audioContext.currentTime)
-})
+}
+
+const setHopSizeMultiplier = async (newHopSizeMultiplier: number) => {
+  const { audioContext, sineWaveSpeechNode } = await getAudioSetup()
+  const param = sineWaveSpeechNode.parameters.get('hopSizeMultiplier')
+  if (param === undefined) throw new Error('Parameter not found')
+
+  param.setValueAtTime(newHopSizeMultiplier, audioContext.currentTime)
+}
+
+watch(quantizeFrequencies, setQuantizeFrequencies)
+watch(hopSizeMultiplier, setHopSizeMultiplier)
 
 const startPlayingAudio = async (fromMicrophone: boolean) => {
   const { audioContext, sineWaveSpeechNode } = await getAudioSetup()
   sineWaveSpeechNode.connect(audioContext.destination)
+
+  // The watch() calls above only happen when the value is updated, so if the user didn't change
+  // anything, the parameters might be out of sync with the audio processor.
+  setQuantizeFrequencies(quantizeFrequencies.value)
+  setHopSizeMultiplier(hopSizeMultiplier.value)
 
   if (fromMicrophone) {
     const mediaStream = await getWebAudioMediaStream()
@@ -94,6 +110,7 @@ const startPlayingAudio = async (fromMicrophone: boolean) => {
       recordedAudioBuffer.value || (await getAudioBuffer(audioContext, sentenceAudio))
     let bufferSource = audioContext.createBufferSource()
     bufferSource.buffer = dryAudioBuffer
+    // bufferSource.loop = true
     bufferSource.connect(sineWaveSpeechNode)
     bufferSource.start()
     totalNumHops.value = Math.ceil(dryAudioBuffer.length / HOP_SIZE)
@@ -147,7 +164,16 @@ const startRecordingAudio = async () => {
       Play
     </button>
     <div>
-      <Toggle v-model="quantizeFrequencies" label="Quantize" />
+      <Toggle v-model="quantizeFrequencies" label="Quantize frequencies" />
+      <div>
+        <Slider
+          v-model="hopSizeMultiplier"
+          label="Time step"
+          :min="1"
+          :max="16"
+          id="hop-size-multiplier-slider"
+        />
+      </div>
     </div>
     <div
       class="mt-2 h-2 bg-white overflow-hidden rounded-sm w-full"
