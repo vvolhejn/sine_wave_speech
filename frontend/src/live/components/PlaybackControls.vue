@@ -4,14 +4,23 @@ import Button from './Button.vue'
 
 const playbackState = defineModel<PlaybackState>({ required: true })
 
-const onPlayPause = async () => {
+const onPlayPauseButtonClick = async () => {
   switch (playbackState.value) {
     case PlaybackState.Stopped:
+    case PlaybackState.PlayingRealtime:
       playbackState.value = PlaybackState.PlayingRecorded
       break
     case PlaybackState.PlayingRecorded:
       playbackState.value = PlaybackState.Stopped
       break
+  }
+}
+
+const onRealtimeButtonClick = async () => {
+  if (playbackState.value === PlaybackState.PlayingRealtime) {
+    playbackState.value = PlaybackState.Stopped
+  } else {
+    playbackState.value = PlaybackState.PlayingRealtime
   }
 }
 
@@ -52,7 +61,7 @@ const getPlayPauseText = (state: PlaybackState) => {
         </Button>
         <Button
           :disabled="playbackState === PlaybackState.Recording"
-          @click="onPlayPause"
+          @click="onPlayPauseButtonClick"
           custom-class="w-20"
         >
           {{ getPlayPauseText(playbackState) }}
@@ -70,14 +79,14 @@ const getPlayPauseText = (state: PlaybackState) => {
       <p class="self-center">Convert in real time</p>
       <div class="justify-self-center">
         <Button
-          :disabled="false"
-          @click="
-            () => {
-              playbackState = PlaybackState.PlayingRealtime
-            }
-          "
+          :disabled="playbackState === PlaybackState.Recording"
+          @click="onRealtimeButtonClick"
         >
-          Start real-time
+          {{
+            playbackState !== PlaybackState.PlayingRealtime
+              ? 'Start real-time'
+              : 'Stop real-time'
+          }}
         </Button>
       </div>
     </div>

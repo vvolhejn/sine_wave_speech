@@ -56,6 +56,10 @@ const totalNumHops = computed(() => {
       return RECORDING_DURATION_BLOCKS / hopSizeMultiplier.value
     } else if (playbackState.value === PlaybackState.PlayingRealtime) {
       return TOTAL_NUM_HOPS_WHEN_LIVE
+    } else if (playbackState.value === PlaybackState.Stopped) {
+      // We get into this branch briefly when we stop real-time playback,
+      // probably because this computed() is called before the state update is handled.
+      return TOTAL_NUM_HOPS_WHEN_LIVE
     } else {
       throw new Error('Invalid playback state')
     }
@@ -186,6 +190,11 @@ watch(playbackState, async (newPlaybackState: PlaybackState) => {
       await startRecordingAudio()
       break
     case PlaybackState.Stopped:
+      if (audioSourceNode.value instanceof MediaStreamAudioSourceNode) {
+        // If we're playing from the microphone, get rid of that node - won't need it anymore.
+        // If it was a recording, we can just suspend so that we can pick up where we left off later.
+        await setAudioSourceNode(null)
+      }
       audioContext.suspend()
       break
   }
@@ -195,15 +204,18 @@ watch(playbackState, async (newPlaybackState: PlaybackState) => {
  * Set the audio source node to a new one, disconnecting the old one if it exists.
  */
 const setAudioSourceNode = async (
-  newAudioSourceNode: MediaStreamAudioSourceNode | AudioBufferSourceNode
+  newValue: MediaStreamAudioSourceNode | AudioBufferSourceNode | null
 ) => {
-  if (audioSourceNode.value !== null) {
-    audioSourceNode.value.disconnect()
-    if (audioSourceNode.value instanceof AudioBufferSourceNode) {
-      audioSourceNode.value.stop()
+  const oldValue = audioSourceNode.value
+  if (oldValue !== null) {
+    oldValue.disconnect()
+    if (oldValue instanceof AudioBufferSourceNode) {
+      oldValue.stop()
     }
   }
-  audioSourceNode.value = newAudioSourceNode
+
+  audioSourceNode.value = newValue
+  hops.value = []
 }
 
 const startPlayingAudio = async (fromMicrophone: boolean) => {
