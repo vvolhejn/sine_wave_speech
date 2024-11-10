@@ -14,14 +14,19 @@ mod utils;
 pub struct SineWaveSpeechConverter {
     pub n_waves: usize,  // 4 is the default in Python
     pub hop_size: usize, // 256 is the default in Python
+    pub sample_rate: usize,
 }
 
 #[wasm_bindgen]
 impl SineWaveSpeechConverter {
-    pub fn new(n_waves: usize, hop_size: usize) -> SineWaveSpeechConverter {
+    pub fn new(n_waves: usize, hop_size: usize, sample_rate: usize) -> SineWaveSpeechConverter {
         utils::set_panic_hook();
 
-        SineWaveSpeechConverter { n_waves, hop_size }
+        SineWaveSpeechConverter {
+            n_waves,
+            hop_size,
+            sample_rate,
+        }
     }
 
     pub fn get_frequencies_and_magnitudes(&mut self, audio_samples: Vec<f32>) -> Vec<f32> {
@@ -50,13 +55,41 @@ impl SineWaveSpeechConverter {
         result
     }
 
+    pub fn quantize_frequencies(
+        &mut self,
+        frequencies: Vec<f32>,
+        quantization_type: Option<music::FrequencyQuantizationType>,
+    ) -> Vec<f32> {
+        match quantization_type {
+            None => return frequencies,
+            Some(quantization_type) => {
+                let allowed_notes = quantization_type.to_scale();
+
+                const MIN_OCTAVE: i32 = 0;
+                const MAX_OCTAVE: i32 = 8;
+                let frequency_multiplier: f32 =
+                    (2. * std::f32::consts::PI) / self.sample_rate as f32;
+                let allowed_frequencies = music::generate_scale(
+                    &allowed_notes.to_vec(),
+                    MIN_OCTAVE,
+                    MAX_OCTAVE,
+                    Some(frequency_multiplier),
+                );
+
+                let quantized_frequencies = frequencies
+                    .iter()
+                    .map(|x| music::quantize_frequency(*x, &allowed_frequencies))
+                    .collect();
+                quantized_frequencies
+            }
+        }
+    }
+
     pub fn synthesize(
         &mut self,
         frequencies: Vec<f32>,
         magnitudes: Vec<f32>,
         first_phases: Vec<f32>,
-        // TODO: support multiple scales
-        quantize: bool,
     ) -> Vec<f32> {
         assert_eq!(frequencies.len(), magnitudes.len());
         let n_steps: usize = frequencies.len() / self.n_waves;
@@ -64,16 +97,12 @@ impl SineWaveSpeechConverter {
         let frequencies = Array2::from_shape_vec((n_steps, self.n_waves), frequencies).unwrap();
         let magnitudes = Array2::from_shape_vec((n_steps, self.n_waves), magnitudes).unwrap();
 
-        let scale = music::C_MAJOR_PENTATONIC.to_vec();
-        let allowed_notes = if quantize { Some(&scale) } else { None };
-
         let (sws, last_phases) = synthesize(
             frequencies.view(),
             magnitudes.view(),
             self.hop_size,
             f32::sin,
             Some(Array::from_vec(first_phases)),
-            allowed_notes,
         );
 
         let mut result = sws.to_vec();

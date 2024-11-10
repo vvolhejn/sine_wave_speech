@@ -1,6 +1,11 @@
+// These are types that are needed for sineWaveSpeechProcessor.ts to compile.
 // https://github.com/microsoft/TypeScript/issues/28308#issuecomment-650802278
 // I also tried https://www.npmjs.com/package/@types/audioworklet
-// but didn't manage to make it work
+// but didn't manage to make it work.
+// Note that this also *incorrectly* adds these declarations to the global scope in other files.
+// Trying to use a global `sampleRate` in other files will compile, but will throw a runtime error.
+// See issue linked above.
+
 interface AudioWorkletProcessor {
   readonly port: MessagePort
   process(
@@ -36,3 +41,6 @@ declare function registerProcessor<
     parameterDescriptors?: AudioParamDescriptor[]
   }
 ): void
+
+// https://developer.mozilla.org/en-US/docs/Web/API/AudioWorkletGlobalScope/sampleRate
+declare var sampleRate: number

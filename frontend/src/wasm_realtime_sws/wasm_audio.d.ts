@@ -1,6 +1,13 @@
 /* tslint:disable */
 /* eslint-disable */
 /**
+*/
+export enum FrequencyQuantizationType {
+  Chromatic = 0,
+  Diatonic = 1,
+  Pentatonic = 2,
+}
+/**
 * Note that the converter doesn't care about the sample rate,
 */
 export class SineWaveSpeechConverter {
@@ -8,9 +15,10 @@ export class SineWaveSpeechConverter {
 /**
 * @param {number} n_waves
 * @param {number} hop_size
+* @param {number} sample_rate
 * @returns {SineWaveSpeechConverter}
 */
-  static new(n_waves: number, hop_size: number): SineWaveSpeechConverter;
+  static new(n_waves: number, hop_size: number, sample_rate: number): SineWaveSpeechConverter;
 /**
 * @param {Float32Array} audio_samples
 * @returns {Float32Array}
@@ -18,18 +26,26 @@ export class SineWaveSpeechConverter {
   get_frequencies_and_magnitudes(audio_samples: Float32Array): Float32Array;
 /**
 * @param {Float32Array} frequencies
-* @param {Float32Array} magnitudes
-* @param {Float32Array} first_phases
-* @param {boolean} quantize
+* @param {FrequencyQuantizationType | undefined} [quantization_type]
 * @returns {Float32Array}
 */
-  synthesize(frequencies: Float32Array, magnitudes: Float32Array, first_phases: Float32Array, quantize: boolean): Float32Array;
+  quantize_frequencies(frequencies: Float32Array, quantization_type?: FrequencyQuantizationType): Float32Array;
+/**
+* @param {Float32Array} frequencies
+* @param {Float32Array} magnitudes
+* @param {Float32Array} first_phases
+* @returns {Float32Array}
+*/
+  synthesize(frequencies: Float32Array, magnitudes: Float32Array, first_phases: Float32Array): Float32Array;
 /**
 */
   hop_size: number;
 /**
 */
   n_waves: number;
+/**
+*/
+  sample_rate: number;
 }
 
 export type InitInput = RequestInfo | URL | Response | BufferSource | WebAssembly.Module;
@@ -41,9 +57,12 @@ export interface InitOutput {
   readonly __wbg_set_sinewavespeechconverter_n_waves: (a: number, b: number) => void;
   readonly __wbg_get_sinewavespeechconverter_hop_size: (a: number) => number;
   readonly __wbg_set_sinewavespeechconverter_hop_size: (a: number, b: number) => void;
-  readonly sinewavespeechconverter_new: (a: number, b: number) => number;
+  readonly __wbg_get_sinewavespeechconverter_sample_rate: (a: number) => number;
+  readonly __wbg_set_sinewavespeechconverter_sample_rate: (a: number, b: number) => void;
+  readonly sinewavespeechconverter_new: (a: number, b: number, c: number) => number;
   readonly sinewavespeechconverter_get_frequencies_and_magnitudes: (a: number, b: number, c: number, d: number) => void;
-  readonly sinewavespeechconverter_synthesize: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number, i: number) => void;
+  readonly sinewavespeechconverter_quantize_frequencies: (a: number, b: number, c: number, d: number, e: number) => void;
+  readonly sinewavespeechconverter_synthesize: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number) => void;
   readonly __wbindgen_add_to_stack_pointer: (a: number) => number;
   readonly __wbindgen_malloc: (a: number, b: number) => number;
   readonly __wbindgen_free: (a: number, b: number, c: number) => void;

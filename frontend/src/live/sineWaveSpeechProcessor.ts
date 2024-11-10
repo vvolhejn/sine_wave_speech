@@ -1,4 +1,7 @@
-import init, { SineWaveSpeechConverter } from '../wasm_realtime_sws/wasm_audio.js'
+import init, {
+  FrequencyQuantizationType,
+  SineWaveSpeechConverter,
+} from '../wasm_realtime_sws/wasm_audio.js'
 import { ProcessorMessage, SineWaveSpeechNodeOptions } from './types.js'
 
 // https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API/Using_AudioWorklet
@@ -61,7 +64,11 @@ class SineWaveSpeechProcessor extends AudioWorkletProcessor {
   onmessage(event: MessageEvent) {
     if (event.type === 'initialize') {
       init(WebAssembly.compile((event as any).wasmBytes)).then(() => {
-        this.converter = SineWaveSpeechConverter.new(this.nWaves, BLOCK_SIZE)
+        this.converter = SineWaveSpeechConverter.new(
+          this.nWaves,
+          BLOCK_SIZE,
+          sampleRate
+        )
       })
     } else {
       throw new Error('Unknown message type: ' + event.type)
@@ -112,8 +119,15 @@ class SineWaveSpeechProcessor extends AudioWorkletProcessor {
       }
 
       const fm = this.converter.get_frequencies_and_magnitudes(this.bufferToProcess)
-      const frequencies = fm.slice(0, fm.length / 2)
+      let frequencies = fm.slice(0, fm.length / 2)
       const magnitudes = fm.slice(fm.length / 2)
+
+      if (shouldQuantizeFrequencies) {
+        frequencies = this.converter.quantize_frequencies(
+          frequencies,
+          FrequencyQuantizationType.Pentatonic
+        )
+      }
 
       if (frequencies.length !== this.nWaves) {
         throw new Error(
@@ -132,8 +146,7 @@ class SineWaveSpeechProcessor extends AudioWorkletProcessor {
         combinedMagnitudes,
         // The phase needs to be passed in from the previous frame
         // so that the sine wave can continue from where it left off
-        this.lastPhases,
-        shouldQuantizeFrequencies
+        this.lastPhases
       )
       const audio = converted.slice(0, hopSize)
       const lastPhases = converted.slice(hopSize)

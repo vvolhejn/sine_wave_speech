@@ -71,6 +71,10 @@ function getArrayF32FromWasm0(ptr, len) {
     return getFloat32Memory0().subarray(ptr / 4, ptr / 4 + len);
 }
 
+function isLikeNone(x) {
+    return x === undefined || x === null;
+}
+
 function addHeapObject(obj) {
     if (heap_next === heap.length) heap.push(heap.length + 1);
     const idx = heap_next;
@@ -133,6 +137,9 @@ function passStringToWasm0(arg, malloc, realloc) {
     WASM_VECTOR_LEN = offset;
     return ptr;
 }
+/**
+*/
+export const FrequencyQuantizationType = Object.freeze({ Chromatic:0,"0":"Chromatic",Diatonic:1,"1":"Diatonic",Pentatonic:2,"2":"Pentatonic", });
 
 const SineWaveSpeechConverterFinalization = (typeof FinalizationRegistry === 'undefined')
     ? { register: () => {}, unregister: () => {} }
@@ -188,12 +195,26 @@ export class SineWaveSpeechConverter {
         wasm.__wbg_set_sinewavespeechconverter_hop_size(this.__wbg_ptr, arg0);
     }
     /**
+    * @returns {number}
+    */
+    get sample_rate() {
+        const ret = wasm.__wbg_get_sinewavespeechconverter_sample_rate(this.__wbg_ptr);
+        return ret >>> 0;
+    }
+    /**
+    * @param {number} arg0
+    */
+    set sample_rate(arg0) {
+        wasm.__wbg_set_sinewavespeechconverter_sample_rate(this.__wbg_ptr, arg0);
+    }
+    /**
     * @param {number} n_waves
     * @param {number} hop_size
+    * @param {number} sample_rate
     * @returns {SineWaveSpeechConverter}
     */
-    static new(n_waves, hop_size) {
-        const ret = wasm.sinewavespeechconverter_new(n_waves, hop_size);
+    static new(n_waves, hop_size, sample_rate) {
+        const ret = wasm.sinewavespeechconverter_new(n_waves, hop_size, sample_rate);
         return SineWaveSpeechConverter.__wrap(ret);
     }
     /**
@@ -217,12 +238,31 @@ export class SineWaveSpeechConverter {
     }
     /**
     * @param {Float32Array} frequencies
-    * @param {Float32Array} magnitudes
-    * @param {Float32Array} first_phases
-    * @param {boolean} quantize
+    * @param {FrequencyQuantizationType | undefined} [quantization_type]
     * @returns {Float32Array}
     */
-    synthesize(frequencies, magnitudes, first_phases, quantize) {
+    quantize_frequencies(frequencies, quantization_type) {
+        try {
+            const retptr = wasm.__wbindgen_add_to_stack_pointer(-16);
+            const ptr0 = passArrayF32ToWasm0(frequencies, wasm.__wbindgen_malloc);
+            const len0 = WASM_VECTOR_LEN;
+            wasm.sinewavespeechconverter_quantize_frequencies(retptr, this.__wbg_ptr, ptr0, len0, isLikeNone(quantization_type) ? 3 : quantization_type);
+            var r0 = getInt32Memory0()[retptr / 4 + 0];
+            var r1 = getInt32Memory0()[retptr / 4 + 1];
+            var v2 = getArrayF32FromWasm0(r0, r1).slice();
+            wasm.__wbindgen_free(r0, r1 * 4, 4);
+            return v2;
+        } finally {
+            wasm.__wbindgen_add_to_stack_pointer(16);
+        }
+    }
+    /**
+    * @param {Float32Array} frequencies
+    * @param {Float32Array} magnitudes
+    * @param {Float32Array} first_phases
+    * @returns {Float32Array}
+    */
+    synthesize(frequencies, magnitudes, first_phases) {
         try {
             const retptr = wasm.__wbindgen_add_to_stack_pointer(-16);
             const ptr0 = passArrayF32ToWasm0(frequencies, wasm.__wbindgen_malloc);
@@ -231,7 +271,7 @@ export class SineWaveSpeechConverter {
             const len1 = WASM_VECTOR_LEN;
             const ptr2 = passArrayF32ToWasm0(first_phases, wasm.__wbindgen_malloc);
             const len2 = WASM_VECTOR_LEN;
-            wasm.sinewavespeechconverter_synthesize(retptr, this.__wbg_ptr, ptr0, len0, ptr1, len1, ptr2, len2, quantize);
+            wasm.sinewavespeechconverter_synthesize(retptr, this.__wbg_ptr, ptr0, len0, ptr1, len1, ptr2, len2);
             var r0 = getInt32Memory0()[retptr / 4 + 0];
             var r1 = getInt32Memory0()[retptr / 4 + 1];
             var v4 = getArrayF32FromWasm0(r0, r1).slice();
@@ -277,6 +317,9 @@ async function __wbg_load(module, imports) {
 function __wbg_get_imports() {
     const imports = {};
     imports.wbg = {};
+    imports.wbg.__wbindgen_object_drop_ref = function(arg0) {
+        takeObject(arg0);
+    };
     imports.wbg.__wbg_new_abda76e883ba8a5f = function() {
         const ret = new Error();
         return addHeapObject(ret);
@@ -298,9 +341,6 @@ function __wbg_get_imports() {
         } finally {
             wasm.__wbindgen_free(deferred0_0, deferred0_1, 1);
         }
-    };
-    imports.wbg.__wbindgen_object_drop_ref = function(arg0) {
-        takeObject(arg0);
     };
     imports.wbg.__wbindgen_throw = function(arg0, arg1) {
         throw new Error(getStringFromWasm0(arg0, arg1));

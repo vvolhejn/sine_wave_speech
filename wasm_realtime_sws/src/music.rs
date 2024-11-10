@@ -1,4 +1,4 @@
-const A4_FREQ: f32 = 440.0;
+use wasm_bindgen::prelude::wasm_bindgen;
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
 pub enum NoteName {
@@ -16,16 +16,6 @@ pub enum NoteName {
     B,
 }
 
-pub const C_MAJOR: &[NoteName] = &[
-    NoteName::C,
-    NoteName::D,
-    NoteName::E,
-    NoteName::F,
-    NoteName::G,
-    NoteName::A,
-    NoteName::B,
-];
-
 pub const CHROMATIC: &[NoteName] = &[
     NoteName::C,
     NoteName::CSharp,
@@ -41,6 +31,17 @@ pub const CHROMATIC: &[NoteName] = &[
     NoteName::B,
 ];
 
+// C major is a diatonic scale
+pub const C_MAJOR: &[NoteName] = &[
+    NoteName::C,
+    NoteName::D,
+    NoteName::E,
+    NoteName::F,
+    NoteName::G,
+    NoteName::A,
+    NoteName::B,
+];
+
 pub const C_MAJOR_PENTATONIC: &[NoteName] = &[
     NoteName::C,
     NoteName::D,
@@ -48,6 +49,24 @@ pub const C_MAJOR_PENTATONIC: &[NoteName] = &[
     NoteName::G,
     NoteName::A,
 ];
+
+#[wasm_bindgen]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
+pub enum FrequencyQuantizationType {
+    Chromatic,
+    Diatonic,
+    Pentatonic,
+}
+
+impl FrequencyQuantizationType {
+    pub fn to_scale(&self) -> &'static [NoteName] {
+        match self {
+            FrequencyQuantizationType::Chromatic => CHROMATIC,
+            FrequencyQuantizationType::Diatonic => C_MAJOR,
+            FrequencyQuantizationType::Pentatonic => C_MAJOR_PENTATONIC,
+        }
+    }
+}
 
 impl NoteName {
     fn octave_4_frequency(&self) -> f32 {
@@ -107,7 +126,7 @@ pub fn generate_scale(
 }
 
 /// Snaps a frequency to the closest note in the allowed frequencies.
-pub fn snap_frequency(to_snap: f32, allowed_frequencies: &Vec<f32>) -> f32 {
+pub fn quantize_frequency(to_snap: f32, allowed_frequencies: &Vec<f32>) -> f32 {
     let mut min_diff_cents = std::f32::MAX;
     let mut closest_note = 0.0;
     for note in allowed_frequencies {
@@ -141,18 +160,18 @@ mod tests {
     }
 
     #[test]
-    fn test_snap_to_note() {
+    fn test_quantize_frequency() {
         let notes = vec![100., 200., 300.];
 
-        assert_eq!(snap_frequency(50., &notes), 100.0);
-        assert_eq!(snap_frequency(110., &notes), 100.0);
+        assert_eq!(quantize_frequency(50., &notes), 100.0);
+        assert_eq!(quantize_frequency(110., &notes), 100.0);
 
         // We don't snap linearly but logarithmically, the breaking
         // point should be at sqrt(2) * 100 = 141.42
-        assert_eq!(snap_frequency(145.0, &notes), 200.0);
+        assert_eq!(quantize_frequency(145.0, &notes), 200.0);
 
-        assert_eq!(snap_frequency(210.0, &notes), 200.0);
-        assert_eq!(snap_frequency(250.0, &notes), 300.0);
-        assert_eq!(snap_frequency(350.0, &notes), 300.0);
+        assert_eq!(quantize_frequency(210.0, &notes), 200.0);
+        assert_eq!(quantize_frequency(250.0, &notes), 300.0);
+        assert_eq!(quantize_frequency(350.0, &notes), 300.0);
     }
 }
