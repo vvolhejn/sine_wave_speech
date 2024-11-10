@@ -255,10 +255,23 @@ const startRecordingAudio = async () => {
 </script>
 
 <template>
-  <div class="grid grid-cols-1 content-center justify-items-center h-screen">
-    <PlaybackControls v-model="playbackState" />
+  <div
+    class="grid grid-cols-1 content-center justify-items-center h-screen font-body gap-2"
+  >
+    <h1 class="text-5xl italic font-header">Sine Wave Speech</h1>
+    <PlaybackControls v-model="playbackState">
+      <div
+        class="mt-2 h-2 bg-white overflow-hidden rounded-sm w-full col-span-2"
+        :style="{ '--recording-duration': `${RECORDING_DURATION_SEC}s` }"
+      >
+        <div
+          class="progress-bar-animation bg-accent1 w-full h-full"
+          v-if="playbackState === PlaybackState.Recording"
+        ></div>
+      </div>
+    </PlaybackControls>
 
-    <div>
+    <div class="mt-2">
       <Slider
         v-model="nWaves"
         :label="`Number of waves: ${nWaves}`"
@@ -289,15 +302,7 @@ const startRecordingAudio = async () => {
         id="gain-db-slider"
       />
     </div>
-    <div
-      class="mt-2 h-2 bg-white overflow-hidden rounded-sm w-full"
-      :style="{ '--recording-duration': `${RECORDING_DURATION_SEC}s` }"
-    >
-      <div
-        class="progress-bar-animation bg-accent1 w-full h-full"
-        v-if="playbackState === PlaybackState.Recording"
-      ></div>
-    </div>
+
     <div class="max-w-3xl">
       <LiveVisualization
         :hops="hops"

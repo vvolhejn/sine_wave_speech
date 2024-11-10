@@ -81,5 +81,6 @@ const getPlayPauseText = (state: PlaybackState) => {
         </Button>
       </div>
     </div>
+    <slot></slot>
   </div>
 </template>
