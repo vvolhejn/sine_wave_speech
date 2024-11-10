@@ -46,11 +46,19 @@ const gainDb = ref(0)
 const totalNumHops = computed(() => {
   const source = audioSourceNode.value
   if (source instanceof AudioBufferSourceNode) {
+    // Pre-recorded source. we know how many hops there are.
     if (source.buffer === null) throw new Error('Buffer is null')
     const hopSize = BLOCK_SIZE * hopSizeMultiplier.value
     return Math.ceil(source.buffer.length / hopSize)
   } else if (source instanceof MediaStreamAudioSourceNode) {
-    return TOTAL_NUM_HOPS_WHEN_LIVE
+    // Live source - a microphone.
+    if (playbackState.value === PlaybackState.Recording) {
+      return RECORDING_DURATION_BLOCKS / hopSizeMultiplier.value
+    } else if (playbackState.value === PlaybackState.PlayingRealtime) {
+      return TOTAL_NUM_HOPS_WHEN_LIVE
+    } else {
+      throw new Error('Invalid playback state')
+    }
   } else {
     return null
   }
@@ -183,6 +191,21 @@ watch(playbackState, async (newPlaybackState: PlaybackState) => {
   }
 })
 
+/**
+ * Set the audio source node to a new one, disconnecting the old one if it exists.
+ */
+const setAudioSourceNode = async (
+  newAudioSourceNode: MediaStreamAudioSourceNode | AudioBufferSourceNode
+) => {
+  if (audioSourceNode.value !== null) {
+    audioSourceNode.value.disconnect()
+    if (audioSourceNode.value instanceof AudioBufferSourceNode) {
+      audioSourceNode.value.stop()
+    }
+  }
+  audioSourceNode.value = newAudioSourceNode
+}
+
 const startPlayingAudio = async (fromMicrophone: boolean) => {
   const { audioContext, sineWaveSpeechNode } = await getAudioSetup()
 
@@ -204,7 +227,7 @@ const startPlayingAudio = async (fromMicrophone: boolean) => {
     const mediaStream = await getWebAudioMediaStream()
     const source = audioContext.createMediaStreamSource(mediaStream)
     source.connect(sineWaveSpeechNode)
-    audioSourceNode.value = source
+    setAudioSourceNode(source)
   } else {
     const dryAudioBuffer =
       recordedAudioBuffer.value || (await getAudioBuffer(audioContext, sentenceAudio))
@@ -220,7 +243,7 @@ const startPlayingAudio = async (fromMicrophone: boolean) => {
     bufferSource.loop = true
     bufferSource.connect(sineWaveSpeechNode)
     bufferSource.start()
-    audioSourceNode.value = bufferSource
+    setAudioSourceNode(bufferSource)
   }
 
   hops.value = []
@@ -228,10 +251,13 @@ const startPlayingAudio = async (fromMicrophone: boolean) => {
 }
 
 const startRecordingAudio = async () => {
-  const { audioContext } = await getAudioSetup()
+  const { audioContext, sineWaveSpeechNode } = await getAudioSetup()
   const mediaStream = await getWebAudioMediaStream()
   const mediaRecorder = new MediaRecorder(mediaStream)
   const audioChunks: BlobPart[] = []
+
+  const source = audioContext.createMediaStreamSource(mediaStream)
+  source.connect(sineWaveSpeechNode)
 
   mediaRecorder.ondataavailable = (event) => {
     audioChunks.push(event.data)
@@ -243,9 +269,18 @@ const startRecordingAudio = async () => {
     recordedAudioBuffer.value = await audioContext.decodeAudioData(arrayBuffer)
     startPlayingAudio(false)
     playbackState.value = PlaybackState.PlayingRecorded
+    // Re-connect the sineWaveSpeechNode to the destination so that we can hear the sound again
+    sineWaveSpeechNode.connect(audioContext.destination)
   }
 
-  audioContext.suspend()
+  setAudioSourceNode(source)
+  await audioContext.resume()
+  // We want to show the visualization as we're recording, but not play (monitor) the audio
+  // to avoid feedback if the user is using speakers.
+  sineWaveSpeechNode.disconnect(audioContext.destination)
+  // Start with an empty array of hops to make it clear it's separate from the playback
+  hops.value = []
+
   mediaRecorder.start()
 
   setTimeout(() => {
