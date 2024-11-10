@@ -27,7 +27,7 @@ const DUMMY_HOPS = [
   },
 ]
 
-const updateVisualization = () => {
+const updateVisualization = (clear: boolean = false) => {
   if (!svgRef.value) return
 
   const svg = d3.select(svgRef.value).select('g')
@@ -60,8 +60,16 @@ const updateVisualization = () => {
   const withOpacity = (color: d3.RGBColor, opacity: number) =>
     `rgba(${color.r}, ${color.g}, ${color.b}, ${opacity})`
 
-  // Remove existing lines
-  svg.selectAll('.line-any').remove()
+  if (props.hops.length == 1) {
+    clear = true // Also clear when we've started a new loop.
+  }
+  if (props.totalNumHops == null) {
+    // TODO: optimize performance for microphone input
+    clear = true // Clear when we're playing from the microphone
+  }
+  if (clear) {
+    svg.selectAll('.line-any').remove()
+  }
 
   // Update visualization for each line
   linesToDraw.forEach((dataset, datasetIndex) => {
@@ -69,13 +77,17 @@ const updateVisualization = () => {
 
     // Draw line segments
     for (let i = 0; i < dataset.frequencies.length - 1; i++) {
+      // if the line already exists, do not redraw
+      if (svg.select(`.line-${datasetIndex}-${i}`).size() > 0) {
+        continue
+      }
+
       let freq1 = dataset.frequencies[i]
       let freq2 = dataset.frequencies[i + 1]
       if (freq1 !== null && freq2 !== null) {
         svg
           .append('path')
-          .attr('class', `line-${datasetIndex}`)
-          .attr('class', `line-any`) // This is so that we can easily remove all lines later
+          .attr('class', `line-${datasetIndex}-${i} line-any`)
           .attr(
             'd',
             d3.line()([
@@ -114,9 +126,14 @@ onMounted(() => {
 
 // Watch for changes in props
 watch(
-  () => [props.hops, props.totalNumHops],
-  () => updateVisualization(),
+  () => props.hops,
+  () => updateVisualization(false),
   { deep: true }
+)
+// When totalNumHops changes, we need to redraw the entire visualization
+watch(
+  () => props.totalNumHops,
+  () => updateVisualization(true)
 )
 </script>
 
