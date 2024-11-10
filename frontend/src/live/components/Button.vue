@@ -4,6 +4,10 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+  customClass: {
+    type: String,
+    default: '',
+  },
 })
 
 const emit = defineEmits(['click'])
@@ -19,7 +23,10 @@ const handleClick = (event: Event) => {
   <button
     type="button"
     :disabled="disabled"
-    class="hover:bg-blue-500 bg-blue-700 text-white font-bold py-2 px-4 rounded m-2"
+    :class="[
+      'hover:bg-blue-500 bg-blue-700 text-white font-bold py-2 px-4 rounded m-2',
+      customClass,
+    ]"
     @click="handleClick"
   >
     <slot></slot>

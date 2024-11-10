@@ -22,45 +22,64 @@ const getPlayPauseText = (state: PlaybackState) => {
     case PlaybackState.PlayingRecorded:
       return 'Pause'
     case PlaybackState.PlayingRealtime:
-      return 'Pause'
+      return 'Play'
     case PlaybackState.Recording:
       return 'Pause'
   }
 }
 </script>
 <template>
-  <div class="grid grid-cols-2 content-center justify-items-center">
-    <p class="self-center">Real-time</p>
-    <div>
-      <Button
-        :disabled="false"
-        @click="
-          () => {
-            playbackState = PlaybackState.PlayingRealtime
-          }
-        "
-      >
-        Start real-time
-      </Button>
+  <div class="grid grid-cols-2 content-center justify-items-center gap-1">
+    <div
+      :class="[
+        'col-span-2 grid grid-cols-2 rounded-lg p-3 w-full border',
+        [PlaybackState.PlayingRecorded, PlaybackState.Recording].includes(playbackState)
+          ? 'border-white'
+          : 'border-transparent',
+      ]"
+    >
+      <p class="self-center">Record, then convert</p>
+      <div class="justify-self-center">
+        <Button
+          :disabled="playbackState === PlaybackState.Recording"
+          @click="
+            () => {
+              playbackState = PlaybackState.Recording
+            }
+          "
+        >
+          Record
+        </Button>
+        <Button
+          :disabled="playbackState === PlaybackState.Recording"
+          @click="onPlayPause"
+          custom-class="w-20"
+        >
+          {{ getPlayPauseText(playbackState) }}
+        </Button>
+      </div>
     </div>
-    <p class="self-center">Recording</p>
-    <div>
-      <Button
-        :disabled="playbackState === PlaybackState.Recording"
-        @click="
-          () => {
-            playbackState = PlaybackState.Recording
-          }
-        "
-      >
-        Record
-      </Button>
-      <Button
-        :disabled="playbackState === PlaybackState.Recording"
-        @click="onPlayPause"
-      >
-        {{ getPlayPauseText(playbackState) }}
-      </Button>
+    <div
+      :class="[
+        'col-span-2 grid grid-cols-2 rounded-lg p-3 w-full border',
+        playbackState === PlaybackState.PlayingRealtime
+          ? 'border-white'
+          : 'border-transparent',
+      ]"
+    >
+      <p class="self-center">Convert in real time</p>
+      <div class="justify-self-center">
+        <Button
+          :disabled="false"
+          @click="
+            () => {
+              playbackState = PlaybackState.PlayingRealtime
+            }
+          "
+        >
+          Start real-time
+        </Button>
+      </div>
     </div>
   </div>
 </template>
