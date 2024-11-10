@@ -118,6 +118,25 @@ const setHopSizeMultiplier = async (newHopSizeMultiplier: number) => {
 watch(quantizeFrequencies, setQuantizeFrequencies)
 watch(hopSizeMultiplier, setHopSizeMultiplier)
 
+// Didn't figure out how to make audioSetup.audioContext.state reactive :(
+const audioPlaying = ref(false)
+
+const onPlayPause = async () => {
+  const { audioContext } = await getAudioSetup()
+  if (audioSourceNode.value === null) {
+    await startPlayingAudio(false)
+    audioPlaying.value = true
+  } else {
+    if (audioContext.state === 'running') {
+      await audioContext.suspend()
+      audioPlaying.value = false
+    } else {
+      await audioContext.resume()
+      audioPlaying.value = true
+    }
+  }
+}
+
 const startPlayingAudio = async (fromMicrophone: boolean) => {
   const { audioContext, sineWaveSpeechNode } = await getAudioSetup()
   sineWaveSpeechNode.connect(audioContext.destination)
@@ -191,11 +210,8 @@ const startRecordingAudio = async () => {
     <button @click="() => startRecordingAudio()" class="button grid-auto text-3xl p-10">
       Record
     </button>
-    <button
-      @click="() => startPlayingAudio(false)"
-      class="button grid-auto text-3xl p-10"
-    >
-      Play
+    <button @click="onPlayPause" class="button grid-auto text-3xl p-10">
+      {{ audioPlaying ? 'Pause' : 'Play' }}
     </button>
     <div>
       <Toggle v-model="quantizeFrequencies" label="Quantize frequencies" />

@@ -16,10 +16,8 @@
   </div>
 </template>
 
-<script setup>
-import { defineProps, defineEmits } from 'vue'
-
-const props = defineProps({
+<script setup lang="ts">
+defineProps({
   modelValue: {
     type: [Number, String],
     default: 50,
@@ -48,7 +46,7 @@ const props = defineProps({
 
 const emit = defineEmits(['update:modelValue', 'change'])
 
-const updateValue = (event) => {
+const updateValue = (event: any) => {
   const value = Number(event.target.value)
   emit('update:modelValue', value)
   emit('change', value)
