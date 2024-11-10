@@ -27,3 +27,10 @@ export interface SineWaveSpeechNodeOptions extends AudioWorkletNodeOptions {
   processorOptions?: SineWaveSpeechProcessorOptions
   onHop: (hop: Hop) => void
 }
+
+export enum PlaybackState {
+  Stopped,
+  PlayingRecorded,
+  PlayingRealtime,
+  Recording,
+}

@@ -8,14 +8,14 @@ import {
   getWebAudioMediaStream,
   trimAudioBufferToMultipleOf,
 } from './audioUtils.ts'
-import Button from './components/Button.vue'
 import LiveVisualization from './components/LiveVisualization.vue'
+import PlaybackControls from './components/PlaybackControls.vue'
 import Slider from './components/Slider.vue'
 import SineWaveSpeechNode from './sineWaveSpeechNode.ts'
 // Importing with "?worker&url" and not "?url" is necessary:
 // https://github.com/vitejs/vite/issues/6979#issuecomment-1320394505
 import processorUrl from './sineWaveSpeechProcessor.ts?worker&url'
-import { Hop } from './types.ts'
+import { Hop, PlaybackState } from './types.ts'
 
 // See BLOCK_SIZE in sineWaveSpeechProcessor.ts.
 // We can't import that here because it's a Worker (I think?).
@@ -157,13 +157,6 @@ const frequencyQuantizationName = computed(() => {
   throw new Error(`Invalid frequency quantization strength ${strength}`)
 })
 
-enum PlaybackState {
-  Stopped,
-  PlayingRecorded,
-  PlayingRealtime,
-  Recording,
-}
-
 const playbackState = ref<PlaybackState>(PlaybackState.Stopped)
 
 watch(playbackState, async (newPlaybackState: PlaybackState) => {
@@ -189,30 +182,6 @@ watch(playbackState, async (newPlaybackState: PlaybackState) => {
       break
   }
 })
-
-const onPlayPause = async () => {
-  switch (playbackState.value) {
-    case PlaybackState.Stopped:
-      playbackState.value = PlaybackState.PlayingRecorded
-      break
-    case PlaybackState.PlayingRecorded:
-      playbackState.value = PlaybackState.Stopped
-      break
-  }
-}
-
-const getPlayPauseText = (state: PlaybackState) => {
-  switch (state) {
-    case PlaybackState.Stopped:
-      return 'Play'
-    case PlaybackState.PlayingRecorded:
-      return 'Pause'
-    case PlaybackState.PlayingRealtime:
-      return 'Pause'
-    case PlaybackState.Recording:
-      return 'Pause'
-  }
-}
 
 const startPlayingAudio = async (fromMicrophone: boolean) => {
   const { audioContext, sineWaveSpeechNode } = await getAudioSetup()
@@ -287,29 +256,7 @@ const startRecordingAudio = async () => {
 
 <template>
   <div class="grid grid-cols-1 content-center justify-items-center h-screen">
-    <div class="grid grid-cols-2 content-center justify-items-center">
-      <p class="self-center">Real-time</p>
-      <div>
-        <Button :disabled="false" @click="() => startPlayingAudio(true)">
-          Start real-time
-        </Button>
-      </div>
-      <p class="self-center">Recording</p>
-      <div>
-        <Button
-          :disabled="playbackState === PlaybackState.Recording"
-          @click="() => (playbackState = PlaybackState.Recording)"
-        >
-          Record
-        </Button>
-        <Button
-          :disabled="playbackState === PlaybackState.Recording"
-          @click="onPlayPause"
-        >
-          {{ getPlayPauseText(playbackState) }}
-        </Button>
-      </div>
-    </div>
+    <PlaybackControls v-model="playbackState" />
 
     <div>
       <Slider
