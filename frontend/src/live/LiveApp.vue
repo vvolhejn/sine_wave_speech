@@ -16,9 +16,6 @@ import SineWaveSpeechNode from './sineWaveSpeechNode.ts'
 import processorUrl from './sineWaveSpeechProcessor.ts?worker&url'
 import { Hop } from './types.ts'
 
-// Single source of truth for the recording duration (in seconds)
-const RECORDING_DURATION_SEC = 3
-
 // See BLOCK_SIZE in sineWaveSpeechProcessor.ts.
 // We can't import that here because it's a Worker (I think?).
 const BLOCK_SIZE = 128
@@ -26,6 +23,10 @@ const BLOCK_SIZE = 128
 // The sample rate significantly affects how sine wave speech effect sounds.
 // 8000 is the tested one.
 const SAMPLE_RATE = 8000
+
+// Single source of truth for the recording duration (in seconds)
+const RECORDING_DURATION_BLOCKS = 128
+const RECORDING_DURATION_SEC = (RECORDING_DURATION_BLOCKS * BLOCK_SIZE) / SAMPLE_RATE
 
 const TOTAL_NUM_HOPS_WHEN_LIVE = 48
 
@@ -170,6 +171,11 @@ const onPlayPause = async () => {
   }
 }
 
+const onRealtimeButtonClick = async () => {
+  if (isRecording.value) return
+  await startPlayingAudio(true)
+}
+
 const startPlayingAudio = async (fromMicrophone: boolean) => {
   const { audioContext, sineWaveSpeechNode } = await getAudioSetup()
   sineWaveSpeechNode.connect(audioContext.destination)
@@ -180,6 +186,13 @@ const startPlayingAudio = async (fromMicrophone: boolean) => {
   setHopSizeMultiplier(hopSizeMultiplier.value)
   setNWaves(nWaves.value)
   setGainDb(gainDb.value)
+
+  if (audioSourceNode.value !== null) {
+    audioSourceNode.value.disconnect()
+    if (audioSourceNode.value instanceof AudioBufferSourceNode) {
+      audioSourceNode.value.stop()
+    }
+  }
 
   if (fromMicrophone) {
     const mediaStream = await getWebAudioMediaStream()
@@ -225,6 +238,7 @@ const startRecordingAudio = async () => {
     startPlayingAudio(false)
   }
 
+  audioPlaying.value = false
   mediaRecorder.start()
   isRecording.value = true
 
@@ -238,10 +252,7 @@ const startRecordingAudio = async () => {
 <template>
   <div class="grid grid-cols-1 content-center justify-items-center h-screen">
     <p>Work in progress, stay tuned.</p>
-    <button
-      @click="() => startPlayingAudio(true)"
-      class="button grid-auto text-3xl p-10"
-    >
+    <button @click="onRealtimeButtonClick" class="button grid-auto text-3xl p-10">
       Real-time
     </button>
     <button @click="() => startRecordingAudio()" class="button grid-auto text-3xl p-10">
@@ -274,9 +285,9 @@ const startRecordingAudio = async () => {
       />
       <Slider
         v-model="gainDb"
-        :label="`Gain (volume): ${gainDb} dB`"
-        :min="-12"
-        :max="12"
+        :label="`Gain: ${gainDb} dB`"
+        :min="-18"
+        :max="18"
         id="gain-db-slider"
       />
     </div>

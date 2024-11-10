@@ -65,8 +65,8 @@ class SineWaveSpeechProcessor extends AudioWorkletProcessor {
       {
         name: 'gainDb',
         defaultValue: 0,
-        minValue: -12,
-        maxValue: 12,
+        minValue: -18,
+        maxValue: 18,
       },
     ]
   }
