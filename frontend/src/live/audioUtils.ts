@@ -50,3 +50,28 @@ export const magnitudeToDbfs = (magnitude: number): number => {
   // Calculate dBFS: 20 * log10(magnitude).
   return 20 * Math.log10(magnitude)
 }
+
+const trimAudioBuffer = (
+  audioContext: AudioContext,
+  audioBuffer: AudioBuffer,
+  nSamples: number
+): AudioBuffer => {
+  const newBuffer = audioContext.createBuffer(
+    audioBuffer.numberOfChannels,
+    nSamples,
+    audioBuffer.sampleRate
+  )
+  for (let i = 0; i < audioBuffer.numberOfChannels; i++) {
+    newBuffer.copyToChannel(audioBuffer.getChannelData(i).slice(0, nSamples), i)
+  }
+  return newBuffer
+}
+
+export const trimAudioBufferToMultipleOf = (
+  audioContext: AudioContext,
+  audioBuffer: AudioBuffer,
+  multiple: number
+): AudioBuffer => {
+  const nSamples = Math.floor(audioBuffer.length / multiple) * multiple
+  return trimAudioBuffer(audioContext, audioBuffer, nSamples)
+}

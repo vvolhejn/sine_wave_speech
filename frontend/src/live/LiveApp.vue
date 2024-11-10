@@ -3,7 +3,11 @@ import { computed, ref, watch } from 'vue'
 
 import sentenceAudio from '../assets/sentence-original.wav'
 import wasmUrl from '../wasm_realtime_sws/wasm_audio_bg.wasm?url'
-import { getAudioBuffer, getWebAudioMediaStream } from './audioUtils.ts'
+import {
+  getAudioBuffer,
+  getWebAudioMediaStream,
+  trimAudioBufferToMultipleOf,
+} from './audioUtils.ts'
 import LiveVisualization from './components/LiveVisualization.vue'
 import Slider from './components/Slider.vue'
 import Toggle from './components/Toggle.vue'
@@ -36,7 +40,6 @@ const totalNumHops = computed(() => {
   const source = audioSourceNode.value
   if (source instanceof AudioBufferSourceNode) {
     if (source.buffer === null) throw new Error('Buffer is null')
-    console.log(source)
     const hopSize = BLOCK_SIZE * hopSizeMultiplier.value
     return Math.ceil(source.buffer.length / hopSize)
   } else {
@@ -69,11 +72,10 @@ const setupAudio = async (): Promise<AudioSetup> => {
     {
       processorOptions: {},
       onHop: (hop: Hop) => {
-        hops.value.push(hop)
         if (totalNumHops.value != null) {
           // We're playing from a recording
-          if (hops.value.length > totalNumHops.value) {
-            hops.value = hops.value.slice(0, 0)
+          if (hops.value.length >= totalNumHops.value) {
+            hops.value = []
           }
         } else {
           // We're playing from the microphone
@@ -81,6 +83,7 @@ const setupAudio = async (): Promise<AudioSetup> => {
             hops.value.shift()
           }
         }
+        hops.value.push(hop)
       },
     }
   )
@@ -132,8 +135,15 @@ const startPlayingAudio = async (fromMicrophone: boolean) => {
   } else {
     const dryAudioBuffer =
       recordedAudioBuffer.value || (await getAudioBuffer(audioContext, sentenceAudio))
+
+    const trimmedAudioBuffer = trimAudioBufferToMultipleOf(
+      audioContext,
+      dryAudioBuffer,
+      BLOCK_SIZE * 4
+    )
+
     let bufferSource = audioContext.createBufferSource()
-    bufferSource.buffer = dryAudioBuffer
+    bufferSource.buffer = trimmedAudioBuffer
     bufferSource.loop = true
     bufferSource.connect(sineWaveSpeechNode)
     bufferSource.start()
