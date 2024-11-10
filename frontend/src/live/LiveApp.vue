@@ -99,28 +99,24 @@ const getAudioSetup = async () => {
   return audioSetup.value
 }
 
-const setFrequencyQuantizationLevel = async (newFrequencyQuantizationLevel: number) => {
+const updateParameter = async (parameterName: string, value: number) => {
   const { audioContext, sineWaveSpeechNode } = await getAudioSetup()
-  const param = sineWaveSpeechNode.parameters.get('frequencyQuantizationLevel')
-  if (param === undefined) throw new Error('Parameter not found')
+  const param = sineWaveSpeechNode.parameters.get(parameterName)
+  if (param === undefined) throw new Error(`Parameter ${parameterName} not found`)
 
-  param.setValueAtTime(newFrequencyQuantizationLevel, audioContext.currentTime)
+  param.setValueAtTime(value, audioContext.currentTime)
+}
+
+const setFrequencyQuantizationLevel = async (newFrequencyQuantizationLevel: number) => {
+  updateParameter('frequencyQuantizationLevel', newFrequencyQuantizationLevel)
 }
 
 const setHopSizeMultiplier = async (newHopSizeMultiplier: number) => {
-  const { audioContext, sineWaveSpeechNode } = await getAudioSetup()
-  const param = sineWaveSpeechNode.parameters.get('hopSizeMultiplier')
-  if (param === undefined) throw new Error('Parameter not found')
-
-  param.setValueAtTime(newHopSizeMultiplier, audioContext.currentTime)
+  updateParameter('hopSizeMultiplier', newHopSizeMultiplier)
 }
 
 const setNWaves = async (newNWaves: number) => {
-  const { audioContext, sineWaveSpeechNode } = await getAudioSetup()
-  const param = sineWaveSpeechNode.parameters.get('nWaves')
-  if (param === undefined) throw new Error('Parameter not found')
-
-  param.setValueAtTime(newNWaves, audioContext.currentTime)
+  updateParameter('nWaves', newNWaves)
 }
 
 watch(frequencyQuantizationLevel, setFrequencyQuantizationLevel)
