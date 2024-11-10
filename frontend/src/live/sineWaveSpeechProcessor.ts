@@ -92,11 +92,11 @@ class SineWaveSpeechProcessor extends AudioWorkletProcessor {
     // It seems that even if there are two channels, we get stereo output even
     // though we're only writing one channel - why?
     const inputAudio = inputList[0][0]
-    const outputAudio = outputList[0][0]
+    const outputChannels = outputList[0]
 
     if (this.converter === null) {
       // If we're still waiting for the converter to be initialized, just pass through the audio
-      outputAudio.set(inputAudio)
+      outputChannels.forEach((outputChannel) => outputChannel.set(inputAudio))
       return true
     }
 
@@ -184,7 +184,9 @@ class SineWaveSpeechProcessor extends AudioWorkletProcessor {
     }
 
     if (this.bufferToPlay.length >= BLOCK_SIZE) {
-      outputAudio.set(this.bufferToPlay.slice(0, BLOCK_SIZE))
+      outputChannels.forEach((outputChannel) =>
+        outputChannel.set(this.bufferToPlay.slice(0, BLOCK_SIZE))
+      )
       this.bufferToPlay = this.bufferToPlay.slice(BLOCK_SIZE)
     } else {
       // This happens at the beginning of the audio, before we've processed the first hop
