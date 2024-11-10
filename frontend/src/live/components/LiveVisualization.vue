@@ -64,10 +64,6 @@ const updateVisualization = (clear: boolean = false) => {
   if (props.hops.length == 1) {
     clear = true // Also clear when we've started a new loop.
   }
-  if (props.totalNumHops == null) {
-    // TODO: optimize performance for microphone input
-    clear = true // Clear when we're playing from the microphone
-  }
   if (clear) {
     svg.selectAll('.line-any').remove()
   }

@@ -27,10 +27,12 @@ const BLOCK_SIZE = 128
 // 8000 is the tested one.
 const SAMPLE_RATE = 8000
 
+const TOTAL_NUM_HOPS_WHEN_LIVE = 48
+
 const hops = ref<Hop[]>([])
 const recordedAudioBuffer = ref<AudioBuffer | null>(null)
 const isRecording = ref(false)
-const nWaves = ref(1)
+const nWaves = ref(4)
 const frequencyQuantizationLevel = ref(0)
 const hopSizeMultiplier = ref(2)
 const audioSourceNode = ref<MediaStreamAudioSourceNode | AudioBufferSourceNode | null>(
@@ -42,8 +44,9 @@ const totalNumHops = computed(() => {
     if (source.buffer === null) throw new Error('Buffer is null')
     const hopSize = BLOCK_SIZE * hopSizeMultiplier.value
     return Math.ceil(source.buffer.length / hopSize)
+  } else if (source instanceof MediaStreamAudioSourceNode) {
+    return TOTAL_NUM_HOPS_WHEN_LIVE
   } else {
-    // Microphone or nothing
     return null
   }
 })
@@ -79,8 +82,8 @@ const setupAudio = async (): Promise<AudioSetup> => {
           }
         } else {
           // We're playing from the microphone
-          if (hops.value.length > 64) {
-            hops.value.shift()
+          if (hops.value.length > TOTAL_NUM_HOPS_WHEN_LIVE) {
+            hops.value = []
           }
         }
         hops.value.push(hop)
