@@ -118,22 +118,22 @@ const setHopSizeMultiplier = async (newHopSizeMultiplier: number) => {
 watch(quantizeFrequencies, setQuantizeFrequencies)
 watch(hopSizeMultiplier, setHopSizeMultiplier)
 
-// Didn't figure out how to make audioSetup.audioContext.state reactive :(
 const audioPlaying = ref(false)
+watch(audioPlaying, async (newAudioPlaying: boolean) => {
+  const { audioContext } = await getAudioSetup()
+  if (newAudioPlaying) {
+    await audioContext.resume()
+  } else {
+    await audioContext.suspend()
+  }
+})
 
 const onPlayPause = async () => {
-  const { audioContext } = await getAudioSetup()
   if (audioSourceNode.value === null) {
     await startPlayingAudio(false)
     audioPlaying.value = true
   } else {
-    if (audioContext.state === 'running') {
-      await audioContext.suspend()
-      audioPlaying.value = false
-    } else {
-      await audioContext.resume()
-      audioPlaying.value = true
-    }
+    audioPlaying.value = !audioPlaying.value
   }
 }
 
