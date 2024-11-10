@@ -68,6 +68,20 @@ const updateVisualization = (clear: boolean = false) => {
     svg.selectAll('.line-any').remove()
   }
 
+  // Clear the dots every time - these are cheap to draw
+  svg.selectAll('.circle-any').remove()
+
+  // Draw white dots at the bottom
+  for (let i = 0; i < hops.length - 1; i++) {
+    svg
+      .append('circle')
+      .attr('cx', xScale(i))
+      .attr('cy', yScale(0))
+      .attr('r', 2)
+      .attr('fill', 'white')
+      .attr('class', 'circle-any')
+  }
+
   // Update visualization for each line
   linesToDraw.forEach((dataset, datasetIndex) => {
     const baseColor = d3.color(accentColors[datasetIndex % accentColors.length])!.rgb()
