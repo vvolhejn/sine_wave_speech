@@ -303,7 +303,7 @@ const startRecordingAudio = async () => {
 
 <template>
   <div
-    class="grid grid-cols-1 content-center justify-items-center h-screen font-body gap-2"
+    class="grid grid-cols-1 content-center justify-items-center min-h-screen font-body gap-2"
   >
     <h1 class="text-5xl italic font-header">Sine Wave Speech</h1>
     <PlaybackControls v-model="playbackState">

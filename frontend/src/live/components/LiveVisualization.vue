@@ -125,7 +125,6 @@ onMounted(() => {
   const svg = d3
     .select(svgRef.value)
     .attr('width', width + margin.left + margin.right)
-    .attr('height', height + margin.top + margin.bottom)
     .attr(
       'viewBox',
       `0 0 ${width + margin.left + margin.right} ${height + margin.top + margin.bottom}`
@@ -150,7 +149,5 @@ watch(
 </script>
 
 <template>
-  <div class="w-full h-full">
-    <svg ref="svgRef" class="w-full"></svg>
-  </div>
+  <svg ref="svgRef" class="w-full"></svg>
 </template>
