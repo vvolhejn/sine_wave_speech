@@ -62,6 +62,12 @@ class SineWaveSpeechProcessor extends AudioWorkletProcessor {
         minValue: 1,
         maxValue: 16,
       },
+      {
+        name: 'gainDb',
+        defaultValue: 0,
+        minValue: -12,
+        maxValue: 12,
+      },
     ]
   }
 
@@ -131,7 +137,7 @@ class SineWaveSpeechProcessor extends AudioWorkletProcessor {
 
       const fm = this.converter.get_frequencies_and_magnitudes(this.bufferToProcess)
       let frequencies = fm.slice(0, fm.length / 2)
-      const magnitudes = fm.slice(fm.length / 2)
+      let magnitudes = fm.slice(fm.length / 2)
 
       const frequencyQuantizationType = getFrequencyQuantizationType(parameters)
 
@@ -141,6 +147,8 @@ class SineWaveSpeechProcessor extends AudioWorkletProcessor {
           frequencyQuantizationType
         )
       }
+
+      magnitudes = addGain(magnitudes, parameters.gainDb[0])
 
       if (frequencies.length !== nWaves) {
         throw new Error(`Expected ${nWaves} frequencies, got ${frequencies.length}`)
@@ -250,6 +258,11 @@ const getFrequencyQuantizationType = (
         `Expected quantizeFrequencies to be in [0, 1, 2, 3], got ${value}`
       )
   }
+}
+
+const addGain = (magnitudes: Float32Array, gainDb: number): Float32Array => {
+  const gain = Math.pow(10, gainDb / 20)
+  return magnitudes.map((m) => m * gain)
 }
 
 registerProcessor('sine-wave-speech-processor', SineWaveSpeechProcessor)

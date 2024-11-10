@@ -32,12 +32,16 @@ const TOTAL_NUM_HOPS_WHEN_LIVE = 48
 const hops = ref<Hop[]>([])
 const recordedAudioBuffer = ref<AudioBuffer | null>(null)
 const isRecording = ref(false)
-const nWaves = ref(4)
-const frequencyQuantizationLevel = ref(0)
-const hopSizeMultiplier = ref(2)
 const audioSourceNode = ref<MediaStreamAudioSourceNode | AudioBufferSourceNode | null>(
   null
 )
+
+// Synthesis parameters
+const nWaves = ref(4)
+const frequencyQuantizationLevel = ref(0)
+const hopSizeMultiplier = ref(2)
+const gainDb = ref(0)
+
 const totalNumHops = computed(() => {
   const source = audioSourceNode.value
   if (source instanceof AudioBufferSourceNode) {
@@ -122,9 +126,14 @@ const setNWaves = async (newNWaves: number) => {
   updateParameter('nWaves', newNWaves)
 }
 
+const setGainDb = async (newGainDb: number) => {
+  updateParameter('gainDb', newGainDb)
+}
+
 watch(frequencyQuantizationLevel, setFrequencyQuantizationLevel)
 watch(hopSizeMultiplier, setHopSizeMultiplier)
 watch(nWaves, setNWaves)
+watch(gainDb, setGainDb)
 
 // See also getFrequencyQuantizationType() in sineWaveSpeechProcessor.ts.
 const frequencyQuantizationName = computed(() => {
@@ -156,7 +165,6 @@ watch(audioPlaying, async (newAudioPlaying: boolean) => {
 const onPlayPause = async () => {
   if (audioSourceNode.value === null) {
     await startPlayingAudio(false)
-    audioPlaying.value = true
   } else {
     audioPlaying.value = !audioPlaying.value
   }
@@ -171,6 +179,7 @@ const startPlayingAudio = async (fromMicrophone: boolean) => {
   setFrequencyQuantizationLevel(frequencyQuantizationLevel.value)
   setHopSizeMultiplier(hopSizeMultiplier.value)
   setNWaves(nWaves.value)
+  setGainDb(gainDb.value)
 
   if (fromMicrophone) {
     const mediaStream = await getWebAudioMediaStream()
@@ -196,6 +205,7 @@ const startPlayingAudio = async (fromMicrophone: boolean) => {
   }
 
   hops.value = []
+  audioPlaying.value = true
 }
 
 const startRecordingAudio = async () => {
@@ -212,6 +222,7 @@ const startRecordingAudio = async () => {
     const audioBlob = new Blob(audioChunks)
     const arrayBuffer = await audioBlob.arrayBuffer()
     recordedAudioBuffer.value = await audioContext.decodeAudioData(arrayBuffer)
+    startPlayingAudio(false)
   }
 
   mediaRecorder.start()
@@ -260,6 +271,13 @@ const startRecordingAudio = async () => {
         :min="1"
         :max="16"
         id="hop-size-multiplier-slider"
+      />
+      <Slider
+        v-model="gainDb"
+        :label="`Gain (volume): ${gainDb} dB`"
+        :min="-12"
+        :max="12"
+        id="gain-db-slider"
       />
     </div>
     <div
