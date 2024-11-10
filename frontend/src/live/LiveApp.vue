@@ -10,7 +10,6 @@ import {
 } from './audioUtils.ts'
 import LiveVisualization from './components/LiveVisualization.vue'
 import Slider from './components/Slider.vue'
-import Toggle from './components/Toggle.vue'
 import SineWaveSpeechNode from './sineWaveSpeechNode.ts'
 // Importing with "?worker&url" and not "?url" is necessary:
 // https://github.com/vitejs/vite/issues/6979#issuecomment-1320394505
@@ -31,7 +30,7 @@ const SAMPLE_RATE = 8000
 const hops = ref<Hop[]>([])
 const recordedAudioBuffer = ref<AudioBuffer | null>(null)
 const isRecording = ref(false)
-const quantizeFrequencies = ref(false)
+const frequencyQuantizationLevel = ref(0)
 const hopSizeMultiplier = ref(2)
 const audioSourceNode = ref<MediaStreamAudioSourceNode | AudioBufferSourceNode | null>(
   null
@@ -99,12 +98,12 @@ const getAudioSetup = async () => {
   return audioSetup.value
 }
 
-const setQuantizeFrequencies = async (newQuantizeFrequencies: boolean) => {
+const setFrequencyQuantizationLevel = async (newFrequencyQuantizationLevel: number) => {
   const { audioContext, sineWaveSpeechNode } = await getAudioSetup()
-  const param = sineWaveSpeechNode.parameters.get('quantizeFrequencies')
+  const param = sineWaveSpeechNode.parameters.get('frequencyQuantizationLevel')
   if (param === undefined) throw new Error('Parameter not found')
 
-  param.setValueAtTime(newQuantizeFrequencies ? 1.0 : 0.0, audioContext.currentTime)
+  param.setValueAtTime(newFrequencyQuantizationLevel, audioContext.currentTime)
 }
 
 const setHopSizeMultiplier = async (newHopSizeMultiplier: number) => {
@@ -115,8 +114,25 @@ const setHopSizeMultiplier = async (newHopSizeMultiplier: number) => {
   param.setValueAtTime(newHopSizeMultiplier, audioContext.currentTime)
 }
 
-watch(quantizeFrequencies, setQuantizeFrequencies)
+watch(frequencyQuantizationLevel, setFrequencyQuantizationLevel)
 watch(hopSizeMultiplier, setHopSizeMultiplier)
+
+// See also getFrequencyQuantizationType() in sineWaveSpeechProcessor.ts.
+const frequencyQuantizationName = computed(() => {
+  const level = frequencyQuantizationLevel.value
+  switch (level) {
+    case 0:
+      return 'No quantization'
+    case 1:
+      return 'Chromatic'
+    case 2:
+      return 'Diatonic'
+    case 3:
+      return 'Pentatonic'
+    default:
+      throw new Error(`Invalid frequency quantization level ${level}`)
+  }
+})
 
 const audioPlaying = ref(false)
 watch(audioPlaying, async (newAudioPlaying: boolean) => {
@@ -143,7 +159,7 @@ const startPlayingAudio = async (fromMicrophone: boolean) => {
 
   // The watch() calls above only happen when the value is updated, so if the user didn't change
   // anything, the parameters might be out of sync with the audio processor.
-  setQuantizeFrequencies(quantizeFrequencies.value)
+  setFrequencyQuantizationLevel(frequencyQuantizationLevel.value)
   setHopSizeMultiplier(hopSizeMultiplier.value)
 
   if (fromMicrophone) {
@@ -214,16 +230,20 @@ const startRecordingAudio = async () => {
       {{ audioPlaying ? 'Pause' : 'Play' }}
     </button>
     <div>
-      <Toggle v-model="quantizeFrequencies" label="Quantize frequencies" />
-      <div>
-        <Slider
-          v-model="hopSizeMultiplier"
-          label="Time step"
-          :min="1"
-          :max="16"
-          id="hop-size-multiplier-slider"
-        />
-      </div>
+      <Slider
+        v-model="frequencyQuantizationLevel"
+        :label="frequencyQuantizationName"
+        :min="0"
+        :max="3"
+        id="frequency-quantization-level-slider"
+      />
+      <Slider
+        v-model="hopSizeMultiplier"
+        label="Step size"
+        :min="1"
+        :max="16"
+        id="hop-size-multiplier-slider"
+      />
     </div>
     <div
       class="mt-2 h-2 bg-white overflow-hidden rounded-sm w-full"

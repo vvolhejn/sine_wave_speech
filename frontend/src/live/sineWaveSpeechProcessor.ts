@@ -47,10 +47,10 @@ class SineWaveSpeechProcessor extends AudioWorkletProcessor {
   static get parameterDescriptors(): AudioParamDescriptor[] {
     return [
       {
-        name: 'quantizeFrequencies',
+        name: 'frequencyQuantizationLevel',
         defaultValue: 0.0,
         minValue: 0,
-        maxValue: 1,
+        maxValue: 3,
       },
       {
         name: 'hopSizeMultiplier',
@@ -95,7 +95,7 @@ class SineWaveSpeechProcessor extends AudioWorkletProcessor {
       return true
     }
 
-    const shouldQuantizeFrequencies = getShouldQuantizeFrequencies(parameters)
+    const frequencyQuantizationType = getFrequencyQuantizationType(parameters)
     const hopSize = BLOCK_SIZE * parameters.hopSizeMultiplier[0]
     const hopSizeChanged = hopSize !== this.lastHopSize
 
@@ -122,10 +122,11 @@ class SineWaveSpeechProcessor extends AudioWorkletProcessor {
       let frequencies = fm.slice(0, fm.length / 2)
       const magnitudes = fm.slice(fm.length / 2)
 
-      if (shouldQuantizeFrequencies) {
+      if (frequencyQuantizationType != null) {
+        console.log('quantization', frequencyQuantizationType)
         frequencies = this.converter.quantize_frequencies(
           frequencies,
-          FrequencyQuantizationType.Pentatonic
+          frequencyQuantizationType
         )
       }
 
@@ -219,12 +220,26 @@ const canProcess = (inputList: Float32Array[][], outputList: Float32Array[][]) =
   return true
 }
 
-const getShouldQuantizeFrequencies = (parameters: Record<string, Float32Array>) => {
-  const value = parameters.quantizeFrequencies[0]
-  if (value !== 0 && value !== 1) {
-    throw new Error(`Expected quantizeFrequencies to be 0 or 1, got ${value}`)
+// See also frequencyQuantizationName in LiveApp.vue
+const getFrequencyQuantizationType = (
+  parameters: Record<string, Float32Array>
+): FrequencyQuantizationType | null => {
+  const value = parameters.frequencyQuantizationLevel[0]
+
+  switch (value) {
+    case 0:
+      return null
+    case 1:
+      return FrequencyQuantizationType.Chromatic
+    case 2:
+      return FrequencyQuantizationType.Diatonic
+    case 3:
+      return FrequencyQuantizationType.Pentatonic
+    default:
+      throw new Error(
+        `Expected quantizeFrequencies to be in [0, 1, 2, 3], got ${value}`
+      )
   }
-  return value === 1
 }
 
 registerProcessor('sine-wave-speech-processor', SineWaveSpeechProcessor)
