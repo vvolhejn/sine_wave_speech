@@ -8,6 +8,7 @@ import {
   getWebAudioMediaStream,
   trimAudioBufferToMultipleOf,
 } from './audioUtils.ts'
+import Button from './components/Button.vue'
 import LiveVisualization from './components/LiveVisualization.vue'
 import Slider from './components/Slider.vue'
 import SineWaveSpeechNode from './sineWaveSpeechNode.ts'
@@ -171,10 +172,9 @@ const onPlayPause = async () => {
   }
 }
 
-const onRealtimeButtonClick = async () => {
-  if (isRecording.value) return
-  await startPlayingAudio(true)
-}
+const isRealtime = computed(
+  () => audioSourceNode.value instanceof MediaStreamAudioSourceNode
+)
 
 const startPlayingAudio = async (fromMicrophone: boolean) => {
   const { audioContext, sineWaveSpeechNode } = await getAudioSetup()
@@ -252,15 +252,17 @@ const startRecordingAudio = async () => {
 <template>
   <div class="grid grid-cols-1 content-center justify-items-center h-screen">
     <p>Work in progress, stay tuned.</p>
-    <button @click="onRealtimeButtonClick" class="button grid-auto text-3xl p-10">
+    <Button
+      :disabled="isRecording || isRealtime"
+      @click="() => startPlayingAudio(true)"
+    >
       Real-time
-    </button>
-    <button @click="() => startRecordingAudio()" class="button grid-auto text-3xl p-10">
-      Record
-    </button>
-    <button @click="onPlayPause" class="button grid-auto text-3xl p-10">
+    </Button>
+    <Button :disabled="isRecording" @click="startRecordingAudio"> Record </Button>
+    <Button :disabled="isRecording" @click="onPlayPause">
       {{ audioPlaying ? 'Pause' : 'Play' }}
-    </button>
+    </Button>
+
     <div>
       <Slider
         v-model="nWaves"
