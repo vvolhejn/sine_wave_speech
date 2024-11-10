@@ -33,7 +33,6 @@ const TOTAL_NUM_HOPS_WHEN_LIVE = 48
 
 const hops = ref<Hop[]>([])
 const recordedAudioBuffer = ref<AudioBuffer | null>(null)
-const isRecording = ref(false)
 const audioSourceNode = ref<MediaStreamAudioSourceNode | AudioBufferSourceNode | null>(
   null
 )
@@ -96,6 +95,8 @@ const setupAudio = async (): Promise<AudioSetup> => {
       },
     }
   )
+  sineWaveSpeechNode.connect(audioContext.destination)
+
   return { audioContext, sineWaveSpeechNode }
 }
 
@@ -154,31 +155,65 @@ const frequencyQuantizationName = computed(() => {
   }
 })
 
-const audioPlaying = ref(false)
-watch(audioPlaying, async (newAudioPlaying: boolean) => {
+enum PlaybackState {
+  Stopped,
+  PlayingRecorded,
+  PlayingRealtime,
+  Recording,
+}
+
+const playbackState = ref<PlaybackState>(PlaybackState.Stopped)
+
+watch(playbackState, async (newPlaybackState: PlaybackState) => {
   const { audioContext } = await getAudioSetup()
-  if (newAudioPlaying) {
-    await audioContext.resume()
-  } else {
-    await audioContext.suspend()
+
+  switch (newPlaybackState) {
+    case PlaybackState.PlayingRecorded:
+      if (audioSourceNode.value instanceof AudioBufferSourceNode) {
+        // No need to restart, we were just paused
+        audioContext.resume()
+      } else {
+        await startPlayingAudio(false)
+      }
+      break
+    case PlaybackState.PlayingRealtime:
+      await startPlayingAudio(true)
+      break
+    case PlaybackState.Recording:
+      await startRecordingAudio()
+      break
+    case PlaybackState.Stopped:
+      audioContext.suspend()
+      break
   }
 })
 
 const onPlayPause = async () => {
-  if (audioSourceNode.value === null) {
-    await startPlayingAudio(false)
-  } else {
-    audioPlaying.value = !audioPlaying.value
+  switch (playbackState.value) {
+    case PlaybackState.Stopped:
+      playbackState.value = PlaybackState.PlayingRecorded
+      break
+    case PlaybackState.PlayingRecorded:
+      playbackState.value = PlaybackState.Stopped
+      break
   }
 }
 
-const isRealtime = computed(
-  () => audioSourceNode.value instanceof MediaStreamAudioSourceNode
-)
+const getPlayPauseText = (state: PlaybackState) => {
+  switch (state) {
+    case PlaybackState.Stopped:
+      return 'Play'
+    case PlaybackState.PlayingRecorded:
+      return 'Pause'
+    case PlaybackState.PlayingRealtime:
+      return 'Pause'
+    case PlaybackState.Recording:
+      return 'Pause'
+  }
+}
 
 const startPlayingAudio = async (fromMicrophone: boolean) => {
   const { audioContext, sineWaveSpeechNode } = await getAudioSetup()
-  sineWaveSpeechNode.connect(audioContext.destination)
 
   // The watch() calls above only happen when the value is updated, so if the user didn't change
   // anything, the parameters might be out of sync with the audio processor.
@@ -218,7 +253,7 @@ const startPlayingAudio = async (fromMicrophone: boolean) => {
   }
 
   hops.value = []
-  audioPlaying.value = true
+  await audioContext.resume()
 }
 
 const startRecordingAudio = async () => {
@@ -236,14 +271,13 @@ const startRecordingAudio = async () => {
     const arrayBuffer = await audioBlob.arrayBuffer()
     recordedAudioBuffer.value = await audioContext.decodeAudioData(arrayBuffer)
     startPlayingAudio(false)
+    playbackState.value = PlaybackState.PlayingRecorded
   }
 
-  audioPlaying.value = false
+  audioContext.suspend()
   mediaRecorder.start()
-  isRecording.value = true
 
   setTimeout(() => {
-    isRecording.value = false
     mediaRecorder.stop()
   }, RECORDING_DURATION_SEC * 1000)
 }
@@ -251,17 +285,29 @@ const startRecordingAudio = async () => {
 
 <template>
   <div class="grid grid-cols-1 content-center justify-items-center h-screen">
-    <p>Work in progress, stay tuned.</p>
-    <Button
-      :disabled="isRecording || isRealtime"
-      @click="() => startPlayingAudio(true)"
-    >
-      Real-time
-    </Button>
-    <Button :disabled="isRecording" @click="startRecordingAudio"> Record </Button>
-    <Button :disabled="isRecording" @click="onPlayPause">
-      {{ audioPlaying ? 'Pause' : 'Play' }}
-    </Button>
+    <div class="grid grid-cols-2 content-center justify-items-center">
+      <p class="self-center">Real-time</p>
+      <div>
+        <Button :disabled="false" @click="() => startPlayingAudio(true)">
+          Start real-time
+        </Button>
+      </div>
+      <p class="self-center">Recording</p>
+      <div>
+        <Button
+          :disabled="playbackState === PlaybackState.Recording"
+          @click="() => (playbackState = PlaybackState.Recording)"
+        >
+          Record
+        </Button>
+        <Button
+          :disabled="playbackState === PlaybackState.Recording"
+          @click="onPlayPause"
+        >
+          {{ getPlayPauseText(playbackState) }}
+        </Button>
+      </div>
+    </div>
 
     <div>
       <Slider
@@ -299,7 +345,7 @@ const startRecordingAudio = async () => {
     >
       <div
         class="progress-bar-animation bg-accent1 w-full h-full"
-        v-if="isRecording"
+        v-if="playbackState === PlaybackState.Recording"
       ></div>
     </div>
     <div class="max-w-3xl">
