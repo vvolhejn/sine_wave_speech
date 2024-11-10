@@ -33,7 +33,8 @@ const updateVisualization = (clear: boolean = false) => {
   const svg = d3.select(svgRef.value).select('g')
 
   const hops = props.hops.length > 0 ? props.hops : DUMMY_HOPS
-  const nWaves = hops[0].frequencies.length
+  // nWaves can be different for different hops if the user modifies the number of waves
+  const nWaves = Math.max(...hops.map((hop) => hop.frequencies.length))
   const numHops = props.totalNumHops || hops.length
 
   const xScale = d3.scaleLinear().domain([0, numHops]).range([0, width])
