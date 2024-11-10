@@ -1,7 +1,4 @@
-import init, {
-  FrequencyQuantizationType,
-  SineWaveSpeechConverter,
-} from '../wasm_realtime_sws/wasm_audio.js'
+import init, { SineWaveSpeechConverter } from '../wasm_realtime_sws/wasm_audio.js'
 import { ProcessorMessage, SineWaveSpeechNodeOptions } from './types.js'
 
 // https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API/Using_AudioWorklet
@@ -45,7 +42,7 @@ class SineWaveSpeechProcessor extends AudioWorkletProcessor {
   static get parameterDescriptors(): AudioParamDescriptor[] {
     return [
       {
-        name: 'frequencyQuantizationLevel',
+        name: 'frequencyQuantizationStrength',
         defaultValue: 0.0,
         minValue: 0,
         maxValue: 3,
@@ -139,14 +136,11 @@ class SineWaveSpeechProcessor extends AudioWorkletProcessor {
       let frequencies = fm.slice(0, fm.length / 2)
       let magnitudes = fm.slice(fm.length / 2)
 
-      const frequencyQuantizationType = getFrequencyQuantizationType(parameters)
-
-      if (frequencyQuantizationType != null) {
-        frequencies = this.converter.quantize_frequencies(
-          frequencies,
-          frequencyQuantizationType
-        )
-      }
+      const frequencyQuantizationStrength = parameters.frequencyQuantizationStrength[0]
+      frequencies = this.converter.quantize_frequencies_continuous(
+        frequencies,
+        frequencyQuantizationStrength
+      )
 
       magnitudes = addGain(magnitudes, parameters.gainDb[0])
 
@@ -236,28 +230,6 @@ const canProcess = (inputList: Float32Array[][], outputList: Float32Array[][]) =
   }
 
   return true
-}
-
-// See also frequencyQuantizationName in LiveApp.vue
-const getFrequencyQuantizationType = (
-  parameters: Record<string, Float32Array>
-): FrequencyQuantizationType | null => {
-  const value = parameters.frequencyQuantizationLevel[0]
-
-  switch (value) {
-    case 0:
-      return null
-    case 1:
-      return FrequencyQuantizationType.Chromatic
-    case 2:
-      return FrequencyQuantizationType.Diatonic
-    case 3:
-      return FrequencyQuantizationType.Pentatonic
-    default:
-      throw new Error(
-        `Expected quantizeFrequencies to be in [0, 1, 2, 3], got ${value}`
-      )
-  }
 }
 
 const addGain = (magnitudes: Float32Array, gainDb: number): Float32Array => {

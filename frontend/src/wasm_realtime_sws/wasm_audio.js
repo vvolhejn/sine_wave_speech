@@ -258,6 +258,26 @@ export class SineWaveSpeechConverter {
     }
     /**
     * @param {Float32Array} frequencies
+    * @param {number} quantization_strength
+    * @returns {Float32Array}
+    */
+    quantize_frequencies_continuous(frequencies, quantization_strength) {
+        try {
+            const retptr = wasm.__wbindgen_add_to_stack_pointer(-16);
+            const ptr0 = passArrayF32ToWasm0(frequencies, wasm.__wbindgen_malloc);
+            const len0 = WASM_VECTOR_LEN;
+            wasm.sinewavespeechconverter_quantize_frequencies_continuous(retptr, this.__wbg_ptr, ptr0, len0, quantization_strength);
+            var r0 = getInt32Memory0()[retptr / 4 + 0];
+            var r1 = getInt32Memory0()[retptr / 4 + 1];
+            var v2 = getArrayF32FromWasm0(r0, r1).slice();
+            wasm.__wbindgen_free(r0, r1 * 4, 4);
+            return v2;
+        } finally {
+            wasm.__wbindgen_add_to_stack_pointer(16);
+        }
+    }
+    /**
+    * @param {Float32Array} frequencies
     * @param {Float32Array} magnitudes
     * @param {Float32Array} first_phases
     * @returns {Float32Array}

@@ -139,6 +139,35 @@ pub fn quantize_frequency(to_snap: f32, allowed_frequencies: &Vec<f32>) -> f32 {
     closest_note
 }
 
+pub fn quantize_frequencies(
+    frequencies: &Vec<f32>,
+    quantization_type: Option<FrequencyQuantizationType>,
+    sample_rate: usize,
+) -> Vec<f32> {
+    match quantization_type {
+        None => return frequencies.clone(),
+        Some(quantization_type) => {
+            let allowed_notes = quantization_type.to_scale();
+
+            const MIN_OCTAVE: i32 = 0;
+            const MAX_OCTAVE: i32 = 8;
+            let frequency_multiplier: f32 = (2. * std::f32::consts::PI) / sample_rate as f32;
+            let allowed_frequencies = generate_scale(
+                &allowed_notes.to_vec(),
+                MIN_OCTAVE,
+                MAX_OCTAVE,
+                Some(frequency_multiplier),
+            );
+
+            let quantized_frequencies = frequencies
+                .iter()
+                .map(|x| quantize_frequency(*x, &allowed_frequencies))
+                .collect();
+            quantized_frequencies
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

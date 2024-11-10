@@ -39,7 +39,7 @@ const audioSourceNode = ref<MediaStreamAudioSourceNode | AudioBufferSourceNode |
 
 // Synthesis parameters
 const nWaves = ref(4)
-const frequencyQuantizationLevel = ref(0)
+const frequencyQuantizationStrength = ref(0.0)
 const hopSizeMultiplier = ref(2)
 const gainDb = ref(0)
 
@@ -117,8 +117,10 @@ const updateParameter = async (parameterName: string, value: number) => {
   param.setValueAtTime(value, audioContext.currentTime)
 }
 
-const setFrequencyQuantizationLevel = async (newFrequencyQuantizationLevel: number) => {
-  updateParameter('frequencyQuantizationLevel', newFrequencyQuantizationLevel)
+const setFrequencyQuantizationStrength = async (
+  newFrequencyQuantizationStrength: number
+) => {
+  updateParameter('frequencyQuantizationStrength', newFrequencyQuantizationStrength)
 }
 
 const setHopSizeMultiplier = async (newHopSizeMultiplier: number) => {
@@ -133,26 +135,26 @@ const setGainDb = async (newGainDb: number) => {
   updateParameter('gainDb', newGainDb)
 }
 
-watch(frequencyQuantizationLevel, setFrequencyQuantizationLevel)
+watch(frequencyQuantizationStrength, setFrequencyQuantizationStrength)
 watch(hopSizeMultiplier, setHopSizeMultiplier)
 watch(nWaves, setNWaves)
 watch(gainDb, setGainDb)
 
-// See also getFrequencyQuantizationType() in sineWaveSpeechProcessor.ts.
 const frequencyQuantizationName = computed(() => {
-  const level = frequencyQuantizationLevel.value
-  switch (level) {
-    case 0:
-      return 'No quantization'
-    case 1:
-      return 'Chromatic'
-    case 2:
-      return 'Diatonic'
-    case 3:
-      return 'Pentatonic'
-    default:
-      throw new Error(`Invalid frequency quantization level ${level}`)
+  const strength = frequencyQuantizationStrength.value
+  const breakpoints = [
+    { upTo: 0.5, name: 'No quantization' },
+    { upTo: 1.5, name: 'Chromatic' },
+    { upTo: 2.5, name: 'Diatonic' },
+    { upTo: 3.0, name: 'Pentatonic' },
+  ]
+  for (const { upTo, name } of breakpoints) {
+    if (strength <= upTo) {
+      return name
+    }
   }
+
+  throw new Error(`Invalid frequency quantization strength ${strength}`)
 })
 
 enum PlaybackState {
@@ -217,7 +219,7 @@ const startPlayingAudio = async (fromMicrophone: boolean) => {
 
   // The watch() calls above only happen when the value is updated, so if the user didn't change
   // anything, the parameters might be out of sync with the audio processor.
-  setFrequencyQuantizationLevel(frequencyQuantizationLevel.value)
+  setFrequencyQuantizationStrength(frequencyQuantizationStrength.value)
   setHopSizeMultiplier(hopSizeMultiplier.value)
   setNWaves(nWaves.value)
   setGainDb(gainDb.value)
@@ -318,10 +320,11 @@ const startRecordingAudio = async () => {
         id="n-waves-slider"
       />
       <Slider
-        v-model="frequencyQuantizationLevel"
+        v-model="frequencyQuantizationStrength"
         :label="frequencyQuantizationName"
         :min="0"
         :max="3"
+        :step="0.1"
         id="frequency-quantization-level-slider"
       />
       <Slider

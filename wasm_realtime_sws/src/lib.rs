@@ -60,29 +60,63 @@ impl SineWaveSpeechConverter {
         frequencies: Vec<f32>,
         quantization_type: Option<music::FrequencyQuantizationType>,
     ) -> Vec<f32> {
-        match quantization_type {
-            None => return frequencies,
-            Some(quantization_type) => {
-                let allowed_notes = quantization_type.to_scale();
+        music::quantize_frequencies(&frequencies, quantization_type, self.sample_rate)
+    }
 
-                const MIN_OCTAVE: i32 = 0;
-                const MAX_OCTAVE: i32 = 8;
-                let frequency_multiplier: f32 =
-                    (2. * std::f32::consts::PI) / self.sample_rate as f32;
-                let allowed_frequencies = music::generate_scale(
-                    &allowed_notes.to_vec(),
-                    MIN_OCTAVE,
-                    MAX_OCTAVE,
-                    Some(frequency_multiplier),
-                );
+    pub fn quantize_frequencies_continuous(
+        &mut self,
+        frequencies: Vec<f32>,
+        quantization_strength: f32,
+    ) -> Vec<f32> {
+        let quantized_versions = [
+            None,
+            Some(music::FrequencyQuantizationType::Chromatic),
+            Some(music::FrequencyQuantizationType::Diatonic),
+            Some(music::FrequencyQuantizationType::Pentatonic),
+        ]
+        .map(|quantization_type| {
+            music::quantize_frequencies(&frequencies, quantization_type, self.sample_rate)
+        });
+        let max_strength = quantized_versions.len() as f32 - 1.0;
 
-                let quantized_frequencies = frequencies
-                    .iter()
-                    .map(|x| music::quantize_frequency(*x, &allowed_frequencies))
-                    .collect();
-                quantized_frequencies
+        if quantization_strength < 0.0 || quantization_strength > max_strength {
+            panic!(
+                "quantization_strength must be between 0 and {}, got {}",
+                max_strength, quantization_strength
+            );
+        }
+
+        let interpolation_weights = [
+            // Unquantized version fades out quickly
+            remap(quantization_strength, 0.0, 3.0, 1.0, 0.0),
+            // Chromatic peaks at quantization_strength==1 and then fades
+            if quantization_strength <= 1.0 {
+                remap(quantization_strength, 0.0, 1.0, 0.0, 3.0)
+            } else {
+                remap(quantization_strength, 1.0, 2.0, 3.0, 0.0)
+            },
+            // Diatonic peaks at quantization_strength==2 and then fades
+            if quantization_strength <= 2.0 {
+                remap(quantization_strength, 1.0, 2.0, 0.0, 3.0)
+            } else {
+                remap(quantization_strength, 2.0, 3.0, 3.0, 0.0)
+            },
+            // Pentatonic comes in at quantization_strength==1 and then gets stronger
+            remap(quantization_strength, 1.0, 3.0, 0.0, 3.0),
+        ];
+
+        let total_weight: f32 = interpolation_weights.iter().sum();
+
+        let mut result = vec![0.0; frequencies.len()];
+        for (i, quantized_version) in quantized_versions.iter().enumerate() {
+            for (j, (result, quantized)) in
+                result.iter_mut().zip(quantized_version.iter()).enumerate()
+            {
+                *result += quantized * (interpolation_weights[i] / total_weight);
             }
         }
+
+        result
     }
 
     pub fn synthesize(
@@ -109,4 +143,12 @@ impl SineWaveSpeechConverter {
         result.append(&mut last_phases.to_vec());
         result
     }
+}
+
+fn remap(value: f32, from_min: f32, from_max: f32, to_min: f32, to_max: f32) -> f32 {
+    // For our purposes, it's useful to silently return 0.0 if the value is outside the range
+    if value < from_min || value > from_max {
+        return 0.0;
+    }
+    (value - from_min) / (from_max - from_min) * (to_max - to_min) + to_min
 }
