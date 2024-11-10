@@ -8,7 +8,7 @@ import { ProcessorMessage, SineWaveSpeechNodeOptions } from './types.js'
 // depending on circumstances, so you should always check the array's length
 // rather than assuming a particular size."
 // Here we do make the assumption but fail loudly if it's not true
-export const BLOCK_SIZE = 128
+const BLOCK_SIZE = 128
 
 class SineWaveSpeechProcessor extends AudioWorkletProcessor {
   converter: SineWaveSpeechConverter | null = null

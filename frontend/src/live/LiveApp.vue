@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 
 import sentenceAudio from '../assets/sentence-original.wav'
 import wasmUrl from '../wasm_realtime_sws/wasm_audio_bg.wasm?url'
@@ -16,8 +16,9 @@ import { Hop } from './types.ts'
 // Single source of truth for the recording duration (in seconds)
 const RECORDING_DURATION_SEC = 3
 
-// Must be a multiple of 128, the WebAudio block size
-const HOP_SIZE = 256
+// See BLOCK_SIZE in sineWaveSpeechProcessor.ts.
+// We can't import that here because it's a Worker (I think?).
+const BLOCK_SIZE = 128
 
 // The sample rate significantly affects how sine wave speech effect sounds.
 // 8000 is the tested one.
@@ -26,9 +27,23 @@ const SAMPLE_RATE = 8000
 const hops = ref<Hop[]>([])
 const recordedAudioBuffer = ref<AudioBuffer | null>(null)
 const isRecording = ref(false)
-const totalNumHops = ref<number | null>(null)
 const quantizeFrequencies = ref(false)
 const hopSizeMultiplier = ref(2)
+const audioSourceNode = ref<MediaStreamAudioSourceNode | AudioBufferSourceNode | null>(
+  null
+)
+const totalNumHops = computed(() => {
+  const source = audioSourceNode.value
+  if (source instanceof AudioBufferSourceNode) {
+    if (source.buffer === null) throw new Error('Buffer is null')
+    console.log(source)
+    const hopSize = BLOCK_SIZE * hopSizeMultiplier.value
+    return Math.ceil(source.buffer.length / hopSize)
+  } else {
+    // Microphone or nothing
+    return null
+  }
+})
 
 type AudioSetup = {
   audioContext: AudioContext
@@ -55,8 +70,16 @@ const setupAudio = async (): Promise<AudioSetup> => {
       processorOptions: {},
       onHop: (hop: Hop) => {
         hops.value.push(hop)
-        if (hops.value.length > 200) {
-          hops.value.shift()
+        if (totalNumHops.value != null) {
+          // We're playing from a recording
+          if (hops.value.length > totalNumHops.value) {
+            hops.value = hops.value.slice(0, 0)
+          }
+        } else {
+          // We're playing from the microphone
+          if (hops.value.length > 64) {
+            hops.value.shift()
+          }
         }
       },
     }
@@ -105,15 +128,16 @@ const startPlayingAudio = async (fromMicrophone: boolean) => {
     const mediaStream = await getWebAudioMediaStream()
     const source = audioContext.createMediaStreamSource(mediaStream)
     source.connect(sineWaveSpeechNode)
+    audioSourceNode.value = source
   } else {
     const dryAudioBuffer =
       recordedAudioBuffer.value || (await getAudioBuffer(audioContext, sentenceAudio))
     let bufferSource = audioContext.createBufferSource()
     bufferSource.buffer = dryAudioBuffer
-    // bufferSource.loop = true
+    bufferSource.loop = true
     bufferSource.connect(sineWaveSpeechNode)
     bufferSource.start()
-    totalNumHops.value = Math.ceil(dryAudioBuffer.length / HOP_SIZE)
+    audioSourceNode.value = bufferSource
   }
 
   hops.value = []
