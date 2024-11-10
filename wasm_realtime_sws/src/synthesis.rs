@@ -42,7 +42,7 @@ pub fn synthesize(
     }
 
     // Apply compression to avoid clipping
-    output.mapv_inplace(|x| x.atan());
+    output.mapv_inplace(atan_compression);
 
     (output, last_phases)
 }
@@ -120,6 +120,11 @@ pub fn upsample(
     }
 
     output
+}
+
+/// Compresses a signal to [-1, 1] by applying a scaled atan.
+fn atan_compression(x: f32) -> f32 {
+    x.atan() * 2.0 / std::f32::consts::PI
 }
 
 #[cfg(test)]

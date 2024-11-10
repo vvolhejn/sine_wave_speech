@@ -1,3 +1,5 @@
+import { Hop } from './types'
+
 export const getAudioBuffer = async (audioContext: AudioContext, audioFile: string) => {
   const response = await fetch(audioFile)
   const arrayBuffer = await response.arrayBuffer()
@@ -74,4 +76,12 @@ export const trimAudioBufferToMultipleOf = (
 ): AudioBuffer => {
   const nSamples = Math.floor(audioBuffer.length / multiple) * multiple
   return trimAudioBuffer(audioContext, audioBuffer, nSamples)
+}
+
+// For debugging issues with loudness.
+export const getMeanMagnitude = (hops: Hop[]) => {
+  const totalHopMagnitude = (hop: Hop) => hop.magnitudes.reduce((a, b) => a + b, 0)
+  let meanMagnitude =
+    hops.map(totalHopMagnitude).reduce((a, b) => a + b, 0) / hops.length
+  return meanMagnitude
 }

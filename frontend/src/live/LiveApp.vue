@@ -30,6 +30,7 @@ const SAMPLE_RATE = 8000
 const hops = ref<Hop[]>([])
 const recordedAudioBuffer = ref<AudioBuffer | null>(null)
 const isRecording = ref(false)
+const nWaves = ref(4)
 const frequencyQuantizationLevel = ref(0)
 const hopSizeMultiplier = ref(2)
 const audioSourceNode = ref<MediaStreamAudioSourceNode | AudioBufferSourceNode | null>(
@@ -114,8 +115,17 @@ const setHopSizeMultiplier = async (newHopSizeMultiplier: number) => {
   param.setValueAtTime(newHopSizeMultiplier, audioContext.currentTime)
 }
 
+const setNWaves = async (newNWaves: number) => {
+  const { audioContext, sineWaveSpeechNode } = await getAudioSetup()
+  const param = sineWaveSpeechNode.parameters.get('nWaves')
+  if (param === undefined) throw new Error('Parameter not found')
+
+  param.setValueAtTime(newNWaves, audioContext.currentTime)
+}
+
 watch(frequencyQuantizationLevel, setFrequencyQuantizationLevel)
 watch(hopSizeMultiplier, setHopSizeMultiplier)
+watch(nWaves, setNWaves)
 
 // See also getFrequencyQuantizationType() in sineWaveSpeechProcessor.ts.
 const frequencyQuantizationName = computed(() => {
@@ -161,6 +171,7 @@ const startPlayingAudio = async (fromMicrophone: boolean) => {
   // anything, the parameters might be out of sync with the audio processor.
   setFrequencyQuantizationLevel(frequencyQuantizationLevel.value)
   setHopSizeMultiplier(hopSizeMultiplier.value)
+  setNWaves(nWaves.value)
 
   if (fromMicrophone) {
     const mediaStream = await getWebAudioMediaStream()
@@ -231,6 +242,13 @@ const startRecordingAudio = async () => {
     </button>
     <div>
       <Slider
+        v-model="nWaves"
+        :label="`Number of waves: ${nWaves}`"
+        :min="1"
+        :max="16"
+        id="n-waves-slider"
+      />
+      <Slider
         v-model="frequencyQuantizationLevel"
         :label="frequencyQuantizationName"
         :min="0"
@@ -239,7 +257,7 @@ const startRecordingAudio = async () => {
       />
       <Slider
         v-model="hopSizeMultiplier"
-        label="Step size"
+        :label="`Step size: ${hopSizeMultiplier}`"
         :min="1"
         :max="16"
         id="hop-size-multiplier-slider"

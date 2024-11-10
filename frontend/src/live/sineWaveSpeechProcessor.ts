@@ -15,21 +15,19 @@ const BLOCK_SIZE = 128
 
 class SineWaveSpeechProcessor extends AudioWorkletProcessor {
   converter: SineWaveSpeechConverter | null = null
-  nWaves: number = 4
 
+  // Dummy values, these get overwritten in the first process() call
   lastHopSize: number = 0
-  lastFrequencies: Float32Array
-  lastMagnitudes: Float32Array
-  lastPhases: Float32Array
+  lastNWaves: number = 0
+  lastFrequencies: Float32Array = new Float32Array()
+  lastMagnitudes: Float32Array = new Float32Array()
+  lastPhases: Float32Array = new Float32Array()
 
   bufferToPlay: Float32Array
   bufferToProcess: Float32Array
 
   constructor(options?: SineWaveSpeechNodeOptions) {
     super(options)
-    this.lastFrequencies = new Float32Array(this.nWaves)
-    this.lastMagnitudes = new Float32Array(this.nWaves)
-    this.lastPhases = new Float32Array(this.nWaves)
 
     if (!options || !options.processorOptions) {
       throw new Error('Expected options.processorOptions to be defined')
@@ -58,17 +56,21 @@ class SineWaveSpeechProcessor extends AudioWorkletProcessor {
         minValue: 1,
         maxValue: 16,
       },
+      {
+        name: 'nWaves',
+        defaultValue: 4,
+        minValue: 1,
+        maxValue: 16,
+      },
     ]
   }
 
   onmessage(event: MessageEvent) {
     if (event.type === 'initialize') {
       init(WebAssembly.compile((event as any).wasmBytes)).then(() => {
-        this.converter = SineWaveSpeechConverter.new(
-          this.nWaves,
-          BLOCK_SIZE,
-          sampleRate
-        )
+        // n_waves and hop_size get overwritten in the first process() call
+        // (perhaps we shouldn't even have them here)
+        this.converter = SineWaveSpeechConverter.new(4, BLOCK_SIZE, sampleRate)
       })
     } else {
       throw new Error('Unknown message type: ' + event.type)
@@ -95,16 +97,25 @@ class SineWaveSpeechProcessor extends AudioWorkletProcessor {
       return true
     }
 
-    const frequencyQuantizationType = getFrequencyQuantizationType(parameters)
     const hopSize = BLOCK_SIZE * parameters.hopSizeMultiplier[0]
     const hopSizeChanged = hopSize !== this.lastHopSize
-
     if (hopSizeChanged) {
       this.lastHopSize = hopSize
       this.converter.hop_size = hopSize
       // Keeping the buffers from the previous hop size would lead to weird edge cases
       this.bufferToProcess = new Float32Array()
       this.bufferToPlay = new Float32Array()
+    }
+
+    const nWaves = parameters.nWaves[0]
+    if (nWaves !== this.lastNWaves) {
+      this.lastFrequencies = new Float32Array(nWaves)
+      this.lastMagnitudes = new Float32Array(nWaves)
+      this.lastPhases = new Float32Array(nWaves)
+      this.bufferToProcess = new Float32Array()
+      this.bufferToPlay = new Float32Array()
+      this.converter.n_waves = nWaves
+      this.lastNWaves = nWaves
     }
 
     // Not very efficient because we're creating a new array, but it's fine for now
@@ -122,18 +133,17 @@ class SineWaveSpeechProcessor extends AudioWorkletProcessor {
       let frequencies = fm.slice(0, fm.length / 2)
       const magnitudes = fm.slice(fm.length / 2)
 
+      const frequencyQuantizationType = getFrequencyQuantizationType(parameters)
+
       if (frequencyQuantizationType != null) {
-        console.log('quantization', frequencyQuantizationType)
         frequencies = this.converter.quantize_frequencies(
           frequencies,
           frequencyQuantizationType
         )
       }
 
-      if (frequencies.length !== this.nWaves) {
-        throw new Error(
-          `Expected ${this.nWaves} frequencies, got ${frequencies.length}`
-        )
+      if (frequencies.length !== nWaves) {
+        throw new Error(`Expected ${nWaves} frequencies, got ${frequencies.length}`)
       }
 
       const combinedFrequencies = concatFloat32Arrays([

@@ -60,12 +60,12 @@ const updateVisualization = () => {
   const withOpacity = (color: d3.RGBColor, opacity: number) =>
     `rgba(${color.r}, ${color.g}, ${color.b}, ${opacity})`
 
+  // Remove existing lines
+  svg.selectAll('.line-any').remove()
+
   // Update visualization for each line
   linesToDraw.forEach((dataset, datasetIndex) => {
-    // Remove existing line segments
-    svg.selectAll(`.line-${datasetIndex}`).remove()
-
-    const baseColor = d3.color(accentColors[datasetIndex])!.rgb()
+    const baseColor = d3.color(accentColors[datasetIndex % accentColors.length])!.rgb()
 
     // Draw line segments
     for (let i = 0; i < dataset.frequencies.length - 1; i++) {
@@ -75,6 +75,7 @@ const updateVisualization = () => {
         svg
           .append('path')
           .attr('class', `line-${datasetIndex}`)
+          .attr('class', `line-any`) // This is so that we can easily remove all lines later
           .attr(
             'd',
             d3.line()([

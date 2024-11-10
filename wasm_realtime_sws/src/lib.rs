@@ -39,11 +39,11 @@ impl SineWaveSpeechConverter {
         let (frequencies, mut magnitudes) =
             lpc::lpc_coefficients_to_frequencies(lpc_coefficients.view(), gain.view());
 
-        // Limit the really extreme values. I'm not sure at what value the should be limited to
-        // but this at least seemed to get rid of the really extreme values.
-        // Note that in synthesize() we make sure values end up in [01, 1] so there is no clipping,
-        // it's just that some values are really extreme.
-        magnitudes.mapv_inplace(|x| x.min(2.0));
+        // Normalize magnitudes by the number of waves because otherwise the total magnitude
+        // increases with the number of waves. Not sure if this is the proper way to do it
+        // but it works.
+        // Note we also apply compression to the final waveform in synthesize().
+        magnitudes.mapv_inplace(|x| x / self.n_waves as f32);
 
         let frequencies = frequencies.flatten();
         let magnitudes = magnitudes.flatten();
