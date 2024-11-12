@@ -15,6 +15,7 @@ import SineWaveSpeechNode from './sineWaveSpeechNode.ts'
 // Importing with "?worker&url" and not "?url" is necessary:
 // https://github.com/vitejs/vite/issues/6979#issuecomment-1320394505
 import processorUrl from './sineWaveSpeechProcessor.ts?worker&url'
+import { SynthesisParameters } from './synthesisParameters.ts'
 import { Hop, PlaybackState } from './types.ts'
 
 // See BLOCK_SIZE in sineWaveSpeechProcessor.ts.
@@ -37,24 +38,25 @@ const audioSourceNode = ref<MediaStreamAudioSourceNode | AudioBufferSourceNode |
   null
 )
 
-// Synthesis parameters
-const nWaves = ref(4)
-const frequencyQuantizationStrength = ref(0.0)
-const hopSizeMultiplier = ref(2)
-const gainDb = ref(0)
-const depthOctaves = ref(0)
+const synthesisParameters = ref<SynthesisParameters>({
+  nWaves: 4,
+  frequencyQuantizationStrength: 0.0,
+  hopSizeMultiplier: 2,
+  gainDb: 0,
+  depthOctaves: 0,
+})
 
 const totalNumHops = computed(() => {
   const source = audioSourceNode.value
   if (source instanceof AudioBufferSourceNode) {
     // Pre-recorded source. we know how many hops there are.
     if (source.buffer === null) throw new Error('Buffer is null')
-    const hopSize = BLOCK_SIZE * hopSizeMultiplier.value
+    const hopSize = BLOCK_SIZE * synthesisParameters.value.hopSizeMultiplier
     return Math.ceil(source.buffer.length / hopSize)
   } else if (source instanceof MediaStreamAudioSourceNode) {
     // Live source - a microphone.
     if (playbackState.value === PlaybackState.Recording) {
-      return RECORDING_DURATION_BLOCKS / hopSizeMultiplier.value
+      return RECORDING_DURATION_BLOCKS / synthesisParameters.value.hopSizeMultiplier
     } else if (playbackState.value === PlaybackState.PlayingRealtime) {
       return TOTAL_NUM_HOPS_WHEN_LIVE
     } else if (playbackState.value === PlaybackState.Stopped) {
@@ -122,44 +124,20 @@ const getAudioSetup = async () => {
   return audioSetup.value
 }
 
-const updateParameter = async (parameterName: string, value: number) => {
+const setSynthesisParameters = async (newParameters: SynthesisParameters) => {
   const { audioContext, sineWaveSpeechNode } = await getAudioSetup()
-  const param = sineWaveSpeechNode.parameters.get(parameterName)
-  if (param === undefined) throw new Error(`Parameter ${parameterName} not found`)
+  for (const [parameterName, value] of Object.entries(newParameters)) {
+    const param = sineWaveSpeechNode.parameters.get(parameterName)
+    if (param === undefined) throw new Error(`Parameter ${parameterName} not found`)
 
-  param.setValueAtTime(value, audioContext.currentTime)
+    param.setValueAtTime(value, audioContext.currentTime)
+  }
 }
-
-const setFrequencyQuantizationStrength = async (
-  newFrequencyQuantizationStrength: number
-) => {
-  updateParameter('frequencyQuantizationStrength', newFrequencyQuantizationStrength)
-}
-
-const setHopSizeMultiplier = async (newHopSizeMultiplier: number) => {
-  updateParameter('hopSizeMultiplier', newHopSizeMultiplier)
-}
-
-const setNWaves = async (newNWaves: number) => {
-  updateParameter('nWaves', newNWaves)
-}
-
-const setGainDb = async (newGainDb: number) => {
-  updateParameter('gainDb', newGainDb)
-}
-
-const setDepthOctaves = async (newDepthOctaves: number) => {
-  updateParameter('depthOctaves', newDepthOctaves)
-}
-
-watch(frequencyQuantizationStrength, setFrequencyQuantizationStrength)
-watch(hopSizeMultiplier, setHopSizeMultiplier)
-watch(nWaves, setNWaves)
-watch(gainDb, setGainDb)
-watch(depthOctaves, setDepthOctaves)
+// deep: true is necessary because synthesisParameters is an object, we need to watch its properties
+watch(synthesisParameters, setSynthesisParameters, { deep: true })
 
 const frequencyQuantizationName = computed(() => {
-  const strength = frequencyQuantizationStrength.value
+  const strength = synthesisParameters.value.frequencyQuantizationStrength
   const breakpoints = [
     { upTo: 0.5, name: 'Microtonal' },
     { upTo: 1.5, name: 'Chromatic' },
@@ -227,13 +205,9 @@ const setAudioSourceNode = async (
 const startPlayingAudio = async (fromMicrophone: boolean) => {
   const { audioContext, sineWaveSpeechNode } = await getAudioSetup()
 
-  // The watch() calls above only happen when the value is updated, so if the user didn't change
+  // The watch() call above only happen when the value is updated, so if the user didn't change
   // anything, the parameters might be out of sync with the audio processor.
-  setFrequencyQuantizationStrength(frequencyQuantizationStrength.value)
-  setHopSizeMultiplier(hopSizeMultiplier.value)
-  setNWaves(nWaves.value)
-  setGainDb(gainDb.value)
-  setDepthOctaves(depthOctaves.value)
+  setSynthesisParameters(synthesisParameters.value)
 
   if (audioSourceNode.value !== null) {
     audioSourceNode.value.disconnect()
@@ -327,21 +301,21 @@ const startRecordingAudio = async () => {
 
     <div class="mt-2">
       <Slider
-        v-model="hopSizeMultiplier"
-        :label="`Step size: ${hopSizeMultiplier}`"
+        v-model="synthesisParameters.hopSizeMultiplier"
+        :label="`Step size: ${synthesisParameters.hopSizeMultiplier}`"
         :min="1"
         :max="16"
         id="hop-size-multiplier-slider"
       />
       <Slider
-        v-model="nWaves"
-        :label="`Number of waves: ${nWaves}`"
+        v-model="synthesisParameters.nWaves"
+        :label="`Number of waves: ${synthesisParameters.nWaves}`"
         :min="1"
         :max="16"
         id="n-waves-slider"
       />
       <Slider
-        v-model="frequencyQuantizationStrength"
+        v-model="synthesisParameters.frequencyQuantizationStrength"
         :label="`Scale: ${frequencyQuantizationName}`"
         :min="0"
         :max="3"
@@ -349,15 +323,15 @@ const startRecordingAudio = async () => {
         id="frequency-quantization-level-slider"
       />
       <Slider
-        v-model="gainDb"
-        :label="`Gain: ${gainDb} dB`"
+        v-model="synthesisParameters.gainDb"
+        :label="`Gain: ${synthesisParameters.gainDb} dB`"
         :min="-18"
         :max="18"
         id="gain-db-slider"
       />
       <Slider
-        v-model="depthOctaves"
-        :label="`Depth: ${depthOctaves}`"
+        v-model="synthesisParameters.depthOctaves"
+        :label="`Depth: ${synthesisParameters.depthOctaves}`"
         :min="0"
         :max="2"
         :step="0.1"
