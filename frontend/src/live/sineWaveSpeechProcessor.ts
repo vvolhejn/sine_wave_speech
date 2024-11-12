@@ -1,4 +1,5 @@
 import init, { SineWaveSpeechConverter } from '../wasm_realtime_sws/wasm_audio.js'
+import { synthesisParameters } from './synthesisParameters.js'
 import { ProcessorMessage, SineWaveSpeechNodeOptions } from './types.js'
 
 // https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API/Using_AudioWorklet
@@ -40,38 +41,7 @@ class SineWaveSpeechProcessor extends AudioWorkletProcessor {
   }
 
   static get parameterDescriptors(): AudioParamDescriptor[] {
-    return [
-      {
-        name: 'frequencyQuantizationStrength',
-        defaultValue: 0.0,
-        minValue: 0,
-        maxValue: 3,
-      },
-      {
-        name: 'hopSizeMultiplier',
-        defaultValue: 2,
-        minValue: 1,
-        maxValue: 16,
-      },
-      {
-        name: 'nWaves',
-        defaultValue: 4,
-        minValue: 1,
-        maxValue: 16,
-      },
-      {
-        name: 'gainDb',
-        defaultValue: 0,
-        minValue: -18,
-        maxValue: 18,
-      },
-      {
-        name: 'depthOctaves',
-        defaultValue: 0,
-        minValue: 0,
-        maxValue: 2,
-      },
-    ]
+    return synthesisParameters
   }
 
   onmessage(event: MessageEvent) {
