@@ -37,6 +37,15 @@ export class SineWaveSpeechConverter {
 */
   quantize_frequencies_continuous(frequencies: Float32Array, quantization_strength: number): Float32Array;
 /**
+* Add depth by lowering the first frequencies more than the last ones.
+* Specifically, the first frequency is lowered by `width` octaves, and the last frequency
+* is left unchanged. The deepening of the other frequencies is a linear interpolation.
+* @param {Float32Array} frequencies
+* @param {number} width
+* @returns {Float32Array}
+*/
+  add_depth(frequencies: Float32Array, width: number): Float32Array;
+/**
 * @param {Float32Array} frequencies
 * @param {Float32Array} magnitudes
 * @param {Float32Array} first_phases
@@ -69,6 +78,7 @@ export interface InitOutput {
   readonly sinewavespeechconverter_get_frequencies_and_magnitudes: (a: number, b: number, c: number, d: number) => void;
   readonly sinewavespeechconverter_quantize_frequencies: (a: number, b: number, c: number, d: number, e: number) => void;
   readonly sinewavespeechconverter_quantize_frequencies_continuous: (a: number, b: number, c: number, d: number, e: number) => void;
+  readonly sinewavespeechconverter_add_depth: (a: number, b: number, c: number, d: number, e: number) => void;
   readonly sinewavespeechconverter_synthesize: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number) => void;
   readonly __wbindgen_add_to_stack_pointer: (a: number) => number;
   readonly __wbindgen_malloc: (a: number, b: number) => number;

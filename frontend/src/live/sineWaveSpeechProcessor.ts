@@ -65,6 +65,12 @@ class SineWaveSpeechProcessor extends AudioWorkletProcessor {
         minValue: -18,
         maxValue: 18,
       },
+      {
+        name: 'depthOctaves',
+        defaultValue: 0,
+        minValue: 0,
+        maxValue: 2,
+      },
     ]
   }
 
@@ -137,6 +143,7 @@ class SineWaveSpeechProcessor extends AudioWorkletProcessor {
       let magnitudes = fm.slice(fm.length / 2)
 
       const frequencyQuantizationStrength = parameters.frequencyQuantizationStrength[0]
+      frequencies = this.converter.add_depth(frequencies, parameters.depthOctaves[0])
       frequencies = this.converter.quantize_frequencies_continuous(
         frequencies,
         frequencyQuantizationStrength

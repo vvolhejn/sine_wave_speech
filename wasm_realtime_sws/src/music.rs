@@ -168,6 +168,23 @@ pub fn quantize_frequencies(
     }
 }
 
+pub fn add_depth(frequencies: &Vec<f32>, width: f32) -> Vec<f32> {
+    if frequencies.len() <= 1 {
+        return frequencies.clone();
+    }
+    frequencies
+        .iter()
+        .enumerate()
+        .map(|(i, f)| {
+            let fraction = i as f32 / (frequencies.len() - 1) as f32;
+            let cur_width = width * (1. - fraction);
+            // Lower by cur_width octaves
+            let coef = 0.5f32.powf(cur_width);
+            f * coef
+        })
+        .collect()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

@@ -12,6 +12,7 @@ export function sinewavespeechconverter_new(a: number, b: number, c: number): nu
 export function sinewavespeechconverter_get_frequencies_and_magnitudes(a: number, b: number, c: number, d: number): void;
 export function sinewavespeechconverter_quantize_frequencies(a: number, b: number, c: number, d: number, e: number): void;
 export function sinewavespeechconverter_quantize_frequencies_continuous(a: number, b: number, c: number, d: number, e: number): void;
+export function sinewavespeechconverter_add_depth(a: number, b: number, c: number, d: number, e: number): void;
 export function sinewavespeechconverter_synthesize(a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number): void;
 export function __wbindgen_add_to_stack_pointer(a: number): number;
 export function __wbindgen_malloc(a: number, b: number): number;

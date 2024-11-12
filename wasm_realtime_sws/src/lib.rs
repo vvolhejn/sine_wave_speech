@@ -119,6 +119,13 @@ impl SineWaveSpeechConverter {
         result
     }
 
+    /// Add depth by lowering the first frequencies more than the last ones.
+    /// Specifically, the first frequency is lowered by `width` octaves, and the last frequency
+    /// is left unchanged. The deepening of the other frequencies is a linear interpolation.
+    pub fn add_depth(&mut self, frequencies: Vec<f32>, width: f32) -> Vec<f32> {
+        music::add_depth(&frequencies, width)
+    }
+
     pub fn synthesize(
         &mut self,
         frequencies: Vec<f32>,

@@ -42,6 +42,7 @@ const nWaves = ref(4)
 const frequencyQuantizationStrength = ref(0.0)
 const hopSizeMultiplier = ref(2)
 const gainDb = ref(0)
+const depthOctaves = ref(0)
 
 const totalNumHops = computed(() => {
   const source = audioSourceNode.value
@@ -147,10 +148,15 @@ const setGainDb = async (newGainDb: number) => {
   updateParameter('gainDb', newGainDb)
 }
 
+const setDepthOctaves = async (newDepthOctaves: number) => {
+  updateParameter('depthOctaves', newDepthOctaves)
+}
+
 watch(frequencyQuantizationStrength, setFrequencyQuantizationStrength)
 watch(hopSizeMultiplier, setHopSizeMultiplier)
 watch(nWaves, setNWaves)
 watch(gainDb, setGainDb)
+watch(depthOctaves, setDepthOctaves)
 
 const frequencyQuantizationName = computed(() => {
   const strength = frequencyQuantizationStrength.value
@@ -227,6 +233,7 @@ const startPlayingAudio = async (fromMicrophone: boolean) => {
   setHopSizeMultiplier(hopSizeMultiplier.value)
   setNWaves(nWaves.value)
   setGainDb(gainDb.value)
+  setDepthOctaves(depthOctaves.value)
 
   if (audioSourceNode.value !== null) {
     audioSourceNode.value.disconnect()
@@ -320,6 +327,13 @@ const startRecordingAudio = async () => {
 
     <div class="mt-2">
       <Slider
+        v-model="hopSizeMultiplier"
+        :label="`Step size: ${hopSizeMultiplier}`"
+        :min="1"
+        :max="16"
+        id="hop-size-multiplier-slider"
+      />
+      <Slider
         v-model="nWaves"
         :label="`Number of waves: ${nWaves}`"
         :min="1"
@@ -335,18 +349,19 @@ const startRecordingAudio = async () => {
         id="frequency-quantization-level-slider"
       />
       <Slider
-        v-model="hopSizeMultiplier"
-        :label="`Step size: ${hopSizeMultiplier}`"
-        :min="1"
-        :max="16"
-        id="hop-size-multiplier-slider"
-      />
-      <Slider
         v-model="gainDb"
         :label="`Gain: ${gainDb} dB`"
         :min="-18"
         :max="18"
         id="gain-db-slider"
+      />
+      <Slider
+        v-model="depthOctaves"
+        :label="`Depth: ${depthOctaves}`"
+        :min="0"
+        :max="2"
+        :step="0.1"
+        id="dept-octaves-slider"
       />
     </div>
 
