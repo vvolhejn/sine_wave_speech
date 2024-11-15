@@ -287,6 +287,10 @@ const startRecordingAudio = async () => {
     class="grid grid-cols-1 content-center justify-items-center min-h-screen font-body gap-2"
   >
     <h1 class="text-5xl italic font-header">Sine Wave Speech</h1>
+    <p>
+      Anything can be music if you listen hard enough.
+      <span class="font-bold">Press Record to start.</span>
+    </p>
     <PlaybackControls v-model="playbackState">
       <div
         class="mt-2 h-2 bg-white overflow-hidden rounded-sm w-full col-span-2"
