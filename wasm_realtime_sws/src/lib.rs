@@ -136,7 +136,16 @@ impl SineWaveSpeechConverter {
         let n_steps: usize = frequencies.len() / self.n_waves;
 
         let frequencies = Array2::from_shape_vec((n_steps, self.n_waves), frequencies).unwrap();
-        let magnitudes = Array2::from_shape_vec((n_steps, self.n_waves), magnitudes).unwrap();
+        let mut magnitudes = Array2::from_shape_vec((n_steps, self.n_waves), magnitudes).unwrap();
+
+        let to_hz = self.sample_rate as f32 / (2. * std::f32::consts::PI);
+
+        // Higher tones are perceptually louder, compensate for that here.
+        for ((i, j), val) in magnitudes.indexed_iter_mut() {
+            let frequency_hz = to_hz * frequencies[[i, j]];
+            let compensation = signal_processing::equal_loudness_compensation(frequency_hz);
+            *val /= compensation;
+        }
 
         let (sws, last_phases) = synthesize(
             frequencies.view(),

@@ -127,6 +127,31 @@ pub fn solve_toeplitz(
     Ok(x)
 }
 
+/// A-weighting curve for loudness perception
+pub fn a_weighing_loudness(frequency_hz: f32) -> f32 {
+    // See https://en.wikipedia.org/wiki/A-weighting#A
+    let f2 = frequency_hz * frequency_hz;
+    let a = 12194.0_f32;
+    let a2 = a * a;
+
+    (a2 * f2 * f2)
+        / ((f2 + 20.6 * 20.6) * ((f2 + 107.7 * 107.7) * (f2 + 737.9 * 737.9)).sqrt() * (f2 + a2))
+}
+
+/// Divide the amplitude by this value.
+pub fn equal_loudness_compensation(frequency_hz: f32) -> f32 {
+    // 0.8 is roughly the value of a_weighing_loudness() at 1000 Hz.
+    // We make it even lower because otherwise the signal is too loud.
+    const BASE_COEF: f32 = 0.5;
+
+    if frequency_hz < 100.0 {
+        return a_weighing_loudness(100.) / BASE_COEF;
+    } else if frequency_hz > 20000.0 {
+        return a_weighing_loudness(20000.0) / BASE_COEF;
+    }
+    a_weighing_loudness(frequency_hz) / BASE_COEF
+}
+
 #[cfg(test)] // Only used in tests, this keeps Rust from complaining about unused code
 pub mod tests {
     // Module declared as public to export helper fns - perhaps there is a better solution...
@@ -259,5 +284,20 @@ pub mod tests {
             }
             Err(e) => panic!("Expected Ok result, but got Err: {:?}", e),
         }
+    }
+
+    #[test]
+    fn test_equal_loudness_compensation() {
+        for value in [20.0, 100.0, 1000.0, 2000.0, 4000.0, 8000.0, 20000.0].iter() {
+            let compensation = equal_loudness_compensation(*value);
+            assert!(
+                0.05 <= compensation && compensation <= 4.0,
+                "Frequency: {}, Compensation: {}",
+                value,
+                compensation
+            );
+        }
+        assert!(equal_loudness_compensation(4000.) > equal_loudness_compensation(400.));
+        assert!(equal_loudness_compensation(4000.) > equal_loudness_compensation(10000.));
     }
 }
