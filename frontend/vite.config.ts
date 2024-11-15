@@ -11,6 +11,9 @@ export default defineConfig({
       input: {
         explanation: './explanation/index.html',
         live: './live/index.html',
+        // The redirection should be handled by Vercel in production, but for local
+        // testing it's also useful to have a HTML-based redirect.
+        root: './index.html',
       },
     },
     minify: true,
