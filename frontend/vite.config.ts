@@ -9,7 +9,7 @@ export default defineConfig({
   build: {
     rollupOptions: {
       input: {
-        prerecorded: './index.html',
+        explanation: './explanation/index.html',
         live: './live/index.html',
       },
     },
