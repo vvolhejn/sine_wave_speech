@@ -24,19 +24,17 @@ const id = `slider-${props.name}`
 </script>
 
 <template>
-  <div>
-    <label v-if="label" :for="id" class="block mb-2 text-sm font-medium text-white">
-      {{ label }}
-    </label>
-    <input
-      :id="id"
-      type="range"
-      :value="modelValue"
-      @input="updateValue"
-      class="w-full h-2 rounded-lg appearance-none cursor-pointer bg-gray-700"
-      :min="parameter.minValue"
-      :max="parameter.maxValue"
-      :step="step || 1"
-    />
-  </div>
+  <label v-if="label" :for="id" class="block mb-2 text-sm font-medium text-white">
+    {{ label }}
+  </label>
+  <input
+    :id="id"
+    type="range"
+    :value="modelValue"
+    @input="updateValue"
+    class="w-full h-2 rounded-lg appearance-none cursor-pointer bg-gray-700"
+    :min="parameter.minValue"
+    :max="parameter.maxValue"
+    :step="step || 1"
+  />
 </template>

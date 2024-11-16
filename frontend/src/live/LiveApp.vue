@@ -267,7 +267,7 @@ const startRecordingAudio = async () => {
     class="w-full min-h-screen items-center content-center justify-items-center grid grid-cols-1"
   >
     <div
-      class="grid grid-cols-1 content-center justify-items-center font-body gap-2 max-w-sm p-2 h-full"
+      class="grid grid-cols-1 content-center justify-items-center font-body gap-4 max-w-sm p-2 h-full"
     >
       <h1 class="text-5xl italic font-header">Sine Wave Speech</h1>
       <p>
@@ -276,7 +276,7 @@ const startRecordingAudio = async () => {
       </p>
       <PlaybackControls v-model="playbackState" />
       <div
-        class="mt-2 h-2 bg-white overflow-hidden rounded-sm w-full"
+        class="h-2 bg-white overflow-hidden rounded-sm w-full"
         :style="{ '--recording-duration': `${RECORDING_DURATION_SEC}s` }"
       >
         <div

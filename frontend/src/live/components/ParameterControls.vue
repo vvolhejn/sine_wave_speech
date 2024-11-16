@@ -24,7 +24,7 @@ const frequencyQuantizationName = computed(() => {
 })
 </script>
 <template>
-  <div class="mt-2">
+  <div class="grid grid-cols-2 gap-2 w-full">
     <ParameterSlider
       v-model="parameters.hopSizeMultiplier"
       name="hopSizeMultiplier"
