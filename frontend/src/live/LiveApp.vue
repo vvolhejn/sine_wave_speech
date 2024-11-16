@@ -210,6 +210,13 @@ const startPlayingAudio = async (fromMicrophone: boolean) => {
     source.connect(sineWaveSpeechNode)
     setAudioSourceNode(source)
   } else {
+    let bufferSource = audioContext.createBufferSource()
+
+    bufferSource.loop = true
+    bufferSource.connect(sineWaveSpeechNode)
+    bufferSource.connect(audioContext.destination)
+    bufferSource.start()
+
     const dryAudioBuffer =
       recordedAudioBuffer.value || (await getAudioBuffer(audioContext, sentenceAudio))
 
@@ -219,12 +226,7 @@ const startPlayingAudio = async (fromMicrophone: boolean) => {
       BLOCK_SIZE * 4
     )
 
-    let bufferSource = audioContext.createBufferSource()
     bufferSource.buffer = trimmedAudioBuffer
-    bufferSource.loop = true
-    bufferSource.connect(sineWaveSpeechNode)
-    bufferSource.connect(audioContext.destination)
-    bufferSource.start()
     setAudioSourceNode(bufferSource)
   }
 
