@@ -38,58 +38,42 @@ const getPlayPauseText = (state: PlaybackState) => {
 }
 </script>
 <template>
-  <div class="grid grid-cols-2 content-center justify-items-center gap-1">
-    <div
-      :class="[
-        'col-span-2 grid grid-cols-2 rounded-lg p-3 w-full border',
-        [PlaybackState.PlayingRecorded, PlaybackState.Recording].includes(playbackState)
-          ? 'border-white'
-          : 'border-transparent',
-      ]"
-    >
-      <p class="self-center">Record, then convert</p>
-      <div class="justify-self-center">
-        <Button
-          :disabled="playbackState === PlaybackState.Recording"
-          @click="
-            () => {
-              playbackState = PlaybackState.Recording
-            }
-          "
-        >
-          Record
-        </Button>
-        <Button
-          :disabled="playbackState === PlaybackState.Recording"
-          @click="onPlayPauseButtonClick"
-          custom-class="w-20"
-        >
-          {{ getPlayPauseText(playbackState) }}
-        </Button>
-      </div>
+  <div class="grid grid-cols-2 gap-1">
+    <p class="self-center">Record, then convert</p>
+    <div class="flex flex-row w-full">
+      <Button
+        :disabled="playbackState === PlaybackState.Recording"
+        @click="
+          () => {
+            playbackState = PlaybackState.Recording
+          }
+        "
+        custom-class="grow-0"
+      >
+        Record
+      </Button>
+      <Button
+        :disabled="playbackState === PlaybackState.Recording"
+        @click="onPlayPauseButtonClick"
+        custom-class="grow"
+      >
+        {{ getPlayPauseText(playbackState) }}
+      </Button>
     </div>
-    <div
-      :class="[
-        'col-span-2 grid grid-cols-2 rounded-lg p-3 w-full border',
-        playbackState === PlaybackState.PlayingRealtime
-          ? 'border-white'
-          : 'border-transparent',
-      ]"
-    >
-      <p class="self-center">Convert in real time</p>
-      <div class="justify-self-center">
-        <Button
-          :disabled="playbackState === PlaybackState.Recording"
-          @click="onRealtimeButtonClick"
-        >
-          {{
-            playbackState !== PlaybackState.PlayingRealtime
-              ? 'Start real-time'
-              : 'Stop real-time'
-          }}
-        </Button>
-      </div>
+
+    <p class="self-center">Convert in real time</p>
+    <div class="flex flex-row w-full">
+      <Button
+        :disabled="playbackState === PlaybackState.Recording"
+        @click="onRealtimeButtonClick"
+        custom-class="grow"
+      >
+        {{
+          playbackState !== PlaybackState.PlayingRealtime
+            ? 'Start real-time'
+            : 'Stop real-time'
+        }}
+      </Button>
     </div>
-    <slot></slot>
   </div>
 </template>

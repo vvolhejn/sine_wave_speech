@@ -283,17 +283,18 @@ const startRecordingAudio = async () => {
 </script>
 
 <template>
-  <div
-    class="grid grid-cols-1 content-center justify-items-center min-h-screen font-body gap-2"
-  >
-    <h1 class="text-5xl italic font-header">Sine Wave Speech</h1>
-    <p>
-      Anything can be music if you listen hard enough.
-      <span class="font-bold">Press Record to start.</span>
-    </p>
-    <PlaybackControls v-model="playbackState">
+  <div class="w-full min-h-screen items-center flex flex-col">
+    <div
+      class="grid grid-cols-1 content-center justify-items-center font-body gap-2 max-w-sm p-2"
+    >
+      <h1 class="text-5xl italic font-header">Sine Wave Speech</h1>
+      <p>
+        Anything can be music if you listen hard enough.
+        <span class="font-bold">Press Record to start.</span>
+      </p>
+      <PlaybackControls v-model="playbackState" />
       <div
-        class="mt-2 h-2 bg-white overflow-hidden rounded-sm w-full col-span-2"
+        class="mt-2 h-2 bg-white overflow-hidden rounded-sm w-full"
         :style="{ '--recording-duration': `${RECORDING_DURATION_SEC}s` }"
       >
         <div
@@ -301,54 +302,54 @@ const startRecordingAudio = async () => {
           v-if="playbackState === PlaybackState.Recording"
         ></div>
       </div>
-    </PlaybackControls>
 
-    <div class="mt-2">
-      <Slider
-        v-model="synthesisParameters.hopSizeMultiplier"
-        :label="`Step size: ${synthesisParameters.hopSizeMultiplier}`"
-        :min="1"
-        :max="16"
-        id="hop-size-multiplier-slider"
-      />
-      <Slider
-        v-model="synthesisParameters.nWaves"
-        :label="`Number of waves: ${synthesisParameters.nWaves}`"
-        :min="1"
-        :max="16"
-        id="n-waves-slider"
-      />
-      <Slider
-        v-model="synthesisParameters.frequencyQuantizationStrength"
-        :label="`Scale: ${frequencyQuantizationName}`"
-        :min="0"
-        :max="3"
-        :step="0.1"
-        id="frequency-quantization-level-slider"
-      />
-      <Slider
-        v-model="synthesisParameters.gainDb"
-        :label="`Gain: ${synthesisParameters.gainDb} dB`"
-        :min="-18"
-        :max="18"
-        id="gain-db-slider"
-      />
-      <Slider
-        v-model="synthesisParameters.depthOctaves"
-        :label="`Depth: ${synthesisParameters.depthOctaves}`"
-        :min="0"
-        :max="2"
-        :step="0.1"
-        id="dept-octaves-slider"
-      />
-    </div>
+      <div class="mt-2">
+        <Slider
+          v-model="synthesisParameters.hopSizeMultiplier"
+          :label="`Step size: ${synthesisParameters.hopSizeMultiplier}`"
+          :min="1"
+          :max="16"
+          id="hop-size-multiplier-slider"
+        />
+        <Slider
+          v-model="synthesisParameters.nWaves"
+          :label="`Number of waves: ${synthesisParameters.nWaves}`"
+          :min="1"
+          :max="16"
+          id="n-waves-slider"
+        />
+        <Slider
+          v-model="synthesisParameters.frequencyQuantizationStrength"
+          :label="`Scale: ${frequencyQuantizationName}`"
+          :min="0"
+          :max="3"
+          :step="0.1"
+          id="frequency-quantization-level-slider"
+        />
+        <Slider
+          v-model="synthesisParameters.gainDb"
+          :label="`Gain: ${synthesisParameters.gainDb} dB`"
+          :min="-18"
+          :max="18"
+          id="gain-db-slider"
+        />
+        <Slider
+          v-model="synthesisParameters.depthOctaves"
+          :label="`Depth: ${synthesisParameters.depthOctaves}`"
+          :min="0"
+          :max="2"
+          :step="0.1"
+          id="dept-octaves-slider"
+        />
+      </div>
 
-    <div class="max-w-3xl">
-      <LiveVisualization
-        :hops="hops"
-        :totalNumHops="totalNumHops"
-        :sampleRate="SAMPLE_RATE"
-      />
+      <div class="max-w-3xl">
+        <LiveVisualization
+          :hops="hops"
+          :totalNumHops="totalNumHops"
+          :sampleRate="SAMPLE_RATE"
+        />
+      </div>
     </div>
   </div>
 </template>
