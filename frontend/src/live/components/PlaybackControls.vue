@@ -5,15 +5,14 @@ import Button from './Button.vue'
 const playbackState = defineModel<PlaybackState>({ required: true })
 
 const props = defineProps<{
-  playAndAllowAudio: () => Promise<void>
-  audioContextState?: AudioContextState
+  disablePlayButton?: boolean
 }>()
 
 const onPlayPauseButtonClick = async () => {
   switch (playbackState.value) {
     case PlaybackState.Stopped:
     case PlaybackState.PlayingRealtime:
-      await props.playAndAllowAudio()
+      playbackState.value = PlaybackState.PlayingRecorded
       break
     case PlaybackState.PlayingRecorded:
       playbackState.value = PlaybackState.Stopped
@@ -58,11 +57,11 @@ const getPlayPauseText = (state: PlaybackState) => {
         Record
       </Button>
       <Button
-        :disabled="playbackState === PlaybackState.Recording"
+        :disabled="playbackState === PlaybackState.Recording || props.disablePlayButton"
         @click="onPlayPauseButtonClick"
         custom-class="grow"
       >
-        {{ getPlayPauseText(playbackState) }} [{{ audioContextState }}]
+        {{ getPlayPauseText(playbackState) }}
       </Button>
     </div>
 

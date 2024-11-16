@@ -148,7 +148,12 @@ watch(playbackState, async (newPlaybackState: PlaybackState) => {
 
   switch (newPlaybackState) {
     case PlaybackState.PlayingRecorded:
-      // handled separately
+      if (audioSourceNode.value instanceof AudioBufferSourceNode) {
+        // No need to restart, we were just paused
+        audioContext.resume()
+      } else {
+        await startPlayingAudio(false)
+      }
       break
     case PlaybackState.PlayingRealtime:
       await startPlayingAudio(true)
@@ -205,16 +210,6 @@ const startPlayingAudio = async (fromMicrophone: boolean) => {
     source.connect(sineWaveSpeechNode)
     setAudioSourceNode(source)
   } else {
-    // Create early to avoid error on iOS
-    // https://stackoverflow.com/questions/43389248/web-audio-api-not-playing-sound-sample-on-device-but-works-in-browser
-    let bufferSource = audioContext.createBufferSource()
-
-    bufferSource.loop = true
-    bufferSource.connect(sineWaveSpeechNode)
-    bufferSource.connect(audioContext.destination)
-    bufferSource.start()
-    await audioContext.resume()
-
     const dryAudioBuffer =
       recordedAudioBuffer.value || (await getAudioBuffer(audioContext, sentenceAudio))
 
@@ -224,7 +219,12 @@ const startPlayingAudio = async (fromMicrophone: boolean) => {
       BLOCK_SIZE * 4
     )
 
+    let bufferSource = audioContext.createBufferSource()
+
     bufferSource.buffer = trimmedAudioBuffer
+    bufferSource.loop = true
+    bufferSource.connect(sineWaveSpeechNode)
+    bufferSource.start()
     setAudioSourceNode(bufferSource)
   }
 
@@ -270,16 +270,34 @@ const startRecordingAudio = async () => {
   }, RECORDING_DURATION_SEC * 1000)
 }
 
-const playAndAllowAudio = async () => {
-  const { audioContext } = await getAudioSetup()
-  if (audioSourceNode.value instanceof AudioBufferSourceNode) {
-    // No need to restart, we were just paused
-    audioContext.resume()
-  } else {
-    await startPlayingAudio(false)
-  }
-  playbackState.value = PlaybackState.PlayingRecorded
+const iOS = () => {
+  // true if iOS, false if not
+  return (
+    [
+      'iPad Simulator',
+      'iPhone Simulator',
+      'iPod Simulator',
+      'iPad',
+      'iPhone',
+      'iPod',
+    ].includes(navigator.platform) ||
+    // iPad on iOS 13 detection
+    (navigator.userAgent.includes('Mac') && 'ontouchend' in document)
+  )
 }
+
+const disablePlayButton = computed(() => {
+  if (recordedAudioBuffer.value == null && iOS()) {
+    // For a reason that I didn't manage to figure out after hours of debugging,
+    // the pre-recorded audio file doesn't play on iOS, even though the visualization
+    // works and the audioContext is not suspended. For now I give up.
+    // Perhaps this is relevant:
+    // https://stackoverflow.com/questions/43389248/web-audio-api-not-playing-sound-sample-on-device-but-works-in-browser
+    return true
+  } else {
+    return false
+  }
+})
 </script>
 
 <template>
@@ -296,8 +314,7 @@ const playAndAllowAudio = async () => {
       </p>
       <PlaybackControls
         v-model="playbackState"
-        :playAndAllowAudio="playAndAllowAudio"
-        :audioContextState="audioSetup?.audioContext.state"
+        :disablePlayButton="disablePlayButton"
       />
 
       <div
