@@ -10,7 +10,7 @@ import {
 } from './audioUtils.ts'
 import LiveVisualization from './components/LiveVisualization.vue'
 import PlaybackControls from './components/PlaybackControls.vue'
-import Slider from './components/Slider.vue'
+import SynthesisParameterControls from './components/SynthesisParameterControls.vue'
 import SineWaveSpeechNode from './sineWaveSpeechNode.ts'
 // Importing with "?worker&url" and not "?url" is necessary:
 // https://github.com/vitejs/vite/issues/6979#issuecomment-1320394505
@@ -124,7 +124,7 @@ const getAudioSetup = async () => {
   return audioSetup.value
 }
 
-const setSynthesisParameters = async (newParameters: SynthesisParameters) => {
+const updateSynthesisParameters = async (newParameters: SynthesisParameters) => {
   const { audioContext, sineWaveSpeechNode } = await getAudioSetup()
   for (const [parameterName, value] of Object.entries(newParameters)) {
     const param = sineWaveSpeechNode.parameters.get(parameterName)
@@ -134,24 +134,7 @@ const setSynthesisParameters = async (newParameters: SynthesisParameters) => {
   }
 }
 // deep: true is necessary because synthesisParameters is an object, we need to watch its properties
-watch(synthesisParameters, setSynthesisParameters, { deep: true })
-
-const frequencyQuantizationName = computed(() => {
-  const strength = synthesisParameters.value.frequencyQuantizationStrength
-  const breakpoints = [
-    { upTo: 0.5, name: 'Microtonal' },
-    { upTo: 1.5, name: 'Chromatic' },
-    { upTo: 2.5, name: 'Diatonic' },
-    { upTo: 3.0, name: 'Pentatonic' },
-  ]
-  for (const { upTo, name } of breakpoints) {
-    if (strength <= upTo) {
-      return name
-    }
-  }
-
-  throw new Error(`Invalid frequency quantization strength ${strength}`)
-})
+watch(synthesisParameters, updateSynthesisParameters, { deep: true })
 
 const playbackState = ref<PlaybackState>(PlaybackState.Stopped)
 
@@ -207,7 +190,7 @@ const startPlayingAudio = async (fromMicrophone: boolean) => {
 
   // The watch() call above only happen when the value is updated, so if the user didn't change
   // anything, the parameters might be out of sync with the audio processor.
-  setSynthesisParameters(synthesisParameters.value)
+  updateSynthesisParameters(synthesisParameters.value)
 
   if (audioSourceNode.value !== null) {
     audioSourceNode.value.disconnect()
@@ -305,45 +288,7 @@ const startRecordingAudio = async () => {
         ></div>
       </div>
 
-      <div class="mt-2">
-        <Slider
-          v-model="synthesisParameters.hopSizeMultiplier"
-          :label="`Step size: ${synthesisParameters.hopSizeMultiplier}`"
-          :min="1"
-          :max="16"
-          id="hop-size-multiplier-slider"
-        />
-        <Slider
-          v-model="synthesisParameters.nWaves"
-          :label="`Number of waves: ${synthesisParameters.nWaves}`"
-          :min="1"
-          :max="16"
-          id="n-waves-slider"
-        />
-        <Slider
-          v-model="synthesisParameters.frequencyQuantizationStrength"
-          :label="`Scale: ${frequencyQuantizationName}`"
-          :min="0"
-          :max="3"
-          :step="0.1"
-          id="frequency-quantization-level-slider"
-        />
-        <Slider
-          v-model="synthesisParameters.gainDb"
-          :label="`Gain: ${synthesisParameters.gainDb} dB`"
-          :min="-18"
-          :max="18"
-          id="gain-db-slider"
-        />
-        <Slider
-          v-model="synthesisParameters.depthOctaves"
-          :label="`Depth: ${synthesisParameters.depthOctaves}`"
-          :min="0"
-          :max="2"
-          :step="0.1"
-          id="dept-octaves-slider"
-        />
-      </div>
+      <SynthesisParameterControls v-model="synthesisParameters" />
 
       <div class="max-w-3xl">
         <LiveVisualization
