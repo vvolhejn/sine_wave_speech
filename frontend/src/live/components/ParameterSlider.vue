@@ -155,14 +155,14 @@ onUnmounted(() => {
   >
     <!-- Active track -->
     <div
-      class="absolute h-full bg-blue-500 rounded-lg transition-all duration-75"
+      class="absolute h-full bg-blue-500 rounded-lg"
       :style="{ width: `${percentage}%` }"
     ></div>
 
     <!-- Thumb -->
     <div
       ref="thumbRef"
-      class="absolute top-1/2 -translate-y-1/2 w-4 h-4 -ml-2 bg-white rounded-full shadow-md border border-gray-300 transition-transform duration-75"
+      class="absolute top-1/2 -translate-y-1/2 w-4 h-4 -ml-2 bg-white rounded-full shadow-md border border-gray-300 transition-transform duration-150"
       :class="{ 'scale-110': dragInfo !== null }"
       :style="{ left: `${percentage}%` }"
     ></div>
