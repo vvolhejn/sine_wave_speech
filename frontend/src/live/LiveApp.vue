@@ -283,14 +283,16 @@ const startRecordingAudio = async () => {
 </script>
 
 <template>
-  <div class="w-full min-h-screen items-center flex flex-col">
+  <div
+    class="w-full min-h-screen items-center content-center justify-items-center grid grid-cols-1"
+  >
     <div
-      class="grid grid-cols-1 content-center justify-items-center font-body gap-2 max-w-sm p-2"
+      class="grid grid-cols-1 content-center justify-items-center font-body gap-2 max-w-sm p-2 h-full"
     >
       <h1 class="text-5xl italic font-header">Sine Wave Speech</h1>
       <p>
-        Anything can be music if you listen hard enough.
-        <span class="font-bold">Press Record to start.</span>
+        Anything can be music if you listen closely enough.
+        <span class="font-bold">Press Record or Play to start.</span>
       </p>
       <PlaybackControls v-model="playbackState" />
       <div
