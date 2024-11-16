@@ -6,6 +6,7 @@ const playbackState = defineModel<PlaybackState>({ required: true })
 
 const props = defineProps<{
   playAndAllowAudio: () => Promise<void>
+  audioContextState?: AudioContextState
 }>()
 
 const onPlayPauseButtonClick = async () => {
@@ -61,7 +62,7 @@ const getPlayPauseText = (state: PlaybackState) => {
         @click="onPlayPauseButtonClick"
         custom-class="grow"
       >
-        {{ getPlayPauseText(playbackState) }}
+        {{ getPlayPauseText(playbackState) }} [{{ audioContextState }}]
       </Button>
     </div>
 

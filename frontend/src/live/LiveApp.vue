@@ -291,7 +291,9 @@ const playAndAllowAudio = async () => {
       <PlaybackControls
         v-model="playbackState"
         :playAndAllowAudio="playAndAllowAudio"
+        :audioContextState="audioSetup?.audioContext.state"
       />
+
       <div
         class="h-2 bg-white overflow-hidden rounded-sm w-full"
         :style="{ '--recording-duration': `${RECORDING_DURATION_SEC}s` }"
