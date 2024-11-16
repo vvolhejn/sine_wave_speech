@@ -268,6 +268,12 @@ const startRecordingAudio = async () => {
     mediaRecorder.stop()
   }, RECORDING_DURATION_SEC * 1000)
 }
+
+const playAndAllowAudio = async () => {
+  const { audioContext } = await getAudioSetup()
+  playbackState.value = PlaybackState.PlayingRecorded
+  await audioContext.resume()
+}
 </script>
 
 <template>
@@ -282,7 +288,10 @@ const startRecordingAudio = async () => {
         Anything can be music if you listen closely enough.
         <span class="font-bold">Press Record or Play to start.</span>
       </p>
-      <PlaybackControls v-model="playbackState" />
+      <PlaybackControls
+        v-model="playbackState"
+        :playAndAllowAudio="playAndAllowAudio"
+      />
       <div
         class="h-2 bg-white overflow-hidden rounded-sm w-full"
         :style="{ '--recording-duration': `${RECORDING_DURATION_SEC}s` }"
