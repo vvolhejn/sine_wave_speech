@@ -216,6 +216,7 @@ const startPlayingAudio = async (fromMicrophone: boolean) => {
     bufferSource.connect(sineWaveSpeechNode)
     bufferSource.connect(audioContext.destination)
     bufferSource.start()
+    await audioContext.resume()
 
     const dryAudioBuffer =
       recordedAudioBuffer.value || (await getAudioBuffer(audioContext, sentenceAudio))
