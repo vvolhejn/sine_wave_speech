@@ -29,6 +29,7 @@ type DragInfo = {
   startX: number
   endX: number
   startValue: number
+  allowAbsolute: boolean
 }
 const dragInfo = ref<DragInfo | null>(null)
 
@@ -80,7 +81,7 @@ const updateValueRelative = (clientX: number) => {
   updateValueAbsolute(rect.left + originalX + deltaX)
 }
 
-const startDragging = (event: MouseEvent | TouchEvent) => {
+const startDragging = (event: MouseEvent | TouchEvent, allowAbsolute: boolean) => {
   if (!trackRef.value) return
   event.preventDefault()
 
@@ -90,6 +91,7 @@ const startDragging = (event: MouseEvent | TouchEvent) => {
     startX: clientX,
     endX: clientX,
     startValue: model.value,
+    allowAbsolute: allowAbsolute,
   }
 }
 
@@ -105,8 +107,11 @@ const onDragging = (event: MouseEvent | TouchEvent) => {
 const stopDragging = (event: MouseEvent | TouchEvent) => {
   if (!dragInfo.value) return
 
-  if (Math.abs(dragInfo.value.endX - dragInfo.value.startX) <= MAX_X_MOVE_FOR_NO_DRAG) {
-    // Handle tap-to-seek
+  if (
+    // Absolute movement is not allowed when we drag the label, not the track or thumb
+    dragInfo.value.allowAbsolute &&
+    Math.abs(dragInfo.value.endX - dragInfo.value.startX) <= MAX_X_MOVE_FOR_NO_DRAG
+  ) {
     if (trackRef.value) {
       const clientX =
         'touches' in event ? event.changedTouches[0].clientX : event.clientX
@@ -136,8 +141,8 @@ onUnmounted(() => {
   <div
     v-if="label"
     class="block mb-2 text-sm font-medium text-white"
-    @mousedown="startDragging"
-    @touchstart="startDragging"
+    @mousedown="(e) => startDragging(e, false)"
+    @touchstart="(e) => startDragging(e, false)"
   >
     {{ label }}
   </div>
@@ -145,8 +150,8 @@ onUnmounted(() => {
   <div
     ref="trackRef"
     class="relative w-full h-2 rounded-lg bg-gray-700 cursor-pointer touch-none"
-    @mousedown="startDragging"
-    @touchstart="startDragging"
+    @mousedown="(e) => startDragging(e, true)"
+    @touchstart="(e) => startDragging(e, true)"
   >
     <!-- Active track -->
     <div
