@@ -22,8 +22,10 @@ const model = defineModel<number>({ required: true })
 const parameter = getSynthesisParameter(props.name)
 
 const thumbRef = ref<HTMLElement | null>(null)
-const trackRef = ref<HTMLElement | null>(null)
-const trackRect = computed(() => trackRef.value?.getBoundingClientRect() || null)
+const hitboxRef = ref<HTMLElement | null>(null)
+// Here we take use the rectangle of the hitbox but since we only care about the width,
+// this is the same as the actual track. The elements differ only in height.
+const trackRect = computed(() => hitboxRef.value?.getBoundingClientRect() || null)
 
 type DragInfo = {
   startX: number
@@ -82,7 +84,7 @@ const updateValueRelative = (clientX: number) => {
 }
 
 const startDragging = (event: MouseEvent | TouchEvent, allowAbsolute: boolean) => {
-  if (!trackRef.value) return
+  if (!hitboxRef.value) return
   event.preventDefault()
 
   const clientX = 'touches' in event ? event.touches[0].clientX : event.clientX
@@ -112,7 +114,7 @@ const stopDragging = (event: MouseEvent | TouchEvent) => {
     dragInfo.value.allowAbsolute &&
     Math.abs(dragInfo.value.endX - dragInfo.value.startX) <= MAX_X_MOVE_FOR_NO_DRAG
   ) {
-    if (trackRef.value) {
+    if (hitboxRef.value) {
       const clientX =
         'touches' in event ? event.changedTouches[0].clientX : event.clientX
       updateValueAbsolute(clientX)
@@ -147,24 +149,32 @@ onUnmounted(() => {
     {{ label }}
   </div>
 
+  <!-- An outer hitbox to make dragging easier, especially on desktop.
+  This way you don't have to exactly hit the track. -->
   <div
-    ref="trackRef"
-    class="relative w-full h-2 rounded-lg bg-gray-700 cursor-pointer touch-none"
+    ref="hitboxRef"
+    class="w-full h-7 rounded-lg flex cursor-pointer touch-none"
     @mousedown="(e) => startDragging(e, true)"
     @touchstart="(e) => startDragging(e, true)"
   >
-    <!-- Active track -->
     <div
-      class="absolute h-full bg-blue-500 rounded-lg"
-      :style="{ width: `${percentage}%` }"
-    ></div>
+      class="relative w-full h-2 rounded-lg bg-gray-700 m-auto"
+      @mousedown="(e) => startDragging(e, true)"
+      @touchstart="(e) => startDragging(e, true)"
+    >
+      <!-- Active track -->
+      <div
+        class="absolute h-full bg-blue-500 rounded-lg"
+        :style="{ width: `${percentage}%` }"
+      ></div>
 
-    <!-- Thumb -->
-    <div
-      ref="thumbRef"
-      class="absolute top-1/2 -translate-y-1/2 w-4 h-4 -ml-2 bg-white rounded-full shadow-md border border-gray-300 transition-transform duration-150"
-      :class="{ 'scale-110': dragInfo !== null }"
-      :style="{ left: `${percentage}%` }"
-    ></div>
+      <!-- Thumb -->
+      <div
+        ref="thumbRef"
+        class="absolute top-1/2 -translate-y-1/2 w-4 h-4 -ml-2 bg-white rounded-full shadow-md border border-gray-300 transition-transform duration-150"
+        :class="{ 'scale-110': dragInfo !== null }"
+        :style="{ left: `${percentage}%` }"
+      ></div>
+    </div>
   </div>
 </template>
