@@ -6,6 +6,8 @@ import {
   SynthesisParameterName as ParameterName,
 } from '../synthesisParameters'
 
+const MAX_X_MOVE_FOR_NO_DRAG = 5
+
 const props = withDefaults(
   defineProps<{
     label: string
@@ -21,7 +23,7 @@ const parameter = getSynthesisParameter(props.name)
 
 const thumbRef = ref<HTMLElement | null>(null)
 const trackRef = ref<HTMLElement | null>(null)
-const trackRect = ref<DOMRect | null>(null)
+const trackRect = computed(() => trackRef.value?.getBoundingClientRect() || null)
 
 type DragInfo = {
   startX: number
@@ -78,7 +80,6 @@ const updateValueRelative = (clientX: number) => {
   updateValueAbsolute(rect.left + originalX + deltaX)
 }
 
-let clickTimer: number | null = null
 const startDragging = (event: MouseEvent | TouchEvent) => {
   if (!trackRef.value) return
   event.preventDefault()
@@ -90,12 +91,6 @@ const startDragging = (event: MouseEvent | TouchEvent) => {
     endX: clientX,
     startValue: model.value,
   }
-
-  // Use setTimeout to determine if this was a tap or drag
-  clickTimer = window.setTimeout(() => {
-    trackRect.value = trackRef.value?.getBoundingClientRect() || null
-    clickTimer = null
-  }, 250) // Short delay to distinguish between tap and drag
 }
 
 const onDragging = (event: MouseEvent | TouchEvent) => {
@@ -103,18 +98,16 @@ const onDragging = (event: MouseEvent | TouchEvent) => {
 
   const clientX = 'touches' in event ? event.touches[0].clientX : event.clientX
   updateValueRelative(clientX)
+  dragInfo.value.endX = clientX
   event.preventDefault()
 }
 
 const stopDragging = (event: MouseEvent | TouchEvent) => {
-  // If clickTimer exists, this was a tap (not a drag)
-  if (clickTimer !== null) {
-    clearTimeout(clickTimer)
-    clickTimer = null
+  if (!dragInfo.value) return
 
+  if (Math.abs(dragInfo.value.endX - dragInfo.value.startX) <= MAX_X_MOVE_FOR_NO_DRAG) {
     // Handle tap-to-seek
     if (trackRef.value) {
-      trackRect.value = trackRef.value.getBoundingClientRect()
       const clientX =
         'touches' in event ? event.changedTouches[0].clientX : event.clientX
       updateValueAbsolute(clientX)
@@ -122,10 +115,8 @@ const stopDragging = (event: MouseEvent | TouchEvent) => {
   }
 
   dragInfo.value = null
-  trackRect.value = null
 }
 
-// Event listeners
 onMounted(() => {
   document.addEventListener('mousemove', onDragging)
   document.addEventListener('mouseup', stopDragging)
@@ -138,9 +129,6 @@ onUnmounted(() => {
   document.removeEventListener('mouseup', stopDragging)
   document.removeEventListener('touchmove', onDragging)
   document.removeEventListener('touchend', stopDragging)
-  if (clickTimer !== null) {
-    clearTimeout(clickTimer)
-  }
 })
 </script>
 
