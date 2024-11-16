@@ -68,6 +68,14 @@ const totalNumHops = computed(() => {
   }
 })
 
+/**
+ * A more accurate check than playbackState because it's only true once the
+ * user has given permission to use the microphone.
+ */
+const isActuallyRecording = computed(
+  () => audioSourceNode.value instanceof MediaStreamAudioSourceNode
+)
+
 type AudioSetup = {
   audioContext: AudioContext
   sineWaveSpeechNode: SineWaveSpeechNode
@@ -281,7 +289,7 @@ const startRecordingAudio = async () => {
       >
         <div
           class="progress-bar-animation bg-accent1 w-full h-full"
-          v-if="playbackState === PlaybackState.Recording"
+          v-if="isActuallyRecording"
         ></div>
       </div>
 
