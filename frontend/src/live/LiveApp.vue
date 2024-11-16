@@ -271,7 +271,6 @@ const startRecordingAudio = async () => {
 }
 
 const iOS = () => {
-  // true if iOS, false if not
   return (
     [
       'iPad Simulator',
@@ -310,7 +309,9 @@ const disablePlayButton = computed(() => {
       <h1 class="text-5xl italic font-header">Sine Wave Speech</h1>
       <p>
         Anything can be music if you listen closely enough.
-        <span class="font-bold">Press Record or Play to start.</span>
+        <span class="font-bold"
+          >Press Record {{ iOS() ? '' : 'or Play' }} to start.</span
+        >
       </p>
       <PlaybackControls
         v-model="playbackState"
