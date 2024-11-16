@@ -21,10 +21,14 @@ const parameter = getSynthesisParameter(props.name)
 
 const thumbRef = ref<HTMLElement | null>(null)
 const trackRef = ref<HTMLElement | null>(null)
-const isDragging = ref(false)
 const trackRect = ref<DOMRect | null>(null)
-const dragStartX = ref<number>(0)
-const dragStartValue = ref<number>(0)
+
+type DragInfo = {
+  startX: number
+  endX: number
+  startValue: number
+}
+const dragInfo = ref<DragInfo | null>(null)
 
 // Calculate percentage for visual positioning
 const percentage = computed(() => {
@@ -66,11 +70,11 @@ const updateValueAbsolute = (clientX: number) => {
 }
 
 const updateValueRelative = (clientX: number) => {
-  if (!trackRect.value) return
+  if (!trackRect.value || !dragInfo.value) return
 
   const rect = trackRect.value
-  const deltaX = clientX - dragStartX.value
-  const originalX = valueToX(dragStartValue.value)
+  const deltaX = clientX - dragInfo.value.startX
+  const originalX = valueToX(dragInfo.value.startValue)
   updateValueAbsolute(rect.left + originalX + deltaX)
 }
 
@@ -81,20 +85,21 @@ const startDragging = (event: MouseEvent | TouchEvent) => {
 
   const clientX = 'touches' in event ? event.touches[0].clientX : event.clientX
 
-  // Store initial positions for relative dragging
-  dragStartX.value = clientX
-  dragStartValue.value = model.value
+  dragInfo.value = {
+    startX: clientX,
+    endX: clientX,
+    startValue: model.value,
+  }
 
   // Use setTimeout to determine if this was a tap or drag
   clickTimer = window.setTimeout(() => {
-    isDragging.value = true
     trackRect.value = trackRef.value?.getBoundingClientRect() || null
     clickTimer = null
   }, 250) // Short delay to distinguish between tap and drag
 }
 
 const onDragging = (event: MouseEvent | TouchEvent) => {
-  if (!isDragging.value) return
+  if (!dragInfo.value) return
 
   const clientX = 'touches' in event ? event.touches[0].clientX : event.clientX
   updateValueRelative(clientX)
@@ -116,7 +121,7 @@ const stopDragging = (event: MouseEvent | TouchEvent) => {
     }
   }
 
-  isDragging.value = false
+  dragInfo.value = null
   trackRect.value = null
 }
 
@@ -165,7 +170,7 @@ onUnmounted(() => {
     <div
       ref="thumbRef"
       class="absolute top-1/2 -translate-y-1/2 w-4 h-4 -ml-2 bg-white rounded-full shadow-md border border-gray-300 transition-transform duration-75"
-      :class="{ 'scale-110': isDragging }"
+      :class="{ 'scale-110': dragInfo !== null }"
       :style="{ left: `${percentage}%` }"
     ></div>
   </div>
