@@ -148,12 +148,7 @@ watch(playbackState, async (newPlaybackState: PlaybackState) => {
 
   switch (newPlaybackState) {
     case PlaybackState.PlayingRecorded:
-      if (audioSourceNode.value instanceof AudioBufferSourceNode) {
-        // No need to restart, we were just paused
-        audioContext.resume()
-      } else {
-        await startPlayingAudio(false)
-      }
+      // handled separately
       break
     case PlaybackState.PlayingRealtime:
       await startPlayingAudio(true)
@@ -210,6 +205,8 @@ const startPlayingAudio = async (fromMicrophone: boolean) => {
     source.connect(sineWaveSpeechNode)
     setAudioSourceNode(source)
   } else {
+    // Create early to avoid error on iOS
+    // https://stackoverflow.com/questions/43389248/web-audio-api-not-playing-sound-sample-on-device-but-works-in-browser
     let bufferSource = audioContext.createBufferSource()
 
     bufferSource.loop = true
@@ -252,7 +249,7 @@ const startRecordingAudio = async () => {
     const audioBlob = new Blob(audioChunks)
     const arrayBuffer = await audioBlob.arrayBuffer()
     recordedAudioBuffer.value = await audioContext.decodeAudioData(arrayBuffer)
-    startPlayingAudio(false)
+    await startPlayingAudio(false)
     playbackState.value = PlaybackState.PlayingRecorded
     // Re-connect the sineWaveSpeechNode to the destination so that we can hear the sound again
     sineWaveSpeechNode.connect(audioContext.destination)
@@ -275,8 +272,13 @@ const startRecordingAudio = async () => {
 
 const playAndAllowAudio = async () => {
   const { audioContext } = await getAudioSetup()
+  if (audioSourceNode.value instanceof AudioBufferSourceNode) {
+    // No need to restart, we were just paused
+    audioContext.resume()
+  } else {
+    await startPlayingAudio(false)
+  }
   playbackState.value = PlaybackState.PlayingRecorded
-  await audioContext.resume()
 }
 </script>
 
