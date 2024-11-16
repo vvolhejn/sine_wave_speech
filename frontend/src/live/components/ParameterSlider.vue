@@ -60,8 +60,8 @@ const updateValueAbsolute = (clientX: number) => {
 
   if (props.step > 0) {
     newValue = Math.round(newValue / props.step) * props.step
-    // Prevent floating-point issues
-    newValue = Math.round(newValue * 100) / 100
+    // Round to 6 digits to prevent floating-point issues
+    newValue = Math.round(newValue * 1e6) / 1e6
   }
 
   newValue = Math.max(parameter.minValue, Math.min(parameter.maxValue, newValue))
