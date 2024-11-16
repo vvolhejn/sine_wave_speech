@@ -9,8 +9,8 @@ import {
   trimAudioBufferToMultipleOf,
 } from './audioUtils.ts'
 import LiveVisualization from './components/LiveVisualization.vue'
+import SynthesisParameterControls from './components/ParameterControls.vue'
 import PlaybackControls from './components/PlaybackControls.vue'
-import SynthesisParameterControls from './components/SynthesisParameterControls.vue'
 import SineWaveSpeechNode from './sineWaveSpeechNode.ts'
 // Importing with "?worker&url" and not "?url" is necessary:
 // https://github.com/vitejs/vite/issues/6979#issuecomment-1320394505

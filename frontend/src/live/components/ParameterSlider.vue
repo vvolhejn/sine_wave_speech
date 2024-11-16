@@ -1,30 +1,15 @@
 <script setup lang="ts">
-defineProps({
-  modelValue: {
-    type: [Number, String],
-    default: 50,
-  },
-  label: {
-    type: String,
-    default: '',
-  },
-  id: {
-    type: String,
-    default: 'default-range',
-  },
-  min: {
-    type: [Number, String],
-    default: 0,
-  },
-  max: {
-    type: [Number, String],
-    default: 100,
-  },
-  step: {
-    type: [Number, String],
-    default: 1,
-  },
-})
+import {
+  getSynthesisParameter,
+  SynthesisParameterName as ParameterName,
+} from '../synthesisParameters'
+
+const props = defineProps<{
+  modelValue: number | string
+  label: string
+  name: ParameterName
+  step?: number | string
+}>()
 
 const emit = defineEmits(['update:modelValue', 'change'])
 
@@ -33,6 +18,9 @@ const updateValue = (event: any) => {
   emit('update:modelValue', value)
   emit('change', value)
 }
+
+const parameter = getSynthesisParameter(props.name)
+const id = `slider-${props.name}`
 </script>
 
 <template>
@@ -46,9 +34,9 @@ const updateValue = (event: any) => {
       :value="modelValue"
       @input="updateValue"
       class="w-full h-2 rounded-lg appearance-none cursor-pointer bg-gray-700"
-      :min="min"
-      :max="max"
-      :step="step"
+      :min="parameter.minValue"
+      :max="parameter.maxValue"
+      :step="step || 1"
     />
   </div>
 </template>

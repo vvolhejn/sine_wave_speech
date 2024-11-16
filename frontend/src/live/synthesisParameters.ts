@@ -1,4 +1,4 @@
-type SynthesisParameterName =
+export type SynthesisParameterName =
   | 'frequencyQuantizationStrength'
   | 'hopSizeMultiplier'
   | 'nWaves'
@@ -44,6 +44,16 @@ export const synthesisParameters: SynthesisParameter[] = [
     maxValue: 2,
   },
 ]
+
+export const getSynthesisParameter = (
+  name: SynthesisParameterName
+): SynthesisParameter => {
+  const parameter = synthesisParameters.find((p) => p.name === name)
+  if (!parameter) {
+    throw new Error(`Synthesis parameter not found: ${name}`)
+  }
+  return parameter
+}
 
 export const getDefaultSynthesisParameters = (): SynthesisParameters => {
   const result = {} as SynthesisParameters
