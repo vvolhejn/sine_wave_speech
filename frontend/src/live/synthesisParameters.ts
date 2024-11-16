@@ -15,7 +15,7 @@ export type SynthesisParameter = {
 export const synthesisParameters: SynthesisParameter[] = [
   {
     name: 'frequencyQuantizationStrength',
-    defaultValue: 0.0,
+    defaultValue: 2.0,
     minValue: 0,
     maxValue: 3,
   },
