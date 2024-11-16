@@ -15,7 +15,10 @@ import SineWaveSpeechNode from './sineWaveSpeechNode.ts'
 // Importing with "?worker&url" and not "?url" is necessary:
 // https://github.com/vitejs/vite/issues/6979#issuecomment-1320394505
 import processorUrl from './sineWaveSpeechProcessor.ts?worker&url'
-import { SynthesisParameters } from './synthesisParameters.ts'
+import {
+  getDefaultSynthesisParameters,
+  SynthesisParameters,
+} from './synthesisParameters.ts'
 import { Hop, PlaybackState } from './types.ts'
 
 // See BLOCK_SIZE in sineWaveSpeechProcessor.ts.
@@ -38,13 +41,7 @@ const audioSourceNode = ref<MediaStreamAudioSourceNode | AudioBufferSourceNode |
   null
 )
 
-const synthesisParameters = ref<SynthesisParameters>({
-  nWaves: 4,
-  frequencyQuantizationStrength: 0.0,
-  hopSizeMultiplier: 2,
-  gainDb: 0,
-  depthOctaves: 0,
-})
+const synthesisParameters = ref<SynthesisParameters>(getDefaultSynthesisParameters())
 
 const totalNumHops = computed(() => {
   const source = audioSourceNode.value

@@ -45,6 +45,14 @@ export const synthesisParameters: SynthesisParameter[] = [
   },
 ]
 
+export const getDefaultSynthesisParameters = (): SynthesisParameters => {
+  const result = {} as SynthesisParameters
+  synthesisParameters.forEach((parameter) => {
+    result[parameter.name] = parameter.defaultValue
+  })
+  return result
+}
+
 export type SynthesisParameters = {
   [K in SynthesisParameterName]: number
 }
