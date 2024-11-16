@@ -223,6 +223,7 @@ const startPlayingAudio = async (fromMicrophone: boolean) => {
     bufferSource.buffer = trimmedAudioBuffer
     bufferSource.loop = true
     bufferSource.connect(sineWaveSpeechNode)
+    bufferSource.connect(audioContext.destination)
     bufferSource.start()
     setAudioSourceNode(bufferSource)
   }
