@@ -15,6 +15,21 @@ type Subtitle = {
 
 const subtitles: Subtitle[] = parser.fromSrt(rawSubtitles, true)
 
+export const iOS = () => {
+  return (
+    [
+      'iPad Simulator',
+      'iPhone Simulator',
+      'iPod Simulator',
+      'iPad',
+      'iPhone',
+      'iPod',
+    ].includes(navigator.platform) ||
+    // iPad on iOS 13 detection
+    (navigator.userAgent.includes('Mac') && 'ontouchend' in document)
+  )
+}
+
 export const useMessageStore = defineStore('message', () => {
   // const currentMessage = computed(() => MESSAGES[currentMessageKey.value])
 
@@ -24,7 +39,10 @@ export const useMessageStore = defineStore('message', () => {
     const timeMs = playbackStore.relativeAudioTime * 1000
 
     if (timeMs === 0) {
-      return 'Click anywhere to play audio.'
+      return (
+        'Click anywhere to play audio.' +
+        (iOS() ? ' Make sure your iPhone is not in silent mode.' : '')
+      )
     }
 
     for (let i = 0; i < subtitles.length; i++) {

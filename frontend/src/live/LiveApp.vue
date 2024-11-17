@@ -20,6 +20,7 @@ import {
   SynthesisParameters,
 } from './synthesisParameters.ts'
 import { Hop, PlaybackState } from './types.ts'
+import { iOS } from '@/stores/messageStore.ts'
 
 // See BLOCK_SIZE in sineWaveSpeechProcessor.ts.
 // We can't import that here because it's a Worker (I think?).
@@ -269,34 +270,6 @@ const startRecordingAudio = async () => {
     mediaRecorder.stop()
   }, RECORDING_DURATION_SEC * 1000)
 }
-
-const iOS = () => {
-  return (
-    [
-      'iPad Simulator',
-      'iPhone Simulator',
-      'iPod Simulator',
-      'iPad',
-      'iPhone',
-      'iPod',
-    ].includes(navigator.platform) ||
-    // iPad on iOS 13 detection
-    (navigator.userAgent.includes('Mac') && 'ontouchend' in document)
-  )
-}
-
-const disablePlayButton = computed(() => {
-  if (recordedAudioBuffer.value == null && iOS()) {
-    // For a reason that I didn't manage to figure out after hours of debugging,
-    // the pre-recorded audio file doesn't play on iOS, even though the visualization
-    // works and the audioContext is not suspended. For now I give up.
-    // Perhaps this is relevant:
-    // https://stackoverflow.com/questions/43389248/web-audio-api-not-playing-sound-sample-on-device-but-works-in-browser
-    return false // todo remove
-  } else {
-    return false
-  }
-})
 </script>
 
 <template>
@@ -311,14 +284,10 @@ const disablePlayButton = computed(() => {
       </h1>
       <p>
         Anything can be music if you listen closely enough.
-        <span class="font-bold"
-          >Press Record {{ iOS() ? '' : 'or Play' }} to start.</span
-        >
+        <span class="font-bold">Press Record or play to start.</span>
+        {{ iOS() ? 'Make sure your iPhone is not in silent mode.' : '' }}
       </p>
-      <PlaybackControls
-        v-model="playbackState"
-        :disablePlayButton="disablePlayButton"
-      />
+      <PlaybackControls v-model="playbackState" />
 
       <div
         class="h-2 bg-white overflow-hidden rounded-sm w-full"
