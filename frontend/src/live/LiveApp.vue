@@ -292,7 +292,7 @@ const disablePlayButton = computed(() => {
     // works and the audioContext is not suspended. For now I give up.
     // Perhaps this is relevant:
     // https://stackoverflow.com/questions/43389248/web-audio-api-not-playing-sound-sample-on-device-but-works-in-browser
-    return true
+    return false // todo remove
   } else {
     return false
   }
