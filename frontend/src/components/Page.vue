@@ -14,7 +14,7 @@ const messageStore = useMessageStore()
     class="flex flex-col items-center min-h-screen font-header text-center"
     @click="props.onClick"
   >
-    <h1 class="text-8xl italic mt-[20vh] md:mt-[35vh]">
+    <h1 class="text-8xl italic mt-[2vh] md:mt-[35vh]">
       <slot />
     </h1>
     <template v-if="debug">

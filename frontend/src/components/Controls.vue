@@ -56,7 +56,9 @@ const onClick = () => {
 </script>
 
 <template>
-  <div class="fixed bottom-0 right-0 m-4 sm:m-12 text-white text-2xl font-body">
+  <div
+    class="fixed bottom-0 right-0 m-4 sm:m-12 text-white text-md md:text-2xl font-body"
+  >
     <p class="my-2">
       By
       <a href="https://vvolhejn.com" class="underline">Václav Volhejn</a>
