@@ -26,6 +26,7 @@ const setup = async () => {
   const audioBuffer = await getAudioBuffer(originalAudio)
   playbackStore.setOriginalAudioBuffer(audioBuffer)
   playSineWaveSpeech()
+  playbackStore.audioContext.suspend()
 }
 
 onMounted(() => {
