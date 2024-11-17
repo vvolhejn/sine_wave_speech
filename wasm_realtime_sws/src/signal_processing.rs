@@ -143,13 +143,19 @@ pub fn equal_loudness_compensation(frequency_hz: f32) -> f32 {
     // 0.8 is roughly the value of a_weighing_loudness() at 1000 Hz.
     // We make it even lower because otherwise the signal is too loud.
     const BASE_COEF: f32 = 0.5;
+    // A power lower than 1 means the adjustment is less aggressive.
+    const POW: f32 = 0.5;
+
+    fn adjusted_loudness(frequency_hz: f32) -> f32 {
+        (a_weighing_loudness(frequency_hz) / BASE_COEF).powf(POW)
+    }
 
     if frequency_hz < 100.0 {
-        return a_weighing_loudness(100.) / BASE_COEF;
+        return adjusted_loudness(100.);
     } else if frequency_hz > 20000.0 {
-        return a_weighing_loudness(20000.0) / BASE_COEF;
+        return adjusted_loudness(20000.0);
     }
-    a_weighing_loudness(frequency_hz) / BASE_COEF
+    adjusted_loudness(frequency_hz)
 }
 
 #[cfg(test)] // Only used in tests, this keeps Rust from complaining about unused code
