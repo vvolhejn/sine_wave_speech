@@ -340,6 +340,12 @@ const disablePlayButton = computed(() => {
         />
       </div>
     </div>
+    <div class="static lg:fixed bottom-0 right-0 m-4 sm:m-12">
+      <p class="text-white text-2xl font-body">
+        By
+        <a href="https://vvolhejn.com" class="underline">Václav Volhejn</a>
+      </p>
+    </div>
   </div>
 </template>
 <style lang="css" scoped>
