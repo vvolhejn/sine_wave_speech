@@ -304,9 +304,11 @@ const disablePlayButton = computed(() => {
     class="w-full min-h-screen items-center content-center justify-items-center grid grid-cols-1"
   >
     <div
-      class="grid grid-cols-1 content-center justify-items-center font-body gap-4 max-w-sm p-2 h-full"
+      class="grid grid-cols-1 content-center justify-items-center font-body gap-4 max-w-md p-2 h-full"
     >
-      <h1 class="text-5xl italic font-header">Sine Wave Speech</h1>
+      <h1 class="text-4xl md:text-5xl italic font-header">
+        Sine Wave Speech<span class="text-lg"> .com</span>
+      </h1>
       <p>
         Anything can be music if you listen closely enough.
         <span class="font-bold"
