@@ -55,12 +55,21 @@ const onClick = () => {
 </script>
 
 <template>
-  <div class="fixed bottom-0 right-0 m-4 sm:m-12">
-    <a
-      href="https://vvolhejn.github.io/2023/08/20/sinewavespeech-com.html"
-      class="text-white text-2xl font-body"
-      >About</a
-    >
+  <div class="fixed bottom-0 right-0 m-4 sm:m-12 text-white text-2xl font-body">
+    <p class="my-2">
+      By
+      <a href="https://vvolhejn.com" class="underline">Václav Volhejn</a>
+    </p>
+    <p class="my-2">
+      <a href="/live/" class="underline">Try the effect live</a>
+    </p>
+    <p class="my-2">
+      <a
+        href="https://vvolhejn.github.io/2023/08/20/sinewavespeech-com.html"
+        class="underline"
+        >Blog post</a
+      >
+    </p>
   </div>
   <Page :on-click="onClick" :is-original="false">Sine Wave Speech</Page>
   <Page :on-click="onClick" :is-original="true" v-if="playbackStore.showLowerHeader"
