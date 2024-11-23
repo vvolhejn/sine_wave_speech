@@ -311,7 +311,9 @@ onBeforeUnmount(() => {
         <span class="font-bold">Press Record or play to start.</span>
         {{ iOS() ? 'Make sure your iPhone is not in silent mode.' : '' }}
       </p>
-      <PlaybackControls v-model="playbackState" v-if="!demoMode" />
+      <!-- v-show and not v-if to keep the component rendered. That way
+      we can still use space to play/pause. -->
+      <PlaybackControls v-model="playbackState" v-show="!demoMode" />
 
       <div
         class="h-2 bg-white overflow-hidden rounded-sm w-full"
@@ -336,6 +338,7 @@ onBeforeUnmount(() => {
     </div>
     <div
       class="static lg:fixed bottom-0 right-0 m-4 sm:m-12 text-white text-2xl font-body"
+      v-if="!demoMode"
     >
       <p class="my-2">
         By

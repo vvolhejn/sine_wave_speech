@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { onBeforeUnmount, onMounted } from 'vue'
+
 import { PlaybackState } from '../types'
 import Button from './Button.vue'
 
@@ -36,6 +38,20 @@ const getPlayPauseText = (state: PlaybackState) => {
       return 'Pause'
   }
 }
+
+const handleKeyPress = (event: any) => {
+  // pause/play with space
+  if (event.key === ' ') {
+    onPlayPauseButtonClick()
+  }
+}
+
+onMounted(() => {
+  document.addEventListener('keydown', handleKeyPress)
+})
+onBeforeUnmount(() => {
+  document.removeEventListener('keydown', handleKeyPress)
+})
 </script>
 <template>
   <div class="grid grid-cols-2 gap-1">
