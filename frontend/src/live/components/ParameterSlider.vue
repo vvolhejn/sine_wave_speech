@@ -142,7 +142,7 @@ onUnmounted(() => {
 <template>
   <div
     v-if="label"
-    class="block mb-2 text-sm font-medium text-white"
+    class="block mb-0 text-lg font-medium text-white"
     @mousedown="(e) => startDragging(e, false)"
     @touchstart="(e) => startDragging(e, false)"
   >
@@ -158,13 +158,13 @@ onUnmounted(() => {
     @touchstart="(e) => startDragging(e, true)"
   >
     <div
-      class="relative w-full h-2 rounded-lg bg-gray-700 m-auto"
+      class="relative w-full h-2 rounded-lg bg-secondary-700 m-auto"
       @mousedown="(e) => startDragging(e, true)"
       @touchstart="(e) => startDragging(e, true)"
     >
       <!-- Active track -->
       <div
-        class="absolute h-full bg-blue-500 rounded-lg"
+        class="absolute h-full bg-secondary-300 rounded-lg"
         :style="{ width: `${percentage}%` }"
       ></div>
 

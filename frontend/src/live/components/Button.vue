@@ -24,7 +24,7 @@ const handleClick = (event: Event) => {
     type="button"
     :disabled="disabled"
     :class="[
-      'hover:bg-blue-500 bg-blue-700 text-white font-bold py-2 px-4 rounded m-1',
+      'hover:bg-secondary-300 bg-secondary-500 text-white font-bold py-2 px-4 rounded m-1',
       customClass,
     ]"
     @click="handleClick"
