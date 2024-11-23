@@ -13,7 +13,7 @@ const props = defineProps<{
 }>()
 
 const svgRef = ref<SVGSVGElement | null>(null)
-const margin = { top: 20, right: 20, bottom: 30, left: 40 }
+const margin = { top: 0, right: 0, bottom: 0, left: 0 }
 const width = 800 - margin.left - margin.right
 const height = 400 - margin.top - margin.bottom
 
