@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
 import sentenceAudio from '../assets/sentence-original.wav'
 import wasmUrl from '../wasm_realtime_sws/wasm_audio_bg.wasm?url'
@@ -41,8 +41,11 @@ const recordedAudioBuffer = ref<AudioBuffer | null>(null)
 const audioSourceNode = ref<MediaStreamAudioSourceNode | AudioBufferSourceNode | null>(
   null
 )
-
 const synthesisParameters = ref<SynthesisParameters>(getDefaultSynthesisParameters())
+
+// Demo mode is a simplified interface for presentations.
+const demoMode = ref(false)
+const keyPressCount = ref(0)
 
 const totalNumHops = computed(() => {
   const source = audioSourceNode.value
@@ -270,11 +273,32 @@ const startRecordingAudio = async () => {
     mediaRecorder.stop()
   }, RECORDING_DURATION_SEC * 1000)
 }
+
+const handleKeyPress = (event: any) => {
+  if (event.key === 'd' || event.key === 'D') {
+    keyPressCount.value++
+    if (keyPressCount.value === 2) {
+      demoMode.value = !demoMode.value
+      console.log('Demo mode:', demoMode.value)
+      keyPressCount.value = 0
+    }
+  } else {
+    keyPressCount.value = 0
+  }
+}
+
+onMounted(() => {
+  document.addEventListener('keydown', handleKeyPress)
+})
+onBeforeUnmount(() => {
+  document.removeEventListener('keydown', handleKeyPress)
+})
 </script>
 
 <template>
   <div
     class="w-full min-h-screen items-center content-center justify-items-center grid grid-cols-1"
+    :class="{ 'bg-black': demoMode }"
   >
     <div
       class="grid grid-cols-1 content-center justify-items-center font-body gap-4 max-w-md p-2 h-full"
@@ -282,16 +306,17 @@ const startRecordingAudio = async () => {
       <h1 class="text-4xl md:text-5xl italic font-header">
         Sine Wave Speech<span class="text-lg"> .com</span>
       </h1>
-      <p>
+      <p v-if="!demoMode">
         Anything can be music if you listen closely enough.
         <span class="font-bold">Press Record or play to start.</span>
         {{ iOS() ? 'Make sure your iPhone is not in silent mode.' : '' }}
       </p>
-      <PlaybackControls v-model="playbackState" />
+      <PlaybackControls v-model="playbackState" v-if="!demoMode" />
 
       <div
         class="h-2 bg-white overflow-hidden rounded-sm w-full"
         :style="{ '--recording-duration': `${RECORDING_DURATION_SEC}s` }"
+        v-if="!demoMode"
       >
         <div
           class="progress-bar-animation bg-accent1 w-full h-full"
