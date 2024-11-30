@@ -2,8 +2,8 @@ use nalgebra::{Complex, ComplexField};
 use ndarray::{concatenate, prelude::*};
 
 use crate::{
-    linear_algebra::find_roots,
-    signal_processing::{autocorrelate, hann_window, lfilter, solve_toeplitz, ToeplitzError},
+    linear_algebra::{find_roots, solve_toeplitz, ToeplitzError},
+    signal_processing::{autocorrelate, hann_window, lfilter},
 };
 
 // Original Python: def fit_lpc(audio: np.ndarray, p=12, hop_size=DEFAULT_HOP_SIZE, window_size=None):
@@ -197,14 +197,15 @@ mod tests {
         // Needed to set the epsilon fairly high for this to work, is there
         // concern? Perhaps it's because of float64 in Python or a different
         // implementation in Scipy than what we have.
-        assert_array2_eq(&lpc_coefficients, &expected_lpc_coefficients, 1e-2);
-        assert_array1_eq(&gain, &Array1::from_vec(input.gain), 1e-2);
-        assert_array1_eq(&residual, &Array1::from_vec(input.residual), 1e-2);
+        let epsilon = 1e-2;
+        assert_array2_eq(&lpc_coefficients, &expected_lpc_coefficients, epsilon);
+        assert_array1_eq(&gain, &Array1::from_vec(input.gain), epsilon);
+        assert_array1_eq(&residual, &Array1::from_vec(input.residual), epsilon);
 
         let (frequencies, magnitudes) =
             lpc_coefficients_to_frequencies(lpc_coefficients.view(), gain.view());
 
-        assert_array2_eq(&frequencies, &expected_frequencies, 1e-2);
-        assert_array2_eq(&magnitudes, &expected_magnitudes, 1e-2);
+        assert_array2_eq(&frequencies, &expected_frequencies, epsilon);
+        assert_array2_eq(&magnitudes, &expected_magnitudes, epsilon);
     }
 }

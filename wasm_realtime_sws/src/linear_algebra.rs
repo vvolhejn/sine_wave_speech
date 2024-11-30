@@ -1,6 +1,8 @@
 // use nalgebra::Complex;
 // use num::complex::Complex;
 
+use thiserror::Error;
+
 use nalgebra::Complex;
 use ndarray::*;
 use ndarray::{Array1, Array2};
@@ -32,13 +34,101 @@ fn get_companion_matrix(coefs: ArrayView1<f32>) -> Array2<f32> {
     matrix
 }
 
+#[derive(Error, Debug)]
+pub enum ToeplitzError {
+    #[error("Singular principal minor")]
+    SingularPrincipalMinor,
+}
+
+/// AI reimplementation of the Cython version from SciPy:
+/// https://github.com/scipy/scipy/blob/92d2a8592782ee19a1161d0bf3fc2241ba78bb63/scipy/linalg/_solve_toeplitz.pyx#L14
+pub fn solve_toeplitz(
+    a: ArrayView1<f32>,
+    b: ArrayView1<f32>,
+) -> Result<Array1<f32>, ToeplitzError> {
+    let n = b.len();
+    assert_eq!(a.len(), 2 * n - 1, "Input 'a' must have length 2n-1");
+
+    let mut x = Array1::zeros(n);
+    let mut g = Array1::zeros(n);
+    let mut h = Array1::zeros(n);
+
+    if a[n - 1] == 0.0 {
+        return Err(ToeplitzError::SingularPrincipalMinor);
+    }
+
+    x[0] = b[0] / a[n - 1];
+
+    if n == 1 {
+        return Ok(x);
+    }
+
+    g[0] = a[n - 2] / a[n - 1];
+    h[0] = a[n] / a[n - 1];
+
+    for m in 1..n {
+        let mut x_num = -b[m];
+        let mut x_den = -a[n - 1];
+        for j in 0..m {
+            let nmj = n + m - (j + 1);
+            x_num += a[nmj] * x[j];
+            x_den += a[nmj] * g[m - j - 1];
+        }
+        if x_den == 0.0 {
+            return Err(ToeplitzError::SingularPrincipalMinor);
+        }
+        x[m] = x_num / x_den;
+
+        for j in 0..m {
+            x[j] -= x[m] * g[m - j - 1];
+        }
+        if m == n - 1 {
+            return Ok(x);
+        }
+
+        let mut g_num = -a[n - m - 2];
+        let mut h_num = -a[n + m];
+        let mut g_den = -a[n - 1];
+        for j in 0..m {
+            g_num += a[n + j - m - 1] * g[j];
+            h_num += a[n + m - j - 1] * h[j];
+            g_den += a[n + j - m - 1] * h[m - j - 1];
+        }
+
+        if g_den == 0.0 {
+            return Err(ToeplitzError::SingularPrincipalMinor);
+        }
+
+        g[m] = g_num / g_den;
+        h[m] = h_num / x_den;
+        let k = m - 1;
+        let m2 = (m + 1) >> 1;
+        let c1 = g[m];
+        let c2 = h[m];
+        for j in 0..m2 {
+            let gj = g[j];
+            let gk = g[k - j];
+            let hj = h[j];
+            let hk = h[k - j];
+            g[j] = gj - (c1 * hk);
+            g[k - j] = gk - (c1 * hj);
+            h[j] = hj - (c2 * gk);
+            h[k - j] = hk - (c2 * gj);
+        }
+    }
+
+    Ok(x)
+}
+
 #[cfg(test)]
 pub mod tests {
-    use crate::signal_processing::tests::{assert_array2_eq, assert_complex_array1_eq};
+    use super::*;
+
+    use crate::signal_processing::tests::{
+        assert_array1_eq, assert_array2_eq, assert_complex_array1_eq,
+    };
     use nalgebra::Complex;
     use ndarray::{array, Array1};
-
-    use super::get_companion_matrix;
 
     #[test]
     fn test_companion_matrix() {
@@ -105,6 +195,32 @@ pub mod tests {
             let roots = Array1::from(roots);
 
             assert_complex_array1_eq(&roots, &expected_roots, 1e-4);
+        }
+    }
+
+    #[test]
+    fn test_toeplitz_singular_principal_minor() {
+        let a = array![1.0, 2.0, 0.0, 2.0, 1.0]; // Note the 0.0 in the middle (a[n-1])
+        let b = array![1.0, 2.0, 3.0];
+        let result = solve_toeplitz(a.view(), b.view());
+        assert!(matches!(result, Err(ToeplitzError::SingularPrincipalMinor)));
+    }
+
+    #[test]
+    fn test_toeplitz_non_singular_case() {
+        // Solution computed using:
+        // scipy.linalg.solve_toeplitz([1., 2., 3., 4.], [2., 2., -1., 4.])
+        // note the input format is a bit different in our rewrite, we explcitly require
+        // the whole "edge" of the toeplitz matrix as the first argument
+        let a = array![4., 3., 2., 1., 2., 3., 4.];
+        let b = array![2., 2., -1., 4.];
+
+        match solve_toeplitz(a.view(), b.view()) {
+            Ok(x) => {
+                let expected: Array1<f32> = array![0.6, -1.5, 4., -1.9];
+                assert_array1_eq(&x, &expected, 1e-6);
+            }
+            Err(e) => panic!("Expected Ok result, but got Err: {:?}", e),
         }
     }
 }
