@@ -101,8 +101,8 @@ impl SineWaveSpeechConverter {
             } else {
                 remap(quantization_strength, 2.0, 3.0, 3.0, 0.0)
             },
-            // Pentatonic comes in at quantization_strength==1 and then gets stronger
-            remap(quantization_strength, 1.0, 3.0, 0.0, 3.0),
+            // Pentatonic comes in at quantization_strength==2 and then gets stronger
+            remap(quantization_strength, 2.0, 3.0, 0.0, 3.0),
         ];
 
         let total_weight: f32 = interpolation_weights.iter().sum();

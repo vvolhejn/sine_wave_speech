@@ -16,7 +16,13 @@ const frequencyQuantizationName = computed(() => {
   ]
   for (const { upTo, name } of breakpoints) {
     if (strength <= upTo) {
-      return name
+      if (strength % 1 === 0 || strength < 1.0) {
+        return name
+      } else {
+        // Due to the interpolation between the breakpoints, the scales "in the middle"
+        // are actually more dissonant than the ones at the breakpoints.
+        return name + '-ish'
+      }
     }
   }
 
