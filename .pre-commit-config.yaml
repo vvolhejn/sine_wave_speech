@@ -6,6 +6,13 @@ repos:
     hooks:
       - id: trailing-whitespace
       - id: check-added-large-files
+  # Forces notebook outputs to be empty before commit
+  - repo: https://github.com/kynan/nbstripout
+    rev: 0.8.1
+    hooks:
+      - id: nbstripout
+        stages: [pre-commit]
+        types: [jupyter]
   - repo: local
     hooks:
       - id: cargo-test

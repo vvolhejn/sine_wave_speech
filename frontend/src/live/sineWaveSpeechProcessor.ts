@@ -50,6 +50,8 @@ class SineWaveSpeechProcessor extends AudioWorkletProcessor {
         // n_waves and hop_size get overwritten in the first process() call
         // (perhaps we shouldn't even have them here)
         this.converter = SineWaveSpeechConverter.new(4, BLOCK_SIZE, sampleRate)
+        // Uncomment to generate quantization plot data
+        // this._createQuantizationPlotData()
       })
     } else {
       throw new Error('Unknown message type: ' + event.type)
@@ -176,6 +178,44 @@ class SineWaveSpeechProcessor extends AudioWorkletProcessor {
   private postMessage(message: ProcessorMessage) {
     this.port.postMessage(message)
   }
+
+  /** Not used for the effect. Logs data for a visualization of how the continuous quantization works.
+   * Set as public so that the compiler doesn't complain about unused code.
+   */
+  public _createQuantizationPlotData() {
+    if (!this.converter) {
+      throw new Error('Converter not initialized')
+    }
+    const C3_HZ = 130.81
+    const centsStep = 10
+    let hzToNormalizedCoef = (2 * Math.PI) / sampleRate
+
+    const indexToNormalizedFrequency = (i: number) => {
+      const cents = i * centsStep
+      const ratio = Math.pow(2, cents / 1200)
+      const hz = C3_HZ * ratio
+      const normalized = hz * hzToNormalizedCoef
+      return normalized
+    }
+
+    const originalFrequencies = new Float32Array(
+      range(0, 1200 / centsStep + 1).map(indexToNormalizedFrequency)
+    )
+    const versions = range(0, 101)
+      .map((i) => (3 * i) / 100)
+      .map((s) => {
+        const array = this.converter!.quantize_frequencies_continuous(
+          originalFrequencies,
+          s
+        )
+        return {
+          strength: s,
+          values: Array.from(array).map((f) => f / hzToNormalizedCoef),
+        }
+      })
+
+    console.log(JSON.stringify(versions))
+  }
 }
 
 const concatFloat32Arrays = (arrays: Float32Array[]) => {
@@ -214,6 +254,11 @@ const canProcess = (inputList: Float32Array[][], outputList: Float32Array[][]) =
 const addGain = (magnitudes: Float32Array, gainDb: number): Float32Array => {
   const gain = Math.pow(10, gainDb / 20)
   return magnitudes.map((m) => m * gain)
+}
+
+/** end is exclusive */
+const range = (start: number, end: number) => {
+  return [...Array(end - start).keys()].map((i) => i + start)
 }
 
 registerProcessor('sine-wave-speech-processor', SineWaveSpeechProcessor)

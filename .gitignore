@@ -5,6 +5,8 @@ __pycache__/
 
 for-video/
 
+quantization_plot_data.json
+
 # Created by https://www.gitignore.io/api/intellij
 
 ### Intellij ###
