@@ -347,6 +347,13 @@ onBeforeUnmount(() => {
       <p class="my-2">
         <a href="/explanation/" class="underline">Explanation</a>
       </p>
+      <p class="my-2">
+        <a
+          href="https://vvolhejn.com/2024/11/16/sinewavespeech-com-live.html"
+          class="underline"
+          >Blog post</a
+        >
+      </p>
     </div>
   </div>
 </template>
